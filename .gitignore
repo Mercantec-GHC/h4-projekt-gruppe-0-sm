@@ -1,5 +1,6 @@
+Mobile/build/
+API/.vs/
+API/obj/
+API/bin/
+.vscode/
 
-/API/.vs
-/API/obj
-/API/bin
-.vscode
