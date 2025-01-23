@@ -17,8 +17,7 @@ class LogInPage extends StatelessWidget {
             style: TextStyle(fontSize: 64),
           ),
           const PrimaryInput(
-              label: "Mail/Tlf",
-              placeholderText: "f.eks. example@example.com eller 12345678"),
+              label: "Mail/Tlf", placeholderText: "f.eks. example@example.com"),
           const PrimaryInput(label: "Password", placeholderText: "*********"),
           PrimaryButton(
               onPressed: () => {

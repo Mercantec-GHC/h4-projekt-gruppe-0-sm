@@ -18,8 +18,7 @@ class RegisterPage extends StatelessWidget {
           ),
           const PrimaryInput(label: "Fornavn", placeholderText: "Fornavn"),
           const PrimaryInput(
-              label: "Mail/Tlf",
-              placeholderText: "f.eks. example@example.com eller 12345678"),
+              label: "Mail/Tlf", placeholderText: "f.eks. example@example.com"),
           const PrimaryInput(label: "Password", placeholderText: "*********"),
           const PrimaryInput(
               label: "Password (igen)", placeholderText: "*********"),

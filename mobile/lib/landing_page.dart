@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'log_in_page.dart';
+import 'register_page.dart';
 import 'global_components.dart';
 
 class LandingPage extends StatelessWidget {
@@ -18,7 +19,12 @@ class LandingPage extends StatelessWidget {
                         builder: (context) => const LogInPage()))
                   },
               child: const Text("Log ind")),
-          PrimaryButton(onPressed: () => {}, child: const Text("Opret bruger"))
+          PrimaryButton(
+              onPressed: () => {
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => const RegisterPage()))
+                  },
+              child: const Text("Opret bruger"))
         ],
       )
     ]);
