@@ -4,8 +4,11 @@ class PrimaryButton extends StatelessWidget {
   final void Function()? onPressed;
   final Widget child;
 
-  const PrimaryButton(
-      {super.key, required this.onPressed, required this.child});
+  const PrimaryButton({
+    super.key,
+    required this.onPressed,
+    required this.child,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,14 +25,15 @@ class PrimaryInput extends StatelessWidget {
   final double height;
   final String label;
   final String placeholderText;
+  final bool obscure;
 
   const PrimaryInput(
       {super.key,
       this.width = 300,
       this.height = 100,
+      this.obscure = false,
       required this.label,
       required this.placeholderText});
-
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -40,6 +44,7 @@ class PrimaryInput extends StatelessWidget {
               border: const OutlineInputBorder(),
               label: Text(label),
               hintText: placeholderText),
+          obscureText: obscure,
         ));
   }
 }

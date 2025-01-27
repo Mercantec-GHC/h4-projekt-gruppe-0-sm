@@ -18,7 +18,8 @@ class LogInPage extends StatelessWidget {
           ),
           const PrimaryInput(
               label: "Mail/Tlf", placeholderText: "f.eks. example@example.com"),
-          const PrimaryInput(label: "Password", placeholderText: "*********"),
+          const PrimaryInput(
+              label: "Password", placeholderText: "*********", obscure: true),
           PrimaryButton(
               onPressed: () => {
                     Navigator.of(context).push(MaterialPageRoute(

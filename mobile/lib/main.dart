@@ -14,6 +14,7 @@ class MyApp extends StatelessWidget {
       title: 'Fresh Plaza',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        scaffoldBackgroundColor: const Color(0xECF6F0FF),
         useMaterial3: true,
       ),
       home: const MyHomePage(title: 'Fresh Plaza'),
