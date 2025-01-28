@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/dashboard.dart';
+import 'package:mobile/product.dart';
+import 'package:provider/provider.dart';
 import 'landing_page.dart';
 
 void main() {
@@ -10,14 +13,20 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Fresh Plaza',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        scaffoldBackgroundColor: const Color(0xECF6F0FF),
-        useMaterial3: true,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ProductRepo()),
+        ChangeNotifierProvider(create: (_) => BottomNavigationBarProvider())
+      ],
+      child: MaterialApp(
+        title: 'Fresh Plaza',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+          scaffoldBackgroundColor: const Color(0xECF6F0FF),
+          useMaterial3: true,
+        ),
+        home: const MyHomePage(title: 'Fresh Plaza'),
       ),
-      home: const MyHomePage(title: 'Fresh Plaza'),
     );
   }
 }

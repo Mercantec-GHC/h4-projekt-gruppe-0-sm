@@ -1,98 +1,67 @@
 import 'package:flutter/material.dart';
-import 'global_components.dart';
+import 'package:mobile/all_products_page.dart';
+import 'package:mobile/cart_page.dart';
+import 'package:mobile/receipts_page.dart';
+import 'package:provider/provider.dart';
 
-class ProductListItem extends StatelessWidget {
-  final String name;
-  final int price;
-  final String imagePath;
-  const ProductListItem(
-      {super.key,
-      required this.name,
-      required this.price,
-      required this.imagePath});
+class BottomNavigationBarProvider extends ChangeNotifier {
+  int currentIndex = 0;
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.all(10),
-      height: 100,
-      decoration: BoxDecoration(
-          color: Color(0xFFFFFFFF),
-          border: Border.all(),
-          borderRadius: BorderRadius.all(Radius.circular(10))),
-      child: ElevatedButton(
-          style: ButtonStyle(
-              backgroundColor: WidgetStateProperty.all(Colors.transparent),
-              elevation: WidgetStateProperty.all(0),
-              shape: WidgetStateProperty.all(RoundedRectangleBorder()),
-              padding: WidgetStateProperty.all(EdgeInsets.zero),
-              splashFactory: NoSplash.splashFactory),
-          onPressed: () {},
-          child: Expanded(
-              child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                  padding: EdgeInsets.fromLTRB(10, 10, 0, 10),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        name,
-                        style: TextStyle(fontSize: 24, color: Colors.black),
-                      ),
-                      Text(
-                        "${price.toString()} kr",
-                        style: TextStyle(fontSize: 16, color: Colors.black),
-                      )
-                    ],
-                  )),
-              ClipRRect(
-                  borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(10),
-                      bottomRight: Radius.circular(10)),
-                  child:
-                      Image(image: AssetImage(imagePath), fit: BoxFit.contain))
-            ],
-          ))),
-    );
+  void setIndex(int index) {
+    currentIndex = index;
+    notifyListeners();
   }
 }
 
 class Dashboard extends StatelessWidget {
-  const Dashboard({super.key});
+  final List<StatelessWidget> pages = [
+    const AllProductsPage(),
+    const CartPage(),
+    const ReceiptsPage(),
+  ];
+
+  Dashboard({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final pageIndexProvider = Provider.of<BottomNavigationBarProvider>(context);
+    int currentIndex = pageIndexProvider.currentIndex;
+
     return Scaffold(
-        body: Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Expanded(
-          child: Column(children: [
-            TextField(
-                decoration: InputDecoration(
-                    label: Text("Search"),
-                    contentPadding: EdgeInsets.only(top: 20))),
-            Expanded(
-              child: ListView(
-                children: [
-                  ProductListItem(
-                    name: "idk",
-                    price: 12,
-                    imagePath: "assets/boykisser.png",
-                  ),
-                  ProductListItem(
-                    name: "idk",
-                    price: 12,
-                    imagePath: "assets/boykisser.png",
-                  ),
-                ],
-              ),
-            )
-          ]),
-        ),
-      ],
-    ));
+      bottomNavigationBar: BottomNavigationBar(
+        onTap: (index) => pageIndexProvider.setIndex(index),
+        currentIndex: currentIndex,
+        items: <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+              icon: Icon(currentIndex == 0 ? Icons.home : Icons.home_outlined),
+              label: "Home"),
+          BottomNavigationBarItem(
+              icon: Icon(currentIndex == 1
+                  ? Icons.shopping_cart
+                  : Icons.shopping_cart_outlined),
+              label: "Cart"),
+          BottomNavigationBarItem(
+              icon: Icon(currentIndex == 2
+                  ? Icons.receipt_long
+                  : Icons.receipt_long_outlined),
+              label: "Receipts")
+        ],
+      ),
+      body: pages[currentIndex],
+    );
   }
 }
+
+//Consumer<ProductRepo>(builder: (_, productRepo, __) {
+//              final products = productRepo.allProducts();
+//              return ListView.builder(
+//                shrinkWrap: true,
+//                itemBuilder: (_, idx) => ProductListItem(
+//                  name: products[idx].name,
+//                  price: products[idx].price,
+//                  imagePath: "assets/${products[idx].name}.png",
+//                  productPage: ProductPage(product: products[idx]),
+//                ),
+//                itemCount: products.length,
+//              );
+//            })

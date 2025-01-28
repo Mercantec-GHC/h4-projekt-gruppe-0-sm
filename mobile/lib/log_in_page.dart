@@ -22,8 +22,8 @@ class LogInPage extends StatelessWidget {
               label: "Password", placeholderText: "*********", obscure: true),
           PrimaryButton(
               onPressed: () => {
-                    Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => const Dashboard()))
+                    Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => Dashboard()))
                   },
               child: const Text("Log ind"))
         ],
