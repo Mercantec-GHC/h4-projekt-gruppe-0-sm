@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/repos/product.dart';
+import 'package:mobile/widgets/primary_card.dart';
 import 'package:provider/provider.dart';
 import 'product_page.dart';
 
@@ -17,13 +18,7 @@ class ProductListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(10),
-      height: 100,
-      decoration: BoxDecoration(
-          color: const Color(0xFFFFFFFF),
-          border: Border.all(color: const Color(0xFF666666)),
-          borderRadius: const BorderRadius.all(Radius.circular(10))),
+    return PrimaryCard(
       child: ElevatedButton(
           style: ButtonStyle(
               backgroundColor: WidgetStateProperty.all(Colors.transparent),
@@ -45,16 +40,9 @@ class ProductListItem extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        name,
-                        style:
-                            const TextStyle(fontSize: 20, color: Colors.black),
-                      ),
-                      Text(
-                        "${price.toString()} kr",
-                        style:
-                            const TextStyle(fontSize: 16, color: Colors.black),
-                      )
+                      Text(name, style: Theme.of(context).textTheme.bodyLarge),
+                      Text("${price.toString()} kr",
+                          style: Theme.of(context).textTheme.bodyMedium),
                     ],
                   )),
               ClipRRect(

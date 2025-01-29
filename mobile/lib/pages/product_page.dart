@@ -57,11 +57,11 @@ class ProductPage extends StatelessWidget {
                   ),
                   Text(
                     product.name,
-                    style: const TextStyle(fontSize: 20),
+                    style: Theme.of(context).textTheme.bodyLarge,
                   ),
                   Text(
                     "${product.price} kr",
-                    style: const TextStyle(fontSize: 16),
+                    style: Theme.of(context).textTheme.bodyLarge,
                   ),
                   Padding(
                     padding: const EdgeInsets.only(top: 20, bottom: 20),

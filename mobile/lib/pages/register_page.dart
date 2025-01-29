@@ -13,9 +13,9 @@ class RegisterPage extends StatelessWidget {
       Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text(
+          Text(
             "Opret bruger",
-            style: TextStyle(fontSize: 64),
+            style: Theme.of(context).textTheme.headlineLarge,
           ),
           const PrimaryInput(label: "Fornavn", placeholderText: "Fornavn"),
           const PrimaryInput(
