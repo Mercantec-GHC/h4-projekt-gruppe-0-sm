@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/widgets/primary_button.dart';
 import 'log_in_page.dart';
 import 'register_page.dart';
-import 'global_components.dart';
 
 class LandingPage extends StatelessWidget {
   const LandingPage({super.key});

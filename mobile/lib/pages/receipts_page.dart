@@ -5,6 +5,6 @@ class ReceiptsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold();
+    return const Row();
   }
 }

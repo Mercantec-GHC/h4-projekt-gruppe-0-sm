@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'dashboard.dart';
-import 'global_components.dart';
+import 'package:mobile/widgets/primary_button.dart';
+import 'package:mobile/widgets/primary_input.dart';
+import 'log_in_page.dart';
 
-class LogInPage extends StatelessWidget {
-  const LogInPage({super.key});
+class RegisterPage extends StatelessWidget {
+  const RegisterPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -13,19 +14,24 @@ class LogInPage extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Text(
-            "Log ind",
+            "Opret bruger",
             style: TextStyle(fontSize: 64),
           ),
+          const PrimaryInput(label: "Fornavn", placeholderText: "Fornavn"),
           const PrimaryInput(
               label: "Mail/Tlf", placeholderText: "f.eks. example@example.com"),
           const PrimaryInput(
               label: "Password", placeholderText: "*********", obscure: true),
+          const PrimaryInput(
+              label: "Password (igen)",
+              placeholderText: "*********",
+              obscure: true),
           PrimaryButton(
               onPressed: () => {
-                    Navigator.of(context).push(
-                        MaterialPageRoute(builder: (context) => Dashboard()))
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => const LogInPage()))
                   },
-              child: const Text("Log ind"))
+              child: const Text("Opret bruger"))
         ],
       )
     ]));

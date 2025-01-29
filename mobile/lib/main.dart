@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/dashboard.dart';
-import 'package:mobile/product.dart';
+import 'package:mobile/repos/product.dart';
 import 'package:provider/provider.dart';
-import 'landing_page.dart';
+import 'pages/landing_page.dart';
+import 'package:mobile/repos/bottom_navigation_bar.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ProductRepo()),
-        ChangeNotifierProvider(create: (_) => BottomNavigationBarProvider())
+        ChangeNotifierProvider(create: (_) => BottomNavigationBarRepo())
       ],
       child: MaterialApp(
         title: 'Fresh Plaza',

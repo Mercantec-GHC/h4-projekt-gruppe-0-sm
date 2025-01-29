@@ -1,17 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/all_products_page.dart';
-import 'package:mobile/cart_page.dart';
-import 'package:mobile/receipts_page.dart';
+import 'package:mobile/pages/all_products_page.dart';
+import 'package:mobile/pages/cart_page.dart';
+import 'package:mobile/pages/receipts_page.dart';
+import 'package:mobile/repos/bottom_navigation_bar.dart';
 import 'package:provider/provider.dart';
-
-class BottomNavigationBarProvider extends ChangeNotifier {
-  int currentIndex = 0;
-
-  void setIndex(int index) {
-    currentIndex = index;
-    notifyListeners();
-  }
-}
 
 class Dashboard extends StatelessWidget {
   final List<StatelessWidget> pages = [
@@ -24,7 +16,7 @@ class Dashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pageIndexProvider = Provider.of<BottomNavigationBarProvider>(context);
+    final pageIndexProvider = Provider.of<BottomNavigationBarRepo>(context);
     int currentIndex = pageIndexProvider.currentIndex;
 
     return Scaffold(
