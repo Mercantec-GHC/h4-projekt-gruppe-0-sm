@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/repos/cart.dart';
 import 'package:mobile/repos/product.dart';
 import 'package:mobile/widgets/primary_button.dart';
+import 'package:provider/provider.dart';
 
 class ProductPage extends StatelessWidget {
   final Product product;
@@ -70,7 +72,10 @@ class ProductPage extends StatelessWidget {
                   PrimaryButton(
                       onPressed: () {}, child: const Text("Find i butik")),
                   PrimaryButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        var cartRepo = context.read<CartRepo>();
+                        cartRepo.addToCart(product);
+                      },
                       child: const Text("Tilføj til indkøbskurv")),
                 ],
               ),

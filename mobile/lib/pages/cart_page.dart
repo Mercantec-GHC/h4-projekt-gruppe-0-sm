@@ -75,7 +75,7 @@ class CartItemView extends StatelessWidget {
           ),
           IconButton(
               onPressed: () {
-                cartRepo.removeCartItem(cartRepo.withProductId(productId));
+                cartRepo.removeCartItem(productId);
               },
               icon: const Icon(Icons.delete_outline)),
           Image(width: 100, image: AssetImage(imagePath))

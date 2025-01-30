@@ -68,32 +68,56 @@ class CartRepo extends ChangeNotifier {
     return cart;
   }
 
-  CartItem withProductId(int productId) {
+  CartItem? withProductId(int productId) {
     for (var i = 0; i < cart.length; i++) {
       if (cart[i].product.id == productId) {
         return cart[i];
       }
     }
-    throw ProductIdException();
+    return null;
   }
 
   void incrementAmount(int productId) {
     var cartItem = withProductId(productId);
+    if (cartItem == null) {
+      throw ProductIdException();
+    }
     cartItem.amount++;
     notifyListeners();
   }
 
   void decrementAmount(int productId) {
     var cartItem = withProductId(productId);
+    if (cartItem == null) {
+      throw ProductIdException();
+    }
     if (--cartItem.amount <= 0) {
-      removeCartItem(cartItem);
+      cart.remove(cartItem);
     }
     notifyListeners();
   }
 
-  void removeCartItem(CartItem cartItem) {
+  void removeCartItem(int productId) {
+    var cartItem = withProductId(productId);
+    if (cartItem == null) {
+      throw ProductIdException();
+    }
     cart.remove(cartItem);
     notifyListeners();
+  }
+
+  addToCart(Product product) {
+    var cartItem = withProductId(product.id);
+    if (cartItem == null) {
+      cart.add(CartItem(product: product, amount: 1));
+    } else {
+      cartItem.amount++;
+    }
+    notifyListeners();
+  }
+
+  totalItemsInCart() {
+    return cart.fold<int>(0, (prev, cartItem) => prev + cartItem.amount);
   }
 }
 
