@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/pages/finish_shopping_page.dart';
 import 'package:mobile/repos/cart.dart';
 import 'package:mobile/widgets/primary_button.dart';
 import 'package:mobile/widgets/primary_card.dart';
@@ -144,7 +145,14 @@ class CartPage extends StatelessWidget {
                     child: Container(
                       margin: const EdgeInsets.only(top: 10),
                       child: PrimaryButton(
-                          onPressed: () {}, child: const Text("Afslut indkøb")),
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        FinishShoppingPage()));
+                          },
+                          child: const Text("Afslut indkøb")),
                     ),
                   ),
                 ],

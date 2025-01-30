@@ -119,6 +119,11 @@ class CartRepo extends ChangeNotifier {
   totalItemsInCart() {
     return cart.fold<int>(0, (prev, cartItem) => prev + cartItem.amount);
   }
+
+  totalPrice() {
+    return cart.fold<int>(
+        0, (prev, cartItem) => prev + cartItem.amount * cartItem.product.price);
+  }
 }
 
 class CartItem {
