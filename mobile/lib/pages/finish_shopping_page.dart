@@ -1,47 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/repos/cart.dart';
 import 'package:mobile/widgets/primary_button.dart';
+import 'package:mobile/widgets/receipt_item.dart';
 import 'package:provider/provider.dart';
-
-class ReceiptItem extends StatelessWidget {
-  final int pricePerAmount;
-  final String name;
-  final int amount;
-
-  const ReceiptItem(
-      {super.key,
-      required this.pricePerAmount,
-      required this.name,
-      required this.amount});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(name),
-        Row(
-          children: [
-            SizedBox(
-                width: 60,
-                child: Text(
-                  "$amount stk",
-                  textAlign: TextAlign.end,
-                  overflow: TextOverflow.ellipsis,
-                )),
-            SizedBox(
-                width: 60,
-                child: Text(
-                  "${pricePerAmount * amount} kr",
-                  textAlign: TextAlign.end,
-                  overflow: TextOverflow.ellipsis,
-                ))
-          ],
-        ),
-      ],
-    );
-  }
-}
 
 class FinishShoppingPage extends StatelessWidget {
   const FinishShoppingPage({super.key});
@@ -65,7 +26,7 @@ class FinishShoppingPage extends StatelessWidget {
             child: Expanded(
                 child: ListView.builder(
                     shrinkWrap: true,
-                    itemBuilder: (_, idx) => ReceiptItem(
+                    itemBuilder: (_, idx) => ReceiptItemView(
                         pricePerAmount: cart[idx].product.price,
                         name: cart[idx].product.name,
                         amount: cart[idx].amount),

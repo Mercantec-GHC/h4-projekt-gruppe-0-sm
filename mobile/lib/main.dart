@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/repos/cart.dart';
 import 'package:mobile/repos/product.dart';
+import 'package:mobile/repos/receipt.dart';
 import 'package:provider/provider.dart';
 import 'pages/landing_page.dart';
 import 'package:mobile/repos/bottom_navigation_bar.dart';
@@ -19,6 +20,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => BottomNavigationBarRepo()),
         ChangeNotifierProvider(create: (_) => ProductRepo()),
         ChangeNotifierProvider(create: (_) => CartRepo()),
+        ChangeNotifierProvider(create: (_) => ReceiptRepo()),
       ],
       child: MaterialApp(
         title: 'Fresh Plaza',

@@ -19,14 +19,9 @@ class ProductListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PrimaryCard(
-      child: ElevatedButton(
-          style: ButtonStyle(
-              backgroundColor: WidgetStateProperty.all(Colors.transparent),
-              elevation: WidgetStateProperty.all(0),
-              shape: WidgetStateProperty.all(const RoundedRectangleBorder()),
-              padding: WidgetStateProperty.all(EdgeInsets.zero),
-              splashFactory: NoSplash.splashFactory),
-          onPressed: () {
+      child: InkWell(
+          borderRadius: const BorderRadius.all(Radius.circular(10)),
+          onTap: () {
             Navigator.of(context)
                 .push(MaterialPageRoute(builder: (context) => productPage));
           },
@@ -49,7 +44,7 @@ class ProductListItem extends StatelessWidget {
                   borderRadius: const BorderRadius.only(
                       topRight: Radius.circular(10),
                       bottomRight: Radius.circular(10)),
-                  child: Image(
+                  child: Ink.image(
                     image: AssetImage(imagePath),
                     fit: BoxFit.contain,
                     width: 100,

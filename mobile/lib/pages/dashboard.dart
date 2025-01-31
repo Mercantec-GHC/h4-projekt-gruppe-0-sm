@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/pages/all_products_page.dart';
 import 'package:mobile/pages/cart_page.dart';
-import 'package:mobile/pages/receipts_page.dart';
+import 'package:mobile/pages/all_receipts_page.dart';
 import 'package:mobile/repos/bottom_navigation_bar.dart';
 import 'package:mobile/repos/cart.dart';
 import 'package:provider/provider.dart';
@@ -10,7 +10,7 @@ class Dashboard extends StatelessWidget {
   final List<StatelessWidget> pages = [
     const AllProductsPage(),
     const CartPage(),
-    const ReceiptsPage(),
+    const AllReceiptsPage(),
   ];
 
   Dashboard({super.key});
@@ -48,17 +48,3 @@ class Dashboard extends StatelessWidget {
     );
   }
 }
-
-//Consumer<ProductRepo>(builder: (_, productRepo, __) {
-//              final products = productRepo.allProducts();
-//              return ListView.builder(
-//                shrinkWrap: true,
-//                itemBuilder: (_, idx) => ProductListItem(
-//                  name: products[idx].name,
-//                  price: products[idx].price,
-//                  imagePath: "assets/${products[idx].name}.png",
-//                  productPage: ProductPage(product: products[idx]),
-//                ),
-//                itemCount: products.length,
-//              );
-//            })

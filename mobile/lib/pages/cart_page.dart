@@ -150,7 +150,7 @@ class CartPage extends StatelessWidget {
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) =>
-                                        FinishShoppingPage()));
+                                        const FinishShoppingPage()));
                           },
                           child: const Text("Afslut indkøb")),
                     ),
