@@ -62,7 +62,12 @@ class CartItemView extends StatelessWidget {
                                     icon: const Icon(Icons.add)),
                                 IconButton(
                                     onPressed: () {
-                                      cartRepo.decrementAmount(productId);
+                                      if (cartRepo.willRemoveOnNextDecrement(
+                                          productId)) {
+                                        removeCartItemDialog(context);
+                                      } else {
+                                        cartRepo.decrementAmount(productId);
+                                      }
                                     },
                                     icon: const Icon(Icons.remove))
                               ],
@@ -75,13 +80,52 @@ class CartItemView extends StatelessWidget {
                 )),
           ),
           IconButton(
-              onPressed: () {
-                cartRepo.removeCartItem(productId);
-              },
+              onPressed: () => removeCartItemDialog(context),
               icon: const Icon(Icons.delete_outline)),
           Image(width: 100, image: AssetImage(imagePath))
         ],
       ),
+    );
+  }
+
+  Future<void> removeCartItemDialog(BuildContext context) {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Text(
+              "Er du sikker på, at du vil slette ${name.toLowerCase()} fra indkøbskurven?"),
+          actions: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  margin: const EdgeInsets.only(right: 5),
+                  child: TextButton(
+                    style: TextButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white),
+                    child: const Text('Slet'),
+                    onPressed: () {
+                      cartRepo.removeCartItem(productId);
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ),
+                Container(
+                  margin: const EdgeInsets.only(left: 5),
+                  child: PrimaryButton(
+                    child: const Text('Annullér'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ),
+              ],
+            )
+          ],
+        );
+      },
     );
   }
 }

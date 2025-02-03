@@ -78,7 +78,7 @@ class CartRepo extends ChangeNotifier {
   }
 
   void incrementAmount(int productId) {
-    var cartItem = withProductId(productId);
+    final cartItem = withProductId(productId);
     if (cartItem == null) {
       throw ProductIdException();
     }
@@ -87,18 +87,27 @@ class CartRepo extends ChangeNotifier {
   }
 
   void decrementAmount(int productId) {
-    var cartItem = withProductId(productId);
+    final cartItem = withProductId(productId);
     if (cartItem == null) {
       throw ProductIdException();
     }
-    if (--cartItem.amount <= 0) {
+    cartItem.amount -= 1;
+    if (cartItem.amount <= 0) {
       cart.remove(cartItem);
     }
     notifyListeners();
   }
 
+  bool willRemoveOnNextDecrement(int productId) {
+    final cartItem = withProductId(productId);
+    if (cartItem == null) {
+      throw ProductIdException();
+    }
+    return cartItem.amount <= 1;
+  }
+
   void removeCartItem(int productId) {
-    var cartItem = withProductId(productId);
+    final cartItem = withProductId(productId);
     if (cartItem == null) {
       throw ProductIdException();
     }
@@ -107,7 +116,7 @@ class CartRepo extends ChangeNotifier {
   }
 
   addToCart(Product product) {
-    var cartItem = withProductId(product.id);
+    final cartItem = withProductId(product.id);
     if (cartItem == null) {
       cart.add(CartItem(product: product, amount: 1));
     } else {
