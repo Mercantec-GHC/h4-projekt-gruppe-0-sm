@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/repos/cart.dart';
+import 'package:mobile/repos/receipt.dart';
 import 'package:mobile/widgets/primary_button.dart';
 import 'package:mobile/widgets/receipt_item.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +11,7 @@ class FinishShoppingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final CartRepo cartRepo = context.read<CartRepo>();
+    final ReceiptRepo receiptRepo = context.read<ReceiptRepo>();
     final cart = cartRepo.allCartItems();
 
     return Scaffold(
@@ -43,8 +45,17 @@ class FinishShoppingPage extends StatelessWidget {
             )),
           ),
           Center(
-              child:
-                  PrimaryButton(onPressed: () {}, child: const Text("Betal")))
+              child: PrimaryButton(
+                  onPressed: () {
+                    receiptRepo.createReceipt(cart);
+                    cartRepo.clearCart();
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Betal"))),
+          //const CircularProgressIndicator(
+          //  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+          //  strokeWidth: 6.0,
+          //)
         ],
       ),
     );

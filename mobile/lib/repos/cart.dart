@@ -22,45 +22,10 @@ class CartRepo extends ChangeNotifier {
         amount: 6),
     CartItem(
         product: Product(
-            id: 1,
-            name: "Letmælk",
-            price: 13,
-            description: "Konventionel letmælk med fedtprocent på 1,5%"),
-        amount: 1),
-    CartItem(
-        product: Product(
-            id: 1,
-            name: "Letmælk",
-            price: 13,
-            description: "Konventionel letmælk med fedtprocent på 1,5%"),
-        amount: 1),
-    CartItem(
-        product: Product(
-            id: 1,
-            name: "Letmælk",
-            price: 13,
-            description: "Konventionel letmælk med fedtprocent på 1,5%"),
-        amount: 1),
-    CartItem(
-        product: Product(
-            id: 1,
-            name: "Letmælk",
-            price: 13,
-            description: "Konventionel letmælk med fedtprocent på 1,5%"),
-        amount: 1),
-    CartItem(
-        product: Product(
-            id: 1,
-            name: "Letmælk",
-            price: 13,
-            description: "Konventionel letmælk med fedtprocent på 1,5%"),
-        amount: 1),
-    CartItem(
-        product: Product(
-            id: 1,
-            name: "Letmælk",
-            price: 13,
-            description: "Konventionel letmælk med fedtprocent på 1,5%"),
+            id: 3,
+            name: "Minimælk",
+            price: 12,
+            description: "Konventionel minimælk med fedtprocent på 0,4%"),
         amount: 1),
   ];
 
@@ -115,7 +80,7 @@ class CartRepo extends ChangeNotifier {
     notifyListeners();
   }
 
-  addToCart(Product product) {
+  void addToCart(Product product) {
     final cartItem = withProductId(product.id);
     if (cartItem == null) {
       cart.add(CartItem(product: product, amount: 1));
@@ -125,13 +90,18 @@ class CartRepo extends ChangeNotifier {
     notifyListeners();
   }
 
-  totalItemsInCart() {
+  int totalItemsInCart() {
     return cart.fold<int>(0, (prev, cartItem) => prev + cartItem.amount);
   }
 
-  totalPrice() {
+  int totalPrice() {
     return cart.fold<int>(
         0, (prev, cartItem) => prev + cartItem.amount * cartItem.product.price);
+  }
+
+  void clearCart() {
+    cart.clear();
+    notifyListeners();
   }
 }
 

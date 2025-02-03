@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/repos/cart.dart';
 import 'package:mobile/repos/product.dart';
 
 class ReceiptRepo extends ChangeNotifier {
+  int nextId = 0;
   final List<Receipt> receipts = [
     Receipt(
         id: 0,
@@ -9,35 +11,38 @@ class ReceiptRepo extends ChangeNotifier {
         receiptItems: [
           ReceiptItem(
               product: Product(
-                  id: 1,
+                  id: 1243,
                   name: "Letmælk",
                   price: 13,
                   description: "Konventionel minimælk med fedtprocent på 0,4%"),
               amount: 1),
           ReceiptItem(
               product: Product(
-                  id: 0,
+                  id: 340,
                   name: "Minimælk",
                   price: 12,
                   description: "Konventionel minimælk med fedtprocent på 0,4%"),
               amount: 3),
         ]),
-    Receipt(id: 1, date: DateTime.now(), receiptItems: [
-      ReceiptItem(
-          product: Product(
-              id: 1,
-              name: "Letmælk",
-              price: 13,
-              description: "Konventionel minimælk med fedtprocent på 0,4%"),
-          amount: 3),
-      ReceiptItem(
-          product: Product(
-              id: 0,
-              name: "Minimælk",
-              price: 12,
-              description: "Konventionel minimælk med fedtprocent på 0,4%"),
-          amount: 1),
-    ])
+    Receipt(
+        id: 1,
+        date: DateTime.fromMillisecondsSinceEpoch(1735031200000),
+        receiptItems: [
+          ReceiptItem(
+              product: Product(
+                  id: 12341,
+                  name: "Letmælk",
+                  price: 13,
+                  description: "Konventionel minimælk med fedtprocent på 0,4%"),
+              amount: 3),
+          ReceiptItem(
+              product: Product(
+                  id: 1234443,
+                  name: "Minimælk",
+                  price: 12,
+                  description: "Konventionel minimælk med fedtprocent på 0,4%"),
+              amount: 1),
+        ])
   ];
 
   List<Receipt> allReceipts() {
@@ -51,6 +56,18 @@ class ReceiptRepo extends ChangeNotifier {
       }
     }
     return null;
+  }
+
+  void createReceipt(List<CartItem> cartItems) {
+    List<ReceiptItem> receiptItems = [];
+    for (var i = 0; i < cartItems.length; i++) {
+      final ReceiptItem receiptItem = ReceiptItem(
+          amount: cartItems[i].amount, product: cartItems[i].product);
+      receiptItems.add(receiptItem);
+    }
+    receipts.add(Receipt(
+        date: DateTime.now(), receiptItems: receiptItems, id: nextId++));
+    notifyListeners();
   }
 }
 
