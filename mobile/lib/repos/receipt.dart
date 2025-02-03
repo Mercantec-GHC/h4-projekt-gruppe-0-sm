@@ -61,6 +61,10 @@ class Receipt {
 
   Receipt({required this.date, required this.receiptItems, required this.id});
 
+  List<ReceiptItem> allReceiptItems() {
+    return receiptItems;
+  }
+
   ReceiptItem? withProductId(int productId) {
     for (var i = 0; i < receiptItems.length; i++) {
       if (receiptItems[i].product.id == productId) {

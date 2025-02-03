@@ -1,19 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/pages/receipt_page.dart';
 import 'package:mobile/repos/receipt.dart';
 import 'package:provider/provider.dart';
 
 class ReceiptsListItem extends StatelessWidget {
   final String dateFormatted;
   final int totalPrice;
+  final ReceiptPage receiptPage;
   const ReceiptsListItem(
-      {super.key, required this.dateFormatted, required this.totalPrice});
+      {super.key,
+      required this.dateFormatted,
+      required this.totalPrice,
+      required this.receiptPage});
 
   @override
   Widget build(BuildContext context) {
     return Card(
       child: InkWell(
         borderRadius: const BorderRadius.all(Radius.circular(10)),
-        onTap: () {},
+        onTap: () {
+          Navigator.of(context)
+              .push(MaterialPageRoute(builder: (context) => receiptPage));
+        },
         child: Container(
           padding: const EdgeInsets.all(20),
           child: Row(
@@ -34,14 +42,15 @@ class AllReceiptsPage extends StatelessWidget {
     return Column(
       children: [
         Expanded(child: Consumer<ReceiptRepo>(
-          builder: (_, cartRepo, __) {
-            final allReceipts = cartRepo.allReceipts();
+          builder: (_, receiptRepo, __) {
+            final allReceipts = receiptRepo.allReceipts();
             return ListView.builder(
               shrinkWrap: true,
               itemBuilder: (_, idx) {
                 return ReceiptsListItem(
                     dateFormatted: allReceipts[idx].dateFormatted(),
-                    totalPrice: allReceipts[idx].totalPrice());
+                    totalPrice: allReceipts[idx].totalPrice(),
+                    receiptPage: ReceiptPage(receipt: allReceipts[idx]));
               },
               itemCount: allReceipts.length,
             );

@@ -16,11 +16,7 @@ class FinishShoppingPage extends StatelessWidget {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          IconButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              icon: const Icon(Icons.arrow_back)),
+          const BackButton(),
           Container(
             margin: const EdgeInsets.all(20),
             child: Expanded(
