@@ -1,6 +1,4 @@
-import { Ctx, File } from "../ctx.ts";
-import { Pos, Span } from "../diagnostics.ts";
-import { ControlFlow, range } from "../util.ts";
+import { ControlFlow, Ctx, File, Pos, range, Span } from "@slige/common";
 import { Token, TokenIter } from "./token.ts";
 
 export class Lexer implements TokenIter {

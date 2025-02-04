@@ -1,6 +1,5 @@
-import * as ast from "../ast/mod.ts";
-import { IdBase, IdentId, IdMap } from "../ids.ts";
-import { Res } from "../util.ts";
+import * as ast from "@slige/ast";
+import { IdBase, IdentId, IdMap, Res } from "@slige/common";
 
 export interface Syms {
     getVal(ident: ast.Ident): Resolve;

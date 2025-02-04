@@ -31,7 +31,7 @@ export class Ids<IdType extends IdBase> {
 export class IdMap<Id extends IdBase, V> implements Map<Id, V> {
     private map = new Map<IdRaw<Id>, V>();
 
-    set(id: Id, val: V) {
+    set(id: Id, val: V): this {
         this.map.set(idRaw(id), val);
         return this;
     }

@@ -1,5 +1,4 @@
-import { AstId, File as CtxFile, IdentId } from "../ids.ts";
-import { Span } from "../diagnostics.ts";
+import { AstId, File as CtxFile, IdentId, Span } from "@slige/common";
 
 export type File = {
     stmts: Stmt[];

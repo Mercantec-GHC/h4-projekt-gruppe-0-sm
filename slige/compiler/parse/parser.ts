@@ -1,15 +1,11 @@
 import {
     AnonFieldDef,
-    BinaryType,
-    ExprField,
-    PathSegment,
-    RefType,
-    UnaryType,
-} from "../ast/ast.ts";
-import {
     AssignType,
+    BinaryType,
     Block,
+    Cx,
     Expr,
+    ExprField,
     ExprKind,
     File,
     GenericParam,
@@ -19,16 +15,16 @@ import {
     Param,
     Pat,
     Path,
+    PathSegment,
     PatKind,
+    RefType,
     Stmt,
     StmtKind,
     Ty,
     TyKind,
-} from "../ast/ast.ts";
-import { Cx } from "../ast/cx.ts";
-import { Ctx, File as CtxFile } from "../ctx.ts";
-import { Pos, Span } from "../diagnostics.ts";
-import { Res, todo } from "../util.ts";
+    UnaryType,
+} from "@slige/ast";
+import { Ctx, File as CtxFile, Pos, Res, Span, todo } from "@slige/common";
 import { Lexer } from "./lexer.ts";
 import { TokenIter } from "./token.ts";
 import { SigFilter } from "./token.ts";

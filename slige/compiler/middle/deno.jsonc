@@ -1,0 +1,4 @@
+{
+    "name": "@slige/middle",
+    "exports": "./mod.ts",
+}

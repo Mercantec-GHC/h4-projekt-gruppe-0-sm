@@ -42,7 +42,7 @@ export const ControlFlow = {
     Continue: <V>(val: V): Continue<V> => ({ break: false, val }),
 } as const;
 
-export const range = (length: number) => (new Array(length).fill(0));
+export const range = (length: number): number[] => (new Array(length).fill(0));
 
 export const strictEq = <T>(a: T, b: T): boolean => a === b;
 

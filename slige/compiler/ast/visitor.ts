@@ -1,4 +1,5 @@
-import { exhausted } from "../util.ts";
+import { exhausted } from "@slige/common";
+
 import {
     AnonStructTy,
     ArrayExpr,

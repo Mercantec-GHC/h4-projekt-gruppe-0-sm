@@ -1,7 +1,5 @@
-import * as ast from "../ast/mod.ts";
-import { Ctx, File } from "../ctx.ts";
-import { AstId, IdMap, Ids } from "../ids.ts";
-import { exhausted, todo } from "../util.ts";
+import * as ast from "@slige/ast";
+import { AstId, Ctx, exhausted, File, IdMap, Ids, todo } from "@slige/common";
 import {
     FnSyms,
     LocalId,
@@ -156,7 +154,7 @@ export class Resolver implements ast.Visitor {
     }
 
     visitPathPat(pat: ast.Pat, kind: ast.PathPat): ast.VisitRes {
-        todo();
+        todo(pat, kind);
     }
 
     visitBlock(block: ast.Block): ast.VisitRes {
@@ -164,6 +162,14 @@ export class Resolver implements ast.Visitor {
         this.visitFnBodies();
         block.expr && ast.visitExpr(this, block.expr);
         return "stop";
+    }
+
+    visitPath(_path: ast.Path): ast.VisitRes {
+        throw new Error("should not be reached");
+    }
+
+    visitIdent(_ident: ast.Ident): ast.VisitRes {
+        throw new Error("should not be reached");
     }
 
     private resolveInnerPath(path: ast.Path): Resolve {

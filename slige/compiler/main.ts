@@ -1,7 +1,7 @@
 import * as path from "jsr:@std/path";
 import { Parser } from "./parse/parser.ts";
 import * as ast from "./ast/mod.ts";
-import { Ctx, File } from "./ctx.ts";
+import { Ctx, File } from "@slige/common";
 import { Resolver } from "./resolve/resolver.ts";
 import { Checker } from "./check/checker.ts";
 import { AstLowerer } from "./middle/ast_lower.ts";

@@ -1,5 +1,4 @@
-import { Ctx } from "../ctx.ts";
-import { exhausted, todo } from "../util.ts";
+import { Ctx, exhausted, todo } from "@slige/common";
 import { Block, Item } from "./ast.ts";
 
 export function itemToString(ctx: Ctx, item: Item): string {

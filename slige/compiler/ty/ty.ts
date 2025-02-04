@@ -1,4 +1,4 @@
-import * as ast from "../ast/mod.ts";
+import * as ast from "@slige/ast";
 
 export type Ty = {
     kind: TyKind;

@@ -1,5 +1,4 @@
-import { Span } from "../diagnostics.ts";
-import { AstId, Ids } from "../ids.ts";
+import { AstId, Ids, Span } from "@slige/common";
 import {
     Expr,
     ExprKind,

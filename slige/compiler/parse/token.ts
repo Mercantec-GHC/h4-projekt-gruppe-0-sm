@@ -1,5 +1,4 @@
-import { Span } from "../diagnostics.ts";
-import { IdentId } from "../ids.ts";
+import { IdentId, Span } from "@slige/common";
 
 export type Token = {
     type: string;

@@ -1,10 +1,8 @@
-import * as ast from "../ast/mod.ts";
-import { Checker } from "../check/checker.ts";
-import { Ctx } from "../ctx.ts";
-import { IdMap, Ids } from "../ids.ts";
-import { LocalId as ReLocalId, Resols } from "../resolve/resolver.ts";
-import { Ty } from "../ty/ty.ts";
-import { exhausted, Res, todo } from "../util.ts";
+import * as ast from "@slige/ast";
+import { Checker } from "@slige/check";
+import { Ctx, exhausted, IdMap, Ids, Res, todo } from "@slige/common";
+import { LocalId as ReLocalId, Resols } from "@slige/resolve";
+import { Ty } from "@slige/ty";
 import { BinaryType, Operand, StmtKind, TerKind } from "./mir.ts";
 import { Block, BlockId, Fn, Local, LocalId, RVal, Stmt, Ter } from "./mir.ts";
 

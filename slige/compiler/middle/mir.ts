@@ -1,6 +1,5 @@
-import { Span } from "../diagnostics.ts";
-import { IdBase, IdMap } from "../ids.ts";
-import { Ty } from "../ty/ty.ts";
+import { IdBase, IdMap } from "@slige/common";
+import { Ty } from "@slige/ty";
 
 export type Fn = {
     label: string;

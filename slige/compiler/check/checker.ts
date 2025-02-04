@@ -1,11 +1,16 @@
-import * as ast from "../ast/mod.ts";
-import { Ctx, File } from "../ctx.ts";
-import { Span } from "../diagnostics.ts";
-import { AstId, IdMap } from "../ids.ts";
-import { Resols } from "../resolve/resolver.ts";
-import { tyToString } from "../ty/to_string.ts";
-import { Ty } from "../ty/ty.ts";
-import { exhausted, Res, todo } from "../util.ts";
+import * as ast from "@slige/ast";
+import {
+    AstId,
+    Ctx,
+    exhausted,
+    File,
+    IdMap,
+    Res,
+    Span,
+    todo,
+} from "@slige/common";
+import { Resols } from "@slige/resolve";
+import { Ty, tyToString } from "@slige/ty";
 
 export class Checker {
     private itemTys = new IdMap<AstId, Ty>();

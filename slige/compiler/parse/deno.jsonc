@@ -1,0 +1,4 @@
+{
+    "name": "@slige/parse",
+    "exports": "./mod.ts",
+}

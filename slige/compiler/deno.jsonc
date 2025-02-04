@@ -1,5 +1,14 @@
 {
+    "workspace": ["./ast", "./check", "./middle", "./parse", "./resolve", "./ty", "./common"],
+    "lint": {
+        "rules": {
+            "exclude": [
+                "verbatim-module-syntax",
+                "no-unused-vars"
+            ],
+        }
+    },
     "fmt": {
         "indentWidth": 4
-    }
+    },
 }

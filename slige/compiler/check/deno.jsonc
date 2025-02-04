@@ -1,0 +1,4 @@
+{
+    "name": "@slige/check",
+    "exports": "./mod.ts",
+}

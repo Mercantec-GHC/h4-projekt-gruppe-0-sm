@@ -1,5 +1,4 @@
-import { Ctx } from "../ctx.ts";
-import { exhausted } from "../util.ts";
+import { Ctx, exhausted } from "@slige/common";
 import { Ty } from "./ty.ts";
 
 export function tyToString(ctx: Ctx, ty: Ty): string {

@@ -1,0 +1,4 @@
+{
+    "name": "@slige/resolve",
+    "exports": "./mod.ts",
+}
