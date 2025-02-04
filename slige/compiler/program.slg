@@ -1,0 +1,12 @@
+
+fn add(lhs: int, rhs: int) -> int {
+    lhs + rhs
+}
+
+fn main() {
+    let a = 5;
+    let b = 7;
+    let c = add(a, b);
+}
+
+
