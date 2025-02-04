@@ -54,10 +54,10 @@ class FinishShoppingPage extends StatelessWidget {
                         onPressed: () async {
                           payingStateRepo.next();
                           receiptRepo.createReceipt(cart);
-                          cartRepo.clearCart();
                           await Future.delayed(const Duration(seconds: 1));
                           payingStateRepo.next();
                           await Future.delayed(const Duration(seconds: 1));
+                          cartRepo.clearCart();
                           payingStateRepo.reset();
                           if (context.mounted) Navigator.pop(context);
                         },

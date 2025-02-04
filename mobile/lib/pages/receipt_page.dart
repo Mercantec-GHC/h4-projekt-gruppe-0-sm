@@ -2,6 +2,55 @@ import 'package:flutter/material.dart';
 import 'package:mobile/repos/receipt.dart';
 import 'package:mobile/widgets/receipt_item.dart';
 
+class ReceiptView extends StatelessWidget {
+  final Receipt receipt;
+  const ReceiptView({super.key, required this.receipt});
+
+  @override
+  Widget build(BuildContext context) {
+    final receiptItems = receipt.allReceiptItems();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const BackButton(),
+        Expanded(
+          child: Container(
+            margin: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                Text(receipt.dateFormatted()),
+                Expanded(
+                    child: Column(
+                  children: [
+                    ListView.builder(
+                        shrinkWrap: true,
+                        itemBuilder: (_, idx) => ReceiptItemView(
+                            pricePerAmount: receiptItems[idx].product.price,
+                            name: receiptItems[idx].product.name,
+                            amount: receiptItems[idx].amount),
+                        itemCount: receiptItems.length),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "Total:",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text("${receipt.totalPrice()} kr"),
+                      ],
+                    ),
+                  ],
+                )),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class ReceiptPage extends StatelessWidget {
   final Receipt receipt;
 
@@ -9,29 +58,6 @@ class ReceiptPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final receiptItems = receipt.allReceiptItems();
-
-    return Scaffold(
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const BackButton(),
-          Container(
-              margin: const EdgeInsets.symmetric(horizontal: 10),
-              child: Text(receipt.dateFormatted())),
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 10),
-            child: Expanded(
-                child: ListView.builder(
-                    shrinkWrap: true,
-                    itemBuilder: (_, idx) => ReceiptItemView(
-                        pricePerAmount: receiptItems[idx].product.price,
-                        name: receiptItems[idx].product.name,
-                        amount: receiptItems[idx].amount),
-                    itemCount: receiptItems.length)),
-          ),
-        ],
-      ),
-    );
+    return Scaffold(body: ReceiptView(receipt: receipt));
   }
 }
