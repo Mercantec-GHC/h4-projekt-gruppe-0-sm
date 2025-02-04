@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/repos/add_to_cart_state.dart';
 import 'package:mobile/repos/cart.dart';
 import 'package:mobile/repos/product.dart';
 import 'package:mobile/widgets/primary_button.dart';
@@ -11,6 +12,8 @@ class ProductPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AddToCartStateRepo addToCartStateRepo =
+        context.watch<AddToCartStateRepo>();
     return Scaffold(
       body: Card(
         margin: const EdgeInsets.all(10),
@@ -70,14 +73,23 @@ class ProductPage extends StatelessWidget {
                         onPressed: () {}, child: const Text("Find i butik")),
                     PrimaryButton(
                         onPressed: () {
-                          var cartRepo = context.read<CartRepo>();
+                          final snackBarDuration = const Duration(seconds: 2);
+                          addToCartStateRepo.notify(snackBarDuration);
+                          final snackBar = SnackBar(
+                            content: Text(
+                                'Tilføjet ${addToCartStateRepo.currentAmount} ${product.name} til kurven'),
+                            duration: const Duration(seconds: 2),
+                          );
+                          ScaffoldMessenger.of(context).removeCurrentSnackBar();
+                          final cartRepo = context.read<CartRepo>();
                           cartRepo.addToCart(product);
+                          ScaffoldMessenger.of(context).showSnackBar(snackBar);
                         },
                         child: const Text("Tilføj til indkøbskurv")),
                   ],
                 ),
               ),
-            )
+            ),
           ]),
         ),
       ),

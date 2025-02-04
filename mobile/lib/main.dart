@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/repos/add_to_cart_state.dart';
 import 'package:mobile/repos/cart.dart';
 import 'package:mobile/repos/paying_state.dart';
 import 'package:mobile/repos/product.dart';
@@ -23,6 +24,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CartRepo()),
         ChangeNotifierProvider(create: (_) => ReceiptRepo()),
         ChangeNotifierProvider(create: (_) => PayingStateRepo()),
+        ChangeNotifierProvider(create: (_) => AddToCartStateRepo()),
       ],
       child: MaterialApp(
         title: 'Fresh Plaza',
