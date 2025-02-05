@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/pages/product_location_page.dart';
 import 'package:mobile/repos/add_to_cart_state.dart';
 import 'package:mobile/repos/cart.dart';
 import 'package:mobile/repos/product.dart';
@@ -16,7 +17,7 @@ class ProductPage extends StatelessWidget {
         context.watch<AddToCartStateRepo>();
     return Scaffold(
       body: Card(
-color: Colors.white,
+        color: Colors.white,
         margin: const EdgeInsets.all(10),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10),
@@ -71,7 +72,12 @@ color: Colors.white,
                       child: Text(product.description),
                     ),
                     PrimaryButton(
-                        onPressed: () {}, child: const Text("Find i butik")),
+                        onPressed: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) =>
+                                  ProductLocationPage(product: product)));
+                        },
+                        child: const Text("Find i butik")),
                     PrimaryButton(
                         onPressed: () {
                           final snackBarDuration = const Duration(seconds: 2);

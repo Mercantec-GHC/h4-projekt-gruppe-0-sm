@@ -15,11 +15,6 @@ class ProductRepo extends ChangeNotifier {
     return products;
   }
 
-  void changePrice(int idx, int price) {
-    products[idx].price = price;
-    notifyListeners();
-  }
-
   void _addAllProducts() {
     products = [
       Product(
@@ -31,7 +26,8 @@ class ProductRepo extends ChangeNotifier {
           id: _nextId++,
           name: "Letmælk",
           price: 13,
-          description: "Konventionel letmælk med fedtprocent på 1,5%"),
+          description: "Konventionel letmælk med fedtprocent på 1,5%",
+          location: Coordinate(x: 1800, y: 100)),
       Product(
           id: _nextId++,
           name: "Frilands Øko Supermælk",
@@ -66,14 +62,24 @@ class ProductRepo extends ChangeNotifier {
   }
 }
 
+class Coordinate {
+  final double x;
+  final double y;
+
+  Coordinate({required this.x, required this.y});
+}
+
 class Product {
   final int id;
   final String name;
   final String description;
-  int price;
+  final int price;
+  final Coordinate? location;
+
   Product(
       {required this.id,
       required this.name,
       required this.price,
-      required this.description});
+      required this.description,
+      this.location});
 }
