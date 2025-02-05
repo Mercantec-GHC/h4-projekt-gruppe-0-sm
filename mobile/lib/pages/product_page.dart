@@ -52,8 +52,8 @@ class ProductPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Image(
-                      image: AssetImage("assets/${product.name}.png"),
+                    const Image(
+                      image: AssetImage("assets/boykisser.png"),
                       height: 250,
                       fit: BoxFit.fitHeight,
                     ),

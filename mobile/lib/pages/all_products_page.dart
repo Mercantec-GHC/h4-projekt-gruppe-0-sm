@@ -45,7 +45,7 @@ class ProductListItem extends StatelessWidget {
                       topRight: Radius.circular(10),
                       bottomRight: Radius.circular(10)),
                   child: Ink.image(
-                    image: AssetImage(imagePath),
+                    image: const AssetImage("assets/boykisser.png"),
                     fit: BoxFit.contain,
                     width: 100,
                   ))
@@ -76,19 +76,21 @@ class AllProductsPage extends StatelessWidget {
                 ),
               ],
             ),
-            Consumer<ProductRepo>(builder: (_, productRepo, __) {
-              final products = productRepo.allProducts();
-              return ListView.builder(
-                shrinkWrap: true,
-                itemBuilder: (_, idx) => ProductListItem(
-                  name: products[idx].name,
-                  price: products[idx].price,
-                  imagePath: "assets/${products[idx].name}.png",
-                  productPage: ProductPage(product: products[idx]),
-                ),
-                itemCount: products.length,
-              );
-            }),
+            Expanded(
+              child: Consumer<ProductRepo>(builder: (_, productRepo, __) {
+                final products = productRepo.allProducts();
+                return ListView.builder(
+                  shrinkWrap: true,
+                  itemBuilder: (_, idx) => ProductListItem(
+                    name: products[idx].name,
+                    price: products[idx].price,
+                    imagePath: "assets/${products[idx].name}.png",
+                    productPage: ProductPage(product: products[idx]),
+                  ),
+                  itemCount: products.length,
+                );
+              }),
+            ),
           ]),
         ),
       ],

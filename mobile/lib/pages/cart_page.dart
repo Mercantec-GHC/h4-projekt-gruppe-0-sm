@@ -148,7 +148,7 @@ class CartPage extends StatelessWidget {
                     productId: cart[idx].product.id,
                     name: cart[idx].product.name,
                     price: cart[idx].product.price,
-                    imagePath: "assets/${cart[idx].product.name}.png",
+                    imagePath: "assets/boykisser.png",
                     amount: cart[idx].amount),
                 itemCount: cart.length,
               );
