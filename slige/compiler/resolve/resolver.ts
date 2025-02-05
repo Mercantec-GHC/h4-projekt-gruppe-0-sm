@@ -1,16 +1,26 @@
 import * as ast from "@slige/ast";
-import { AstId, Ctx, exhausted, File, IdMap, Ids, todo } from "@slige/common";
+import {
+    AstId,
+    Ctx,
+    exhausted,
+    File,
+    IdMap,
+    Ids,
+    Res,
+    Span,
+    todo,
+} from "@slige/common";
 import {
     FnSyms,
-    LocalId,
     LocalSyms,
     PatResolve,
+    PatResolveKind,
+    Redef,
     Resolve,
     ResolveError,
     RootSyms,
     Syms,
 } from "./cx.ts";
-export { type LocalId } from "./cx.ts";
 
 export class Resols {
     public constructor(
@@ -41,9 +51,7 @@ export class Resolver implements ast.Visitor {
     private exprResols = new IdMap<AstId, Resolve>();
     private patResols = new IdMap<AstId, PatResolve>();
 
-    private patResolveStack: PatResolve[] = [];
-
-    private localIds = new Ids<LocalId>();
+    private patResolveStack: PatResolveKind[] = [];
 
     public constructor(
         private ctx: Ctx,
@@ -115,7 +123,7 @@ export class Resolver implements ast.Visitor {
             this.syms = new FnSyms(this.syms);
             this.syms = new LocalSyms(this.syms);
             for (const [paramIdx, param] of kind.params.entries()) {
-                this.patResolveStack.push({ tag: "param", paramIdx });
+                this.patResolveStack.push({ tag: "fn_param", paramIdx });
                 ast.visitParam(this, param);
                 this.patResolveStack.pop();
             }
@@ -164,19 +172,14 @@ export class Resolver implements ast.Visitor {
     }
 
     visitBindPat(pat: ast.Pat, kind: ast.BindPat): ast.VisitRes {
-        this.patResols.set(pat.id, this.patResolveStack.at(-1)!);
+        this.patResols.set(pat.id, { pat, kind: this.patResolveStack.at(-1)! });
         const res = this.syms.defVal(kind.ident, {
             tag: "local",
-            id: this.localIds.nextThenStep(),
+            id: pat.id,
         });
         if (!res.ok) {
             const text = this.ctx.identText(kind.ident.id);
-            this.ctx.report({
-                severity: "error",
-                file: this.currentFile,
-                span: kind.ident.span,
-                msg: `redefinition of value '${text}'`,
-            });
+            this.report(`redefinition of value '${text}'`, kind.ident.span);
         }
         return "stop";
     }
@@ -220,5 +223,14 @@ export class Resolver implements ast.Visitor {
                 exhausted(k);
             }, this.syms.getTy(path.segments[0].ident));
         return res;
+    }
+
+    private report(msg: string, span: Span) {
+        this.ctx.report({
+            severity: "error",
+            file: this.currentFile,
+            span,
+            msg,
+        });
     }
 }

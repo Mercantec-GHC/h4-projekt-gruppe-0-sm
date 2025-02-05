@@ -5,24 +5,28 @@ import {
     exhausted,
     File,
     IdMap,
+    IdSet,
+    Ok,
     Res,
     Span,
     todo,
 } from "@slige/common";
-import { Resols } from "@slige/resolve";
+import * as resolve from "@slige/resolve";
 import { Ty, tyToString } from "@slige/ty";
 
 export class Checker {
+    private stmtChecked = new IdSet<AstId>();
     private itemTys = new IdMap<AstId, Ty>();
     private exprTys = new IdMap<AstId, Ty>();
     private tyTys = new IdMap<AstId, Ty>();
+    private patTys = new IdMap<AstId, Ty>();
 
     private currentFile: File;
 
     public constructor(
         private ctx: Ctx,
         private entryFileAst: ast.File,
-        private resols: Resols,
+        private resols: resolve.Resols,
     ) {
         this.currentFile = ctx.entryFile();
     }
@@ -37,8 +41,51 @@ export class Checker {
     private checkStmts(stmts: ast.Stmt[]) {
     }
 
+    private checkLetStmtTy(stmt: ast.Stmt, kind: ast.LetStmt) {
+        if (this.stmtChecked.has(stmt.id)) {
+            return;
+        }
+
+        const exprTy = kind.expr && Ok(this.exprTy(kind.expr));
+        const tyTy = kind.ty && Ok(this.tyTy(kind.ty));
+        const ty = exprTy && tyTy && this.resolveTys(exprTy.val, tyTy.val);
+
+        if (ty === undefined) {
+            this.report("type amfibious, specify type or value", stmt.span);
+            return Ty({ tag: "error" });
+        }
+
+        if (!ty.ok) {
+            this.report(ty.val, stmt.span);
+            return Ty({ tag: "error" });
+        }
+
+        const res = this.assignPatTy(kind.pat, ty.val);
+        if (!res.ok) {
+            this.report(res.val, stmt.span);
+            return Ty({ tag: "error" });
+        }
+
+        this.stmtChecked.add(stmt.id);
+    }
+
+    private assignPatTy(pat: ast.Pat, ty: Ty): Res<void, string> {
+        const k = pat.kind;
+        switch (k.tag) {
+            case "error":
+                // don't report, already reported
+                return Res.Ok(undefined);
+            case "bind":
+                this.patTys.set(pat.id, ty);
+                return Ok(undefined);
+            case "path":
+                return todo();
+        }
+        exhausted(k);
+    }
+
     public fnItemTy(item: ast.Item, kind: ast.FnItem): Ty {
-        return this.itemTys.get(item.id) || this.checkFnItem(item, kind);
+        return this.itemTys.get(item.id) ?? this.checkFnItem(item, kind);
     }
 
     private checkFnItem(item: ast.Item, kind: ast.FnItem): Ty {
@@ -128,7 +175,8 @@ export class Checker {
                 return resu.val;
             }
             case "local": {
-                const patResu = this.resols.patRes();
+                const patRes = this.resols.patRes(res.kind.id);
+                const ty = this.patTy(patRes.pat);
                 const resu = this.resolveTys(ty, expected);
                 if (!resu.ok) {
                     this.report(resu.val, expr.span);
@@ -166,13 +214,23 @@ export class Checker {
         exhausted(k);
     }
 
-    private report(msg: string, span: Span) {
-        this.ctx.report({
-            severity: "error",
-            file: this.currentFile,
-            span,
-            msg,
-        });
+    public patTy(pat: ast.Pat): Ty {
+        return this.patTys.get(pat.id) ||
+            this.checkPat(pat);
+    }
+
+    private checkPat(pat: ast.Pat): Ty {
+        const patRes = this.resols.patRes(pat.id);
+        const k = pat.kind;
+        switch (k.tag) {
+            case "error":
+                return todo();
+            case "bind":
+                return todo();
+            case "path":
+                return todo();
+        }
+        exhausted(k);
     }
 
     private resolveTys(a: Ty, b: Ty): Res<Ty, string> {
@@ -210,5 +268,14 @@ export class Checker {
             }
         }
         exhausted(a.kind);
+    }
+
+    private report(msg: string, span: Span) {
+        this.ctx.report({
+            severity: "error",
+            file: this.currentFile,
+            span,
+            msg,
+        });
     }
 }

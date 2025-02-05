@@ -1,3 +1,5 @@
+import { todo } from "./util.ts";
+
 //
 
 export type File = IdBase & { readonly _: unique symbol };
@@ -25,6 +27,74 @@ export class Ids<IdType extends IdBase> {
         const rawId = this.next;
         this.next += 1;
         return idFromRaw(rawId);
+    }
+}
+export class IdSet<Id extends IdBase> implements Set<Id> {
+    private set = new Set<IdRaw<Id>>();
+
+    add(value: Id): this {
+        this.set.add(idRaw(value));
+        return this;
+    }
+    clear(): void {
+        this.set.clear();
+    }
+    delete(value: Id): boolean {
+        return this.set.delete(idRaw(value));
+    }
+    forEach(
+        callbackfn: (value: Id, value2: Id, set: Set<Id>) => void,
+        thisArg?: unknown,
+    ): void {
+        this.set.forEach(
+            (v1, v2) => callbackfn(idFromRaw(v1), idFromRaw(v2), this),
+            thisArg,
+        );
+    }
+    has(value: Id): boolean {
+        return this.set.has(idRaw(value));
+    }
+    get size(): number {
+        return this.set.size;
+    }
+    entries(): SetIterator<[Id, Id]> {
+        return this.set.entries()
+            .map(([v1, v2]) => [idFromRaw(v1), idFromRaw(v2)]);
+    }
+    keys(): SetIterator<Id> {
+        return this.set.keys()
+            .map((v) => idFromRaw(v));
+    }
+    values(): SetIterator<Id> {
+        return this.set.values()
+            .map((v) => idFromRaw(v));
+    }
+    union<U>(_other: ReadonlySetLike<U>): Set<Id | U> {
+        return todo();
+    }
+    intersection<U>(_other: ReadonlySetLike<U>): Set<Id & U> {
+        return todo();
+    }
+    difference<U>(_other: ReadonlySetLike<U>): Set<Id> {
+        return todo();
+    }
+    symmetricDifference<U>(_other: ReadonlySetLike<U>): Set<Id | U> {
+        return todo();
+    }
+    isSubsetOf(_other: ReadonlySetLike<unknown>): boolean {
+        return todo();
+    }
+    isSupersetOf(_other: ReadonlySetLike<unknown>): boolean {
+        return todo();
+    }
+    isDisjointFrom(_other: ReadonlySetLike<unknown>): boolean {
+        return todo();
+    }
+    [Symbol.iterator](): SetIterator<Id> {
+        return this.set[Symbol.iterator]().map((v) => idFromRaw(v));
+    }
+    get [Symbol.toStringTag](): string {
+        return this.set[Symbol.toStringTag];
     }
 }
 

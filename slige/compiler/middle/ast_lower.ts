@@ -1,7 +1,7 @@
 import * as ast from "@slige/ast";
 import { Checker } from "@slige/check";
-import { Ctx, exhausted, IdMap, Ids, Res, todo } from "@slige/common";
-import { LocalId as ReLocalId, Resols } from "@slige/resolve";
+import { AstId, Ctx, exhausted, IdMap, Ids, Res, todo } from "@slige/common";
+import { Resols } from "@slige/resolve";
 import { Ty } from "@slige/ty";
 import { BinaryType, Operand, StmtKind, TerKind } from "./mir.ts";
 import { Block, BlockId, Fn, Local, LocalId, RVal, Stmt, Ter } from "./mir.ts";
@@ -32,7 +32,7 @@ export class FnLowerer {
 
     private currentBlock?: Block;
 
-    private reLocals = new IdMap<ReLocalId, LocalId>();
+    private reLocals = new IdMap<AstId, LocalId>();
 
     public constructor(
         private ctx: Ctx,

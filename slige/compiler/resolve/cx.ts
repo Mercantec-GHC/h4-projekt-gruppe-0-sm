@@ -17,16 +17,15 @@ export type Resolve = {
 export type ResolveKind =
     | { tag: "error" }
     | { tag: "fn"; item: ast.Item; kind: ast.FnItem }
-    | { tag: "local"; id: LocalId };
+    | { tag: "local"; id: AstId };
 
-export type PatResolve =
-    | { tag: "param"; paramIdx: number }
-    | { tag: "let"; stmt: ast.Stmt; kind: ast.LetStmt };
+export type PatResolve = {
+    pat: ast.Pat;
+    kind: PatResolveKind;
+};
 
-export type LocalId = IdBase & { readonly _: unique symbol };
-
-export type Local =
-    | { tag: "param"; paramIdx: number }
+export type PatResolveKind =
+    | { tag: "fn_param"; paramIdx: number }
     | { tag: "let"; stmt: ast.Stmt; kind: ast.LetStmt };
 
 export const ResolveError = (ident: ast.Ident): Resolve => ({
