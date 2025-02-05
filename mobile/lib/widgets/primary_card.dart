@@ -11,6 +11,7 @@ class PrimaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: Colors.white,
       child: SizedBox(height: 100, child: child),
     );
   }

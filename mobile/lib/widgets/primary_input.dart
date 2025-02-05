@@ -21,9 +21,12 @@ class PrimaryInput extends StatelessWidget {
         height: height,
         child: TextField(
           decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              label: Text(label),
-              hintText: placeholderText),
+            border: const OutlineInputBorder(),
+            label: Text(label),
+            hintText: placeholderText,
+            filled: true,
+            fillColor: Colors.white,
+          ),
           obscureText: obscure,
         ));
   }

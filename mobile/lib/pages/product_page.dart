@@ -16,6 +16,7 @@ class ProductPage extends StatelessWidget {
         context.watch<AddToCartStateRepo>();
     return Scaffold(
       body: Card(
+color: Colors.white,
         margin: const EdgeInsets.all(10),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10),
