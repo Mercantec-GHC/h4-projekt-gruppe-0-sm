@@ -4,6 +4,7 @@ import {
     FnSyms,
     LocalId,
     LocalSyms,
+    PatResolve,
     Resolve,
     ResolveError,
     RootSyms,
@@ -14,6 +15,7 @@ export { type LocalId } from "./cx.ts";
 export class Resols {
     public constructor(
         private exprResols: IdMap<AstId, Resolve>,
+        private patResols: IdMap<AstId, PatResolve>,
     ) {}
 
     public exprRes(id: AstId): Resolve {
@@ -21,6 +23,13 @@ export class Resols {
             throw new Error();
         }
         return this.exprResols.get(id)!;
+    }
+
+    public patRes(id: AstId): PatResolve {
+        if (!this.patResols.has(id)) {
+            throw new Error();
+        }
+        return this.patResols.get(id)!;
     }
 }
 
@@ -30,6 +39,9 @@ export class Resolver implements ast.Visitor {
     private syms: Syms = this.rootSyms;
 
     private exprResols = new IdMap<AstId, Resolve>();
+    private patResols = new IdMap<AstId, PatResolve>();
+
+    private patResolveStack: PatResolve[] = [];
 
     private localIds = new Ids<LocalId>();
 
@@ -42,13 +54,23 @@ export class Resolver implements ast.Visitor {
         ast.visitFile(this, this.entryFileAst);
         return new Resols(
             this.exprResols,
+            this.patResols,
         );
     }
 
     visitFile(file: ast.File): ast.VisitRes {
         this.currentFile = file.file;
+        this.fnBodiesToCheck.push([]);
         ast.visitStmts(this, file.stmts);
-        this.visitFnBodies();
+        this.popAndVisitFnBodies();
+        return "stop";
+    }
+
+    visitBlock(block: ast.Block): ast.VisitRes {
+        this.fnBodiesToCheck.push([]);
+        ast.visitStmts(this, block.stmts);
+        this.popAndVisitFnBodies();
+        block.expr && ast.visitExpr(this, block.expr);
         return "stop";
     }
 
@@ -56,7 +78,9 @@ export class Resolver implements ast.Visitor {
         kind.ty && ast.visitTy(this, kind.ty);
         kind.expr && ast.visitExpr(this, kind.expr);
         this.syms = new LocalSyms(this.syms);
+        this.patResolveStack.push({ tag: "let", stmt, kind });
         ast.visitPat(this, kind.pat);
+        this.patResolveStack.pop();
         return "stop";
     }
 
@@ -77,25 +101,28 @@ export class Resolver implements ast.Visitor {
         todo();
     }
 
-    private fnBodiesToCheck: [ast.Item, ast.FnItem][] = [];
+    private fnBodiesToCheck: [ast.Item, ast.FnItem][][] = [];
 
     visitFnItem(item: ast.Item, kind: ast.FnItem): ast.VisitRes {
         this.syms.defVal(item.ident, { tag: "fn", item, kind });
-        this.fnBodiesToCheck.push([item, kind]);
+        this.fnBodiesToCheck.at(-1)!.push([item, kind]);
         return "stop";
     }
 
-    private visitFnBodies() {
-        for (const [_item, kind] of this.fnBodiesToCheck) {
+    private popAndVisitFnBodies() {
+        for (const [_item, kind] of this.fnBodiesToCheck.at(-1)!) {
             const outerSyms = this.syms;
             this.syms = new FnSyms(this.syms);
             this.syms = new LocalSyms(this.syms);
-            for (const param of kind.params) {
+            for (const [paramIdx, param] of kind.params.entries()) {
+                this.patResolveStack.push({ tag: "param", paramIdx });
                 ast.visitParam(this, param);
+                this.patResolveStack.pop();
             }
+            ast.visitBlock(this, kind.body!);
             this.syms = outerSyms;
         }
-        this.fnBodiesToCheck = [];
+        this.fnBodiesToCheck.pop();
     }
 
     visitPathExpr(expr: ast.Expr, kind: ast.PathExpr): ast.VisitRes {
@@ -137,6 +164,7 @@ export class Resolver implements ast.Visitor {
     }
 
     visitBindPat(pat: ast.Pat, kind: ast.BindPat): ast.VisitRes {
+        this.patResols.set(pat.id, this.patResolveStack.at(-1)!);
         const res = this.syms.defVal(kind.ident, {
             tag: "local",
             id: this.localIds.nextThenStep(),
@@ -155,13 +183,6 @@ export class Resolver implements ast.Visitor {
 
     visitPathPat(pat: ast.Pat, kind: ast.PathPat): ast.VisitRes {
         todo(pat, kind);
-    }
-
-    visitBlock(block: ast.Block): ast.VisitRes {
-        ast.visitStmts(this, block.stmts);
-        this.visitFnBodies();
-        block.expr && ast.visitExpr(this, block.expr);
-        return "stop";
     }
 
     visitPath(_path: ast.Path): ast.VisitRes {

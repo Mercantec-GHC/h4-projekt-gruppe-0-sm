@@ -224,31 +224,36 @@ export function visitItem<
     item: Item,
     ...p: P
 ) {
-    visitIdent(v, item.ident, ...p);
     const kind = item.kind;
     switch (kind.tag) {
         case "error":
             if (v.visitErrorItem?.(item, ...p) === "stop") return;
+            visitIdent(v, item.ident, ...p);
             return;
         case "mod_block":
             if (v.visitModBlockItem?.(item, kind, ...p) === "stop") return;
+            visitIdent(v, item.ident, ...p);
             visitBlock(v, kind.block, ...p);
             return;
         case "mod_file":
             if (v.visitModFileItem?.(item, kind, ...p) === "stop") return;
+            visitIdent(v, item.ident, ...p);
             return;
         case "enum":
             if (v.visitEnumItem?.(item, kind, ...p) === "stop") return;
+            visitIdent(v, item.ident, ...p);
             for (const variant of kind.variants) {
                 visitVariant(v, variant, ...p);
             }
             return;
         case "struct":
             if (v.visitStructItem?.(item, kind, ...p) === "stop") return;
+            visitIdent(v, item.ident, ...p);
             visitVariantData(v, kind.data, ...p);
             return;
         case "fn":
             if (v.visitFnItem?.(item, kind, ...p) === "stop") return;
+            visitIdent(v, item.ident, ...p);
             for (const param of kind.params) {
                 visitParam(v, param, ...p);
             }
@@ -256,9 +261,11 @@ export function visitItem<
             return;
         case "use":
             if (v.visitUseItem?.(item, kind, ...p) === "stop") return;
+            visitIdent(v, item.ident, ...p);
             return;
         case "type_alias":
             if (v.visitTypeAliasItem?.(item, kind, ...p) === "stop") return;
+            visitIdent(v, item.ident, ...p);
             visitTy(v, kind.ty, ...p);
             return;
     }

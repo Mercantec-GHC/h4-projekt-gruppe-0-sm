@@ -128,7 +128,7 @@ export class Checker {
                 return resu.val;
             }
             case "local": {
-                const ty = this.exprTy(expr);
+                const patResu = this.resols.patRes();
                 const resu = this.resolveTys(ty, expected);
                 if (!resu.ok) {
                     this.report(resu.val, expr.span);

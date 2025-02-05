@@ -1,5 +1,5 @@
 import * as ast from "@slige/ast";
-import { IdBase, IdentId, IdMap, Res } from "@slige/common";
+import { AstId, IdBase, IdentId, IdMap, Res } from "@slige/common";
 
 export interface Syms {
     getVal(ident: ast.Ident): Resolve;
@@ -14,12 +14,20 @@ export type Resolve = {
     kind: ResolveKind;
 };
 
-export type LocalId = IdBase & { readonly _: unique symbol };
-
 export type ResolveKind =
     | { tag: "error" }
     | { tag: "fn"; item: ast.Item; kind: ast.FnItem }
     | { tag: "local"; id: LocalId };
+
+export type PatResolve =
+    | { tag: "param"; paramIdx: number }
+    | { tag: "let"; stmt: ast.Stmt; kind: ast.LetStmt };
+
+export type LocalId = IdBase & { readonly _: unique symbol };
+
+export type Local =
+    | { tag: "param"; paramIdx: number }
+    | { tag: "let"; stmt: ast.Stmt; kind: ast.LetStmt };
 
 export const ResolveError = (ident: ast.Ident): Resolve => ({
     ident,
