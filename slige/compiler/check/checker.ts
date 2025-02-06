@@ -225,8 +225,16 @@ export class Checker {
         switch (k.tag) {
             case "error":
                 return todo();
-            case "bind":
+            case "bind": {
+                switch (patRes.kind.tag) {
+                    case "fn_param":
+                        return todo();
+                    case "let":
+                        return todo();
+                }
+                exhausted(patRes.kind);
                 return todo();
+            }
             case "path":
                 return todo();
         }
