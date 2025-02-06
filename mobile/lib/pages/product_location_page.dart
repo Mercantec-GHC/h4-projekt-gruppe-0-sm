@@ -1,5 +1,4 @@
 import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
 import 'package:mobile/repos/location_image.dart';
 import 'package:mobile/repos/product.dart';
@@ -21,7 +20,6 @@ class ProductLocationPage extends StatelessWidget {
           ],
         ),
         Consumer<LocationImageRepo>(builder: (context, locationImage, child) {
-          locationImage.load();
           if (locationImage.image == null) {
             return const CircularProgressIndicator(
               color: Colors.blue,
@@ -35,7 +33,6 @@ class ProductLocationPage extends StatelessWidget {
               double parentWidth = constraints.maxWidth;
 
               final image = locationImage.image!;
-              // Maintain aspect ratio
               double imageWidth = image.width.toDouble();
               double imageHeight = image.height.toDouble();
               double scale = (parentWidth / imageWidth).clamp(0.0, 1.0);
@@ -71,10 +68,14 @@ class LocationImagePainter extends CustomPainter {
 
     canvas.drawImage(image, const Offset(0, 0), paint);
 
-    Paint circlePaint = Paint()..color = Colors.red;
+    Paint circlePaint = Paint();
+    circlePaint.color = Colors.red;
+
     canvas.drawCircle(Offset(location.x, location.y), 50, circlePaint);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant LocationImagePainter oldDelegate) {
+    return oldDelegate.image != image || oldDelegate.scale != scale;
+  }
 }

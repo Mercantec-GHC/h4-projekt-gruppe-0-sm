@@ -6,6 +6,10 @@ import 'package:flutter/services.dart';
 class LocationImageRepo extends ChangeNotifier {
   ui.Image? image;
 
+  LocationImageRepo() {
+    load();
+  }
+
   Future<void> load() async {
     final ByteData data = await rootBundle.load('assets/floor_plan.png');
     final Uint8List list = data.buffer.asUint8List();
