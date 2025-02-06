@@ -203,7 +203,7 @@ export class Lexer implements TokenIter {
         let val = this.current();
         this.step();
         while (this.test(tailPat)) {
-            end = begin;
+            end = this.pos();
             val += this.current();
             this.step();
         }

@@ -3,10 +3,20 @@ import { Checker } from "@slige/check";
 import { AstId, Ctx, exhausted, IdMap, Ids, Res, todo } from "@slige/common";
 import { Resols } from "@slige/resolve";
 import { Ty } from "@slige/ty";
-import { BinaryType, Operand, StmtKind, TerKind } from "./mir.ts";
+import {
+    BinaryType,
+    Operand,
+    Place,
+    ProjElem,
+    StmtKind,
+    TerKind,
+} from "./mir.ts";
 import { Block, BlockId, Fn, Local, LocalId, RVal, Stmt, Ter } from "./mir.ts";
+import { MirFnStringifyer } from "@slige/stringify";
 
 export class AstLowerer implements ast.Visitor {
+    private fns = new IdMap<AstId, Fn>();
+
     public constructor(
         private ctx: Ctx,
         private re: Resols,
@@ -19,7 +29,18 @@ export class AstLowerer implements ast.Visitor {
     }
 
     visitFnItem(item: ast.Item, kind: ast.FnItem): ast.VisitRes {
-        new FnLowerer(this.ctx, this.re, this.ch, item, kind).lower();
+        const fn = new FnLowerer(this.ctx, this.re, this.ch, item, kind)
+            .lower();
+        if (fn.ok) {
+            this.fns.set(item.id, fn.val);
+        }
+    }
+
+    public mirString(): string {
+        return this.fns.values()
+            .map((fn) => new MirFnStringifyer(this.ctx).fn(fn))
+            .toArray()
+            .join("\n");
     }
 }
 
@@ -46,7 +67,10 @@ export class FnLowerer {
         const entry = this.pushBlock();
 
         const fnTy = this.ch.fnItemTy(this.item, this.kind);
-        const returnPlace = this.local(fnTy);
+        if (fnTy.kind.tag !== "fn") {
+            throw new Error();
+        }
+        const returnPlace = this.local(fnTy.kind.returnTy);
         const returnVal = this.lowerBlock(this.kind.body!);
 
         this.addStmt({
@@ -81,12 +105,68 @@ export class FnLowerer {
             case "error":
                 return { tag: "error" };
             case "item":
+                return todo(k.tag);
             case "let":
+                return this.lowerLetStmt(stmt, k);
             case "return":
             case "break":
             case "continue":
             case "assign":
             case "expr":
+                return todo(k.tag);
+        }
+        exhausted(k);
+    }
+
+    private lowerLetStmt(_stmt: ast.Stmt, kind: ast.LetStmt) {
+        const val = kind.expr && this.lowerExpr(kind.expr);
+        this.allocatePat(kind.pat);
+        if (val) {
+            const local = this.local(this.ch.patTy(kind.pat));
+            this.addStmt({
+                tag: "assign",
+                place: { local: local, proj: [] },
+                rval: val,
+            });
+            this.assignPat(kind.pat, local, []);
+        }
+    }
+
+    private allocatePat(pat: ast.Pat) {
+        const k = pat.kind;
+        switch (k.tag) {
+            case "error":
+                return;
+            case "bind": {
+                const ty = this.ch.patTy(pat);
+                const local = this.local(ty);
+                this.reLocals.set(pat.id, local);
+                return;
+            }
+            case "path":
+                return todo();
+        }
+        exhausted(k);
+    }
+
+    private assignPat(pat: ast.Pat, local: LocalId, proj: ProjElem[]) {
+        const k = pat.kind;
+        switch (k.tag) {
+            case "error":
+                return;
+            case "bind": {
+                const patLocal = this.reLocals.get(pat.id)!;
+                this.addStmt({
+                    tag: "assign",
+                    place: { local: patLocal, proj: [] },
+                    rval: {
+                        tag: "use",
+                        operand: { tag: "move", place: { local, proj } },
+                    },
+                });
+                return;
+            }
+            case "path":
                 return todo();
         }
         exhausted(k);
@@ -100,7 +180,18 @@ export class FnLowerer {
             case "path":
                 return this.lowerPathExpr(expr, k);
             case "null":
+                return {
+                    tag: "use",
+                    operand: { tag: "const", val: { tag: "null" } },
+                };
             case "int":
+                return {
+                    tag: "use",
+                    operand: {
+                        tag: "const",
+                        val: { tag: "int", value: k.value },
+                    },
+                };
             case "bool":
             case "str":
             case "group":
@@ -112,7 +203,9 @@ export class FnLowerer {
             case "elem":
             case "field":
             case "index":
+                return todo(k.tag);
             case "call":
+                return this.lowerCallExpr(expr, k);
             case "unary":
                 return todo(k.tag);
             case "binary":
@@ -133,8 +226,14 @@ export class FnLowerer {
         switch (re.kind.tag) {
             case "error":
                 return { tag: "error" };
-            case "fn":
-                return todo();
+            case "fn": {
+                const ty = this.ch.fnItemTy(re.kind.item, re.kind.kind);
+                const local = this.local(ty);
+                return {
+                    tag: "use",
+                    operand: { tag: "move", place: { local, proj: [] } },
+                };
+            }
             case "local": {
                 const ty = this.ch.exprTy(expr);
                 const local = this.local(ty);
@@ -162,6 +261,17 @@ export class FnLowerer {
             }
         }
         exhausted(re.kind);
+    }
+
+    private lowerCallExpr(expr: ast.Expr, kind: ast.CallExpr): RVal {
+        const args = kind.args.map((arg) =>
+            this.rvalAsOperand(this.lowerExpr(arg), this.ch.exprTy(arg))
+        );
+        const func = this.rvalAsOperand(
+            this.lowerExpr(kind.expr),
+            this.ch.exprTy(expr),
+        );
+        return { tag: "call", func, args };
     }
 
     private lowerBinaryExpr(expr: ast.Expr, kind: ast.BinaryExpr): RVal {

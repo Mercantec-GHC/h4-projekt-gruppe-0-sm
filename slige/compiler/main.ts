@@ -5,6 +5,7 @@ import { Ctx, File } from "@slige/common";
 import { Resolver } from "./resolve/resolver.ts";
 import { Checker } from "./check/checker.ts";
 import { AstLowerer } from "./middle/ast_lower.ts";
+import { HirStringifyer } from "@slige/stringify";
 
 async function main() {
     const filePath = Deno.args[0];
@@ -43,7 +44,17 @@ export class PackCompiler {
             .collect();
         const resols = new Resolver(this.ctx, entryFileAst).resolve();
         const checker = new Checker(this.ctx, entryFileAst, resols);
-        new AstLowerer(this.ctx, resols, checker, entryFileAst).lower();
+        console.log(
+            "=== HIR ===\n" + new HirStringifyer(checker).file(entryFileAst),
+        );
+        const astLowerer = new AstLowerer(
+            this.ctx,
+            resols,
+            checker,
+            entryFileAst,
+        );
+        astLowerer.lower();
+        console.log("=== MIR ===\n" + astLowerer.mirString());
     }
 
     public enableDebug() {

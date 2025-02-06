@@ -118,12 +118,17 @@ export class Resolver implements ast.Visitor {
     }
 
     private popAndVisitFnBodies() {
-        for (const [_item, kind] of this.fnBodiesToCheck.at(-1)!) {
+        for (const [item, kind] of this.fnBodiesToCheck.at(-1)!) {
             const outerSyms = this.syms;
             this.syms = new FnSyms(this.syms);
             this.syms = new LocalSyms(this.syms);
             for (const [paramIdx, param] of kind.params.entries()) {
-                this.patResolveStack.push({ tag: "fn_param", paramIdx });
+                this.patResolveStack.push({
+                    tag: "fn_param",
+                    item,
+                    kind,
+                    paramIdx,
+                });
                 ast.visitParam(this, param);
                 this.patResolveStack.pop();
             }

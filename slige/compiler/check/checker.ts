@@ -48,7 +48,13 @@ export class Checker {
 
         const exprTy = kind.expr && Ok(this.exprTy(kind.expr));
         const tyTy = kind.ty && Ok(this.tyTy(kind.ty));
-        const ty = exprTy && tyTy && this.resolveTys(exprTy.val, tyTy.val);
+        const ty = exprTy !== undefined
+            ? tyTy !== undefined
+                ? this.resolveTys(exprTy.val, tyTy.val)
+                : exprTy
+            : exprTy;
+
+        this.stmtChecked.add(stmt.id);
 
         if (ty === undefined) {
             this.report("type amfibious, specify type or value", stmt.span);
@@ -65,8 +71,6 @@ export class Checker {
             this.report(res.val, stmt.span);
             return Ty({ tag: "error" });
         }
-
-        this.stmtChecked.add(stmt.id);
     }
 
     private assignPatTy(pat: ast.Pat, ty: Ty): Res<void, string> {
@@ -108,9 +112,9 @@ export class Checker {
             case "path":
                 return this.checkPathExpr(expr, k, expected);
             case "null":
-                return todo();
+                return Ty({ tag: "null" });
             case "int":
-                return todo();
+                return Ty({ tag: "int" });
             case "bool":
                 return todo();
             case "str":
@@ -134,7 +138,7 @@ export class Checker {
             case "index":
                 return todo();
             case "call":
-                return todo();
+                return this.checkCallExpr(expr, k, expected);
             case "unary":
                 return todo();
             case "binary":
@@ -188,6 +192,35 @@ export class Checker {
         exhausted(res.kind);
     }
 
+    private checkCallExpr(
+        expr: ast.Expr,
+        kind: ast.CallExpr,
+        expected: Ty,
+    ): Ty {
+        const fnTy = this.exprTy(kind.expr);
+        if (fnTy.kind.tag !== "fn") {
+            if (fnTy.kind.tag === "error") {
+                return fnTy;
+            }
+            const ty = tyToString(this.ctx, fnTy);
+            console.log(kind.expr.span);
+            this.report(`type '${ty}' not fucking callable`, kind.expr.span);
+            return Ty({ tag: "error" });
+        }
+        const paramTys = fnTy.kind.params;
+        if (paramTys.length !== kind.args.length) {
+            this.report(
+                "not enough/too many fucking arguments",
+                kind.expr.span,
+            );
+            return Ty({ tag: "error" });
+        }
+        const _args = kind.args.map((arg, i) =>
+            this.checkExpr(arg, paramTys[i])
+        );
+        return fnTy.kind.returnTy;
+    }
+
     private tyTy(ty: ast.Ty): Ty {
         return this.tyTys.get(ty.id) ||
             this.checkTy(ty);
@@ -227,10 +260,29 @@ export class Checker {
                 return todo();
             case "bind": {
                 switch (patRes.kind.tag) {
-                    case "fn_param":
-                        return todo();
-                    case "let":
-                        return todo();
+                    case "fn_param": {
+                        const fnTy = this.fnItemTy(
+                            patRes.kind.item,
+                            patRes.kind.kind,
+                        );
+                        if (fnTy.kind.tag !== "fn") {
+                            throw new Error();
+                        }
+                        const paramTy = fnTy.kind.params[patRes.kind.paramIdx];
+                        this.assignPatTy(
+                            patRes.kind.kind.params[patRes.kind.paramIdx].pat,
+                            paramTy,
+                        );
+                        const ty = this.patTy(pat);
+                        this.patTys.set(pat.id, ty);
+                        return ty;
+                    }
+                    case "let": {
+                        this.checkLetStmtTy(patRes.kind.stmt, patRes.kind.kind);
+                        const ty = this.patTy(pat);
+                        this.patTys.set(pat.id, ty);
+                        return ty;
+                    }
                 }
                 exhausted(patRes.kind);
                 return todo();
@@ -242,6 +294,12 @@ export class Checker {
     }
 
     private resolveTys(a: Ty, b: Ty): Res<Ty, string> {
+        if (a.kind.tag === "error" || b.kind.tag === "error") {
+            return Res.Ok(a);
+        }
+        if (b.kind.tag === "unknown") {
+            return Res.Ok(a);
+        }
         const as = tyToString(this.ctx, a);
         const bs = tyToString(this.ctx, b);
         const incompat = () =>
@@ -249,10 +307,8 @@ export class Checker {
                 `type '${as}' not compatible with type '${bs}'`,
             );
         switch (a.kind.tag) {
-            case "error":
-                return Res.Ok(b);
             case "unknown":
-                return Res.Ok(b);
+                return this.resolveTys(b, a);
             case "null": {
                 if (b.kind.tag !== "null") {
                     return incompat();

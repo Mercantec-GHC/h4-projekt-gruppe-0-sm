@@ -51,8 +51,7 @@ export type TerKind =
     }
     | { tag: "return" }
     | { tag: "unreachable" }
-    | { tag: "drop"; place: Place; target: BlockId }
-    | { tag: "call"; func: Operand; args: Operand[]; dest: Operand };
+    | { tag: "drop"; place: Place; target: BlockId };
 
 export type SwitchTarget = {
     value: number;
@@ -67,7 +66,6 @@ export type Place = {
 // https://doc.rust-lang.org/beta/nightly-rustc/rustc_middle/mir/type.PlaceElem.html
 export type ProjElem =
     | { tag: "deref" }
-    | { tag: "repeat" }
     | { tag: "field"; fieldIdx: number }
     | { tag: "index"; local: LocalId }
     | { tag: "downcast"; variantIdx: number };
@@ -80,7 +78,8 @@ export type RVal =
     | { tag: "ref"; place: Place; mut: boolean }
     | { tag: "ptr"; place: Place; mut: boolean }
     | { tag: "binary"; binaryType: BinaryType; left: Operand; right: Operand }
-    | { tag: "unary"; unaryType: UnaryType; operand: Operand };
+    | { tag: "unary"; unaryType: UnaryType; operand: Operand }
+    | { tag: "call"; func: Operand; args: Operand[] };
 
 export type BinaryType =
     | "add"
