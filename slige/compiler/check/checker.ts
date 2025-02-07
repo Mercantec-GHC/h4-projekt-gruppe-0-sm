@@ -218,7 +218,10 @@ export class Checker {
         const _args = kind.args.map((arg, i) =>
             this.checkExpr(arg, paramTys[i])
         );
-        return fnTy.kind.returnTy;
+
+        const ty = fnTy.kind.returnTy;
+        this.exprTys.set(expr.id, ty);
+        return ty;
     }
 
     private tyTy(ty: ast.Ty): Ty {

@@ -54,9 +54,8 @@ export function prettyPrintReport(ctx: Ctx, rep: Report) {
     const { severity, msg } = rep;
     const origin = rep.origin ? `\x1b[1m${rep.origin}:\x1b[0m ` : "";
     console.error(
-        `${origin}${
-            severityColor(severity)
-        }${severity}:\x1b[0m \x1b[37m${msg}\x1b[0m`,
+        `${origin}${severityColor(severity)}${severity}:\x1b[0m %c${msg}`,
+        "color: white; font-weight: bold;",
     );
     if (!rep.file) {
         return;
