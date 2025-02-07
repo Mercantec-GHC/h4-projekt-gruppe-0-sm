@@ -15,7 +15,8 @@ class PrimaryButton extends StatelessWidget {
     return TextButton(
         onPressed: onPressed,
         style: TextButton.styleFrom(
-            backgroundColor: Colors.blue, foregroundColor: Colors.white),
+            backgroundColor: Theme.of(context).primaryColor,
+            foregroundColor: Colors.white),
         child: child);
   }
 }

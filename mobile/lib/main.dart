@@ -33,7 +33,8 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Fresh Plaza',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+          colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color.fromARGB(255, 149, 92, 255)),
           scaffoldBackgroundColor: const Color(0xFFFAFAFF),
           textTheme: const TextTheme(
             headlineLarge: TextStyle(color: Color(0xFF000000), fontSize: 64),

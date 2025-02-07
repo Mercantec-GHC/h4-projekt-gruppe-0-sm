@@ -83,12 +83,12 @@ class FinishShoppingPage extends StatelessWidget {
                           color: Colors.white,
                         ),
                         padding: const EdgeInsets.all(20),
-                        child: const SizedBox(
+                        child: SizedBox(
                           width: 50,
                           height: 50,
                           child: CircularProgressIndicator(
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.blue),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                Theme.of(context).primaryColor),
                             strokeWidth: 6.0,
                           ),
                         ),
@@ -101,9 +101,9 @@ class FinishShoppingPage extends StatelessWidget {
                           borderRadius: BorderRadius.all(Radius.circular(10)),
                           color: Colors.white,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.check_rounded,
-                          color: Colors.blue,
+                          color: Theme.of(context).primaryColor,
                           size: 70,
                         ),
                       )
