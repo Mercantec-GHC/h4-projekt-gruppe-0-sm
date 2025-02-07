@@ -64,8 +64,9 @@ class LogInFormState extends State<LogInForm> {
               final loginResult =
                   usersRepo.login(mailController.text, passwordController.text);
               if (loginResult is Ok) {
-                Navigator.of(context)
-                    .push(MaterialPageRoute(builder: (context) => Dashboard()));
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) =>
+                        Dashboard(user: (loginResult as Ok).value)));
               } else {
                 setState(() {
                   loginError = true;

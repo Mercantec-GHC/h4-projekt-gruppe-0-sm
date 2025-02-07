@@ -135,76 +135,80 @@ class CartPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          child: Consumer<CartRepo>(
-            builder: (_, cartRepo, __) {
-              final cart = cartRepo.allCartItems();
-              return ListView.builder(
-                shrinkWrap: true,
-                itemBuilder: (_, idx) => CartItemView(
-                    cartRepo: cartRepo,
-                    productId: cart[idx].product.id,
-                    name: cart[idx].product.name,
-                    price: cart[idx].product.price,
-                    imagePath: "assets/boykisser.png",
-                    amount: cart[idx].amount),
-                itemCount: cart.length,
-              );
-            },
+    return SafeArea(
+      child: Column(
+        children: [
+          Expanded(
+            child: Consumer<CartRepo>(
+              builder: (_, cartRepo, __) {
+                final cart = cartRepo.allCartItems();
+                return ListView.builder(
+                  shrinkWrap: true,
+                  itemBuilder: (_, idx) => CartItemView(
+                      cartRepo: cartRepo,
+                      productId: cart[idx].product.id,
+                      name: cart[idx].product.name,
+                      price: cart[idx].product.price,
+                      imagePath: "assets/boykisser.png",
+                      amount: cart[idx].amount),
+                  itemCount: cart.length,
+                );
+              },
+            ),
           ),
-        ),
-        Container(
-          decoration: const BoxDecoration(color: Color(0xFFFFFFFF), boxShadow: [
-            BoxShadow(
-              blurRadius: 10,
-              spreadRadius: -4,
-            )
-          ]),
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      margin: const EdgeInsets.only(right: 10),
-                      child: PrimaryButton(
-                          onPressed: () {}, child: const Text("Indtast vare")),
+          Container(
+            decoration:
+                const BoxDecoration(color: Color(0xFFFFFFFF), boxShadow: [
+              BoxShadow(
+                blurRadius: 10,
+                spreadRadius: -4,
+              )
+            ]),
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 10),
+                        child: PrimaryButton(
+                            onPressed: () {},
+                            child: const Text("Indtast vare")),
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    child: Container(
-                      margin: const EdgeInsets.only(left: 10),
-                      child: PrimaryButton(
-                          onPressed: () {}, child: const Text("Skan vare")),
+                    Expanded(
+                      child: Container(
+                        margin: const EdgeInsets.only(left: 10),
+                        child: PrimaryButton(
+                            onPressed: () {}, child: const Text("Skan vare")),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      margin: const EdgeInsets.only(top: 10),
-                      child: PrimaryButton(
-                          onPressed: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const FinishShoppingPage()));
-                          },
-                          child: const Text("Afslut indkøb")),
+                  ],
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        margin: const EdgeInsets.only(top: 10),
+                        child: PrimaryButton(
+                            onPressed: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const FinishShoppingPage()));
+                            },
+                            child: const Text("Afslut indkøb")),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

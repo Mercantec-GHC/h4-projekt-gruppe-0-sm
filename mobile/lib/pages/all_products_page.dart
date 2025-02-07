@@ -65,14 +65,16 @@ class AllProductsPage extends StatelessWidget {
       children: [
         Expanded(
           child: Column(children: [
-            const Row(
+            Row(
               children: [
-                BackButton(),
                 Expanded(
-                  child: TextField(
-                      decoration: InputDecoration(
-                          label: Text("Search"),
-                          contentPadding: EdgeInsets.only(top: 20))),
+                  child: Container(
+                    margin: const EdgeInsets.only(left: 10, right: 10),
+                    child: const TextField(
+                        decoration: InputDecoration(
+                            label: Text("Search"),
+                            contentPadding: EdgeInsets.only(top: 20))),
+                  ),
                 ),
               ],
             ),

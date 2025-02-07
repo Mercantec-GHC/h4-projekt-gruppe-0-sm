@@ -5,17 +5,24 @@ import 'package:mobile/pages/all_receipts_page.dart';
 import 'package:mobile/pages/home_page.dart';
 import 'package:mobile/repos/bottom_navigation_bar.dart';
 import 'package:mobile/repos/cart.dart';
+import 'package:mobile/repos/user.dart';
 import 'package:provider/provider.dart';
 
 class Dashboard extends StatelessWidget {
-  final List<StatelessWidget> pages = [
-    const HomePage(),
-    const AllProductsPage(),
-    const CartPage(),
-    const AllReceiptsPage(),
-  ];
+  final User user;
 
-  Dashboard({super.key});
+  final List<StatelessWidget> pages = [];
+
+  Dashboard({super.key, required this.user}) {
+    pages.addAll([
+      HomePage(
+        user: user,
+      ),
+      const AllProductsPage(),
+      const CartPage(),
+      const AllReceiptsPage(),
+    ]);
+  }
 
   @override
   Widget build(BuildContext context) {
