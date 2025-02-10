@@ -10,43 +10,45 @@ class ReceiptView extends StatelessWidget {
   Widget build(BuildContext context) {
     final receiptItems = receipt.allReceiptItems();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const BackButton(),
-        Expanded(
-          child: Container(
-            margin: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                Text(receipt.dateFormatted()),
-                Expanded(
-                    child: Column(
-                  children: [
-                    ListView.builder(
-                        shrinkWrap: true,
-                        itemBuilder: (_, idx) => ReceiptItemView(
-                            pricePerAmount: receiptItems[idx].product.price,
-                            name: receiptItems[idx].product.name,
-                            amount: receiptItems[idx].amount),
-                        itemCount: receiptItems.length),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          "Total:",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text("${receipt.totalPrice()} kr"),
-                      ],
-                    ),
-                  ],
-                )),
-              ],
+    return SafeArea(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const BackButton(),
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  Text(receipt.dateFormatted()),
+                  Expanded(
+                      child: Column(
+                    children: [
+                      ListView.builder(
+                          shrinkWrap: true,
+                          itemBuilder: (_, idx) => ReceiptItemView(
+                              pricePerAmount: receiptItems[idx].product.price,
+                              name: receiptItems[idx].product.name,
+                              amount: receiptItems[idx].amount),
+                          itemCount: receiptItems.length),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            "Total:",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text("${receipt.totalPrice()} kr"),
+                        ],
+                      ),
+                    ],
+                  )),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
