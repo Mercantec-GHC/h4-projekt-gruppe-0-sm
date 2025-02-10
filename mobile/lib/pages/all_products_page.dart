@@ -25,8 +25,7 @@ class ProductListItem extends StatelessWidget {
             Navigator.of(context)
                 .push(MaterialPageRoute(builder: (context) => productPage));
           },
-          child: Expanded(
-              child: Row(
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
@@ -50,7 +49,7 @@ class ProductListItem extends StatelessWidget {
                     width: 100,
                   ))
             ],
-          ))),
+          )),
     );
   }
 }
