@@ -49,6 +49,10 @@ export class PackCompiler {
                 new HirStringifyer(this.ctx, checker)
                     .file(entryFileAst),
         );
+        if (this.ctx.errorOccured()) {
+            console.error("error(s) occurred.");
+            Deno.exit(1);
+        }
         const astLowerer = new AstLowerer(
             this.ctx,
             resols,
@@ -56,6 +60,10 @@ export class PackCompiler {
             entryFileAst,
         );
         astLowerer.lower();
+        if (this.ctx.errorOccured()) {
+            console.error("error(s) occurred. stopping...");
+            Deno.exit(1);
+        }
         console.log("=== MIR ===\n" + astLowerer.mirString());
     }
 

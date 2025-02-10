@@ -15,6 +15,7 @@ export class Ctx {
     private _entryFile?: File;
 
     private reports: Report[] = [];
+    private maxSeverity: number = severityCode.none;
 
     public fileHasChildWithIdent(file: File, childIdent: string): boolean {
         return this.files.get(file)!
@@ -108,7 +109,14 @@ export class Ctx {
 
     public report(rep: Report) {
         this.reports.push(rep);
+        if (this.maxSeverity < severityCode[rep.severity]) {
+            this.maxSeverity = severityCode[rep.severity];
+        }
         this.reportImmediately(rep);
+    }
+
+    public errorOccured(): boolean {
+        return this.maxSeverity >= severityCode.error;
     }
 
     public enableReportImmediately = false;
@@ -129,6 +137,14 @@ export class Ctx {
         }
     }
 }
+
+const severityCode = {
+    "none": 0,
+    "info": 1,
+    "warning": 2,
+    "error": 3,
+    "fatal": 4,
+} as const;
 
 export type FileInfo = {
     ident: string;
