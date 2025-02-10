@@ -60,6 +60,7 @@ class AllProductsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final productRepo = Provider.of<ProductRepo>(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -70,8 +71,11 @@ class AllProductsPage extends StatelessWidget {
                 Expanded(
                   child: Container(
                     margin: const EdgeInsets.only(left: 10, right: 10),
-                    child: const TextField(
-                        decoration: InputDecoration(
+                    child: TextField(
+                        onChanged: (query) {
+                          productRepo.searchProducts(query);
+                        },
+                        decoration: const InputDecoration(
                             label: Text("Search"),
                             contentPadding: EdgeInsets.only(top: 20))),
                   ),
@@ -80,7 +84,7 @@ class AllProductsPage extends StatelessWidget {
             ),
             Expanded(
               child: Consumer<ProductRepo>(builder: (_, productRepo, __) {
-                final products = productRepo.allProducts();
+                final products = productRepo.filteredProducts;
                 return ListView.builder(
                   shrinkWrap: true,
                   itemBuilder: (_, idx) => ProductListItem(

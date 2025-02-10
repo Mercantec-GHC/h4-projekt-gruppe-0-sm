@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 class ProductRepo extends ChangeNotifier {
   int _nextId = 0;
   List<Product> products = [];
+  late List<Product> filteredProducts;
   ProductRepo() {
     _addAllProducts();
+    filteredProducts = products;
   }
 
   int getNextId() {
@@ -13,6 +15,22 @@ class ProductRepo extends ChangeNotifier {
 
   List<Product> allProducts() {
     return products;
+  }
+
+  void searchProducts(String query) {
+    if (query.trim().isEmpty) {
+      filteredProducts = products;
+    } else {
+      filteredProducts = products.where((product) {
+        final nameLower = product.name.toLowerCase();
+        final descriptionLower = product.description.toLowerCase();
+        final searchLower = query.toLowerCase();
+
+        return nameLower.contains(searchLower) ||
+            descriptionLower.contains(searchLower);
+      }).toList();
+    }
+    notifyListeners();
   }
 
   void _addAllProducts() {
