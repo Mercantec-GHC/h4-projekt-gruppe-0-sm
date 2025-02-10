@@ -7,7 +7,7 @@ fn main() {
     let foo = 5;
     let bar = 7 + foo;
 
-    if foo {} else {}
+    if foo == 5 {} else {}
 
     let c = add(foo, bar);
 }

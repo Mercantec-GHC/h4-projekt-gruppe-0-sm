@@ -179,10 +179,10 @@ export type RefType = "ref" | "ptr";
 export type UnaryType = "not" | "-";
 export type BinaryType =
     | "+"
-    | "*"
-    | "=="
     | "-"
+    | "*"
     | "/"
+    | "=="
     | "!="
     | "<"
     | ">"

@@ -24,7 +24,7 @@ import {
     TyKind,
     UnaryType,
 } from "@slige/ast";
-import { Ctx, File as CtxFile, Pos, Res, Span, todo } from "@slige/common";
+import { Ctx, File as CtxFile, Res, Span } from "@slige/common";
 import { Lexer } from "./lexer.ts";
 import { TokenIter } from "./token.ts";
 import { SigFilter } from "./token.ts";
@@ -726,11 +726,10 @@ export class Parser {
     }
 
     private parseOr(rs: ExprRestricts): Expr {
-        const pos = this.span();
         let left = this.parseAnd(rs);
         while (true) {
             if (this.test("or")) {
-                left = this.parBinTail(left, pos, rs, this.parseAnd, "or");
+                left = this.parBinTail(left, rs, this.parseAnd, "or");
             } else {
                 break;
             }
@@ -739,11 +738,10 @@ export class Parser {
     }
 
     private parseAnd(rs: ExprRestricts): Expr {
-        const pos = this.span();
-        let left = this.parseEq(rs);
+        let left = this.parseEquality(rs);
         while (true) {
             if (this.test("and")) {
-                left = this.parBinTail(left, pos, rs, this.parseEq, "and");
+                left = this.parBinTail(left, rs, this.parseEquality, "and");
             } else {
                 break;
             }
@@ -751,36 +749,33 @@ export class Parser {
         return left;
     }
 
-    private parseEq(rs: ExprRestricts): Expr {
-        const pos = this.span();
+    private parseEquality(rs: ExprRestricts): Expr {
         const left = this.parseComparison(rs);
         if (this.test("==") || this.test("!=")) {
             const op = this.current().type as BinaryType;
-            return this.parBinTail(left, pos, rs, this.parseComparison, op);
+            return this.parBinTail(left, rs, this.parseComparison, op);
         }
         return left;
     }
 
     private parseComparison(rs: ExprRestricts): Expr {
-        const pos = this.span();
         const left = this.parseAddSub(rs);
         if (
             this.test("<") || this.test(">") || this.test("<=") ||
             this.test(">=")
         ) {
             const op = this.current().type as BinaryType;
-            return this.parBinTail(left, pos, rs, this.parseAddSub, op);
+            return this.parBinTail(left, rs, this.parseAddSub, op);
         }
         return left;
     }
 
     private parseAddSub(rs: ExprRestricts): Expr {
-        const pos = this.span();
         let left = this.parseMulDiv(rs);
         while (true) {
             if (this.test("+") || this.test("-")) {
                 const op = this.current().type as BinaryType;
-                left = this.parBinTail(left, pos, rs, this.parseMulDiv, op);
+                left = this.parBinTail(left, rs, this.parseMulDiv, op);
                 continue;
             }
             break;
@@ -789,12 +784,11 @@ export class Parser {
     }
 
     private parseMulDiv(rs: ExprRestricts): Expr {
-        const pos = this.span();
         let left = this.parsePrefix(rs);
         while (true) {
             if (this.test("*") || this.test("/")) {
                 const op = this.current().type as BinaryType;
-                left = this.parBinTail(left, pos, rs, this.parsePrefix, op);
+                left = this.parBinTail(left, rs, this.parsePrefix, op);
                 continue;
             }
             break;
@@ -804,7 +798,6 @@ export class Parser {
 
     private parBinTail(
         left: Expr,
-        span: Span,
         rs: ExprRestricts,
         parseRight: (this: Parser, rs: ExprRestricts) => Expr,
         binaryType: BinaryType,
@@ -813,7 +806,7 @@ export class Parser {
         const right = parseRight.call(this, rs);
         return this.expr(
             { tag: "binary", binaryType, left, right },
-            span,
+            Span.fromto(left.span, right.span),
         );
     }
 

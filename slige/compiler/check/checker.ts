@@ -141,58 +141,12 @@ export class Checker {
                 return this.checkCallExpr(expr, k, expected);
             case "unary":
                 return todo();
-            case "binary": {
-                const res = this.resolveTys(
-                    this.exprTy(k.left),
-                    this.exprTy(k.right),
-                );
-                if (!res.ok) {
-                    this.exprTys.set(expr.id, Ty({ tag: "error" }));
-                    this.report(res.val, expr.span);
-                    return Ty({ tag: "error" });
-                }
-                this.exprTys.set(expr.id, res.val);
-                return res.val;
-            }
-            case "block": {
-                const ty = this.checkBlock(k.block, expected);
-                return ty;
-            }
-            case "if": {
-                const cond = this.exprTy(k.cond);
-                const condRes = this.resolveTys(cond, Ty({ tag: "bool" }));
-                if (!condRes.ok) {
-                    this.exprTys.set(expr.id, Ty({ tag: "error" }));
-                    this.report("if-condition must be a boolean", k.cond.span);
-                    return Ty({ tag: "error" });
-                }
-                const truthy = this.exprTy(k.truthy);
-                if (!k.falsy) {
-                    const truthyRes = this.resolveTys(
-                        truthy,
-                        Ty({ tag: "null" }),
-                    );
-                    if (!truthyRes.ok) {
-                        this.exprTys.set(expr.id, Ty({ tag: "error" }));
-                        this.report(
-                            "if there isn't a falsy-clause, then the truthy clause must evaluate to null",
-                            k.truthy.span,
-                        );
-                        return Ty({ tag: "error" });
-                    }
-                    this.exprTys.set(expr.id, Ty({ tag: "null" }));
-                    return Ty({ tag: "null" });
-                }
-                const falsy = this.exprTy(k.falsy);
-                const bothRes = this.resolveTys(truthy, falsy);
-                if (!bothRes.ok) {
-                    this.exprTys.set(expr.id, Ty({ tag: "error" }));
-                    this.report(bothRes.val, k.truthy.span);
-                    return Ty({ tag: "error" });
-                }
-                this.exprTys.set(expr.id, bothRes.val);
-                return bothRes.val;
-            }
+            case "binary":
+                return this.checkBinaryExpr(expr, k, expected);
+            case "block":
+                return this.checkBlock(k.block, expected);
+            case "if":
+                return this.checkIfExpr(expr, k, expected);
             case "loop":
                 return todo();
             case "while":
@@ -261,13 +215,108 @@ export class Checker {
             );
             return Ty({ tag: "error" });
         }
-        const _args = kind.args.map((arg, i) =>
-            this.checkExpr(arg, paramTys[i])
-        );
+        for (const [i, arg] of kind.args.entries()) {
+            this.checkExpr(arg, paramTys[i]);
+        }
 
         const ty = fnTy.kind.returnTy;
         this.exprTys.set(expr.id, ty);
         return ty;
+    }
+
+    private checkBinaryExpr(
+        expr: ast.Expr,
+        kind: ast.BinaryExpr,
+        expected: Ty,
+    ): Ty {
+        switch (kind.binaryType) {
+            case "+":
+            case "-":
+            case "*":
+            case "/": {
+                const operandRes = this.resolveTys(
+                    this.exprTy(kind.left),
+                    this.exprTy(kind.right),
+                );
+                if (!operandRes.ok) {
+                    this.exprTys.set(expr.id, Ty({ tag: "error" }));
+                    this.report(operandRes.val, expr.span);
+                    return Ty({ tag: "error" });
+                }
+                const operatorRes = this.resolveTys(
+                    operandRes.val,
+                    Ty({ tag: "int" }),
+                );
+                if (!operatorRes.ok) {
+                    this.exprTys.set(expr.id, Ty({ tag: "error" }));
+                    this.report(operatorRes.val, expr.span);
+                    return Ty({ tag: "error" });
+                }
+                this.exprTys.set(expr.id, operatorRes.val);
+                return operandRes.val;
+            }
+            case "==":
+            case "!=":
+            case "<":
+            case ">":
+            case "<=":
+            case ">=":
+            case "or":
+            case "and": {
+                const operandRes = this.resolveTys(
+                    this.exprTy(kind.left),
+                    this.exprTy(kind.right),
+                );
+                if (!operandRes.ok) {
+                    this.exprTys.set(expr.id, Ty({ tag: "error" }));
+                    this.report(operandRes.val, expr.span);
+                    return Ty({ tag: "error" });
+                }
+                const ty = Ty({ tag: "bool" });
+                this.exprTys.set(expr.id, ty);
+                return ty;
+            }
+        }
+    }
+
+    private checkIfExpr(
+        expr: ast.Expr,
+        kind: ast.IfExpr,
+        expected: Ty,
+    ): Ty {
+        const cond = this.exprTy(kind.cond);
+        const condRes = this.resolveTys(cond, Ty({ tag: "bool" }));
+        if (!condRes.ok) {
+            this.exprTys.set(expr.id, Ty({ tag: "error" }));
+            this.report("if-condition must be a boolean", kind.cond.span);
+            return Ty({ tag: "error" });
+        }
+        const truthy = this.exprTy(kind.truthy);
+        if (!kind.falsy) {
+            const truthyRes = this.resolveTys(
+                truthy,
+                Ty({ tag: "null" }),
+            );
+            if (!truthyRes.ok) {
+                this.exprTys.set(expr.id, Ty({ tag: "error" }));
+                this.report(
+                    "if there isn't a falsy-clause, then the truthy clause must evaluate to null",
+                    kind.truthy.span,
+                );
+                return Ty({ tag: "error" });
+            }
+            this.exprTys.set(expr.id, Ty({ tag: "null" }));
+            return Ty({ tag: "null" });
+        }
+        const falsy = this.exprTy(kind.falsy);
+        const bothRes = this.resolveTys(truthy, falsy);
+        if (!bothRes.ok) {
+            this.exprTys.set(expr.id, Ty({ tag: "error" }));
+            this.report(bothRes.val, kind.truthy.span);
+            return Ty({ tag: "error" });
+        }
+        this.exprTys.set(expr.id, bothRes.val);
+        return bothRes.val;
     }
 
     private tyTy(ty: ast.Ty): Ty {
