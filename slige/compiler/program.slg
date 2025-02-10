@@ -1,15 +1,8 @@
 
-fn add(lhs: int, rhs: int) -> int {
-    lhs + rhs
-}
-
 fn main() {
-    let foo = 5;
-    let bar = 7 + foo;
+    let a = 5;
 
-    if foo == 5 {} else {}
-
-    let c = add(foo, bar);
+    a = 10;
 }
 
 

@@ -61,7 +61,8 @@ export class MirFnStringifyer {
 
     private localDef(local: Local): string {
         const ident = local.ident && ` // ${local.ident.text}` || "";
-        return `${this.local(local.id)}: ${this.ty(local.ty)}${ident}`;
+        const mut = local.mut ? "mut " : "";
+        return `${mut}${this.local(local.id)}: ${this.ty(local.ty)}${ident}`;
     }
 
     private block(block: Block): string {

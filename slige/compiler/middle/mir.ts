@@ -17,6 +17,7 @@ export type LocalId = IdBase & { readonly _: unique symbol };
 export type Local = {
     id: LocalId;
     ty: Ty;
+    mut: boolean;
     ident?: ast.Ident;
 };
 

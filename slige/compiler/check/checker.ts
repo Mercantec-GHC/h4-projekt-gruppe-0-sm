@@ -32,13 +32,9 @@ export class Checker {
     }
 
     private checkBlock(block: ast.Block, expected: Ty): Ty {
-        this.checkStmts(block.stmts);
         return block.expr &&
                 this.checkExpr(block.expr, expected) ||
             Ty({ tag: "null" });
-    }
-
-    private checkStmts(stmts: ast.Stmt[]) {
     }
 
     private checkLetStmtTy(stmt: ast.Stmt, kind: ast.LetStmt) {
@@ -86,6 +82,78 @@ export class Checker {
                 return todo();
         }
         exhausted(k);
+    }
+
+    public checkAssignStmt(stmt: ast.Stmt, kind: ast.AssignStmt) {
+        if (this.stmtChecked.has(stmt.id)) {
+            return;
+        }
+        this.stmtChecked.add(stmt.id);
+        switch (kind.assignType) {
+            case "=": {
+                const valTy = this.exprTy(kind.value);
+                this.checkAssignableExpr(
+                    kind.subject,
+                    valTy,
+                    kind.subject.span,
+                );
+                return;
+            }
+            case "+=":
+            case "-=": {
+                const re = this.re.exprRes(kind.subject.id);
+                if (re.kind.tag !== "local") {
+                    this.report(
+                        "cannot assign to expression",
+                        kind.subject.span,
+                    );
+                    this.exprTys.set(kind.subject.id, Ty({ tag: "error" }));
+                    return;
+                }
+                const patRe = this.re.patRes(re.kind.id);
+                const patTy = this.patTy(patRe.pat);
+                const tyRes = this.resolveTys(patTy, Ty({ tag: "int" }));
+                if (!tyRes.ok) {
+                    this.report(
+                        "cannot increment/decrement non-integer",
+                        kind.subject.span,
+                    );
+                    this.exprTys.set(kind.subject.id, Ty({ tag: "error" }));
+                    return;
+                }
+                const valTy = this.exprTy(kind.value);
+                const valTyRes = this.resolveTys(valTy, Ty({ tag: "int" }));
+                if (!valTyRes.ok) {
+                    if (valTy.kind.tag !== "error") {
+                        this.report(
+                            "cannot increment/decrement with non-integer",
+                            kind.value.span,
+                        );
+                    }
+                    this.exprTys.set(kind.subject.id, Ty({ tag: "error" }));
+                    return;
+                }
+                this.exprTys.set(kind.subject.id, valTyRes.val);
+                return;
+            }
+        }
+        exhausted(kind.assignType);
+    }
+
+    private checkAssignableExpr(expr: ast.Expr, ty: Ty, valSpan: Span) {
+        todo();
+        switch (ty.kind.tag) {
+            case "error":
+                this.exprTys.set(expr.id, ty);
+                return;
+            case "unknown":
+                this.exprTys.set(expr.id, ty);
+                return;
+            case "null":
+            case "int":
+            case "bool":
+            case "fn":
+        }
     }
 
     public fnItemTy(item: ast.Item, kind: ast.FnItem): Ty {

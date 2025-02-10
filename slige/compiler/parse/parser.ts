@@ -1004,7 +1004,7 @@ export class Parser {
                 return this.pat({ tag: "error" }, pos);
             }
             const ident = this.parseIdent();
-            return this.pat({ tag: "bind", ident, mut: false }, pos);
+            return this.pat({ tag: "bind", ident, mut: true }, pos);
         }
         this.report(`expected pattern, got '${this.current().type}'`, pos);
         this.step();

@@ -109,8 +109,9 @@ export class FnLowerer {
             case "return":
             case "break":
             case "continue":
-            case "assign":
                 return todo(k.tag);
+            case "assign":
+                return this.lowerAssignStmt(stmt, k);
             case "expr": {
                 const rval = this.lowerExpr(k.expr);
                 // ignore the fuck out of the value
@@ -121,7 +122,7 @@ export class FnLowerer {
         exhausted(k);
     }
 
-    private lowerLetStmt(_stmt: ast.Stmt, kind: ast.LetStmt) {
+    private lowerLetStmt(stmt: ast.Stmt, kind: ast.LetStmt) {
         const val = kind.expr && this.lowerExpr(kind.expr);
         this.allocatePat(kind.pat);
         if (val) {
@@ -136,7 +137,9 @@ export class FnLowerer {
                 return;
             case "bind": {
                 const ty = this.ch.patTy(pat);
-                const local = this.local(ty, k.ident);
+                const local = k.mut
+                    ? this.localMut(ty, k.ident)
+                    : this.local(ty, k.ident);
                 this.reLocals.set(pat.id, local);
                 return;
             }
@@ -166,28 +169,59 @@ export class FnLowerer {
         exhausted(k);
     }
 
-    private assignPat(pat: ast.Pat, local: LocalId, proj: ProjElem[] = []) {
-        const k = pat.kind;
+    private lowerAssignStmt(stmt: ast.Stmt, kind: ast.AssignStmt) {
+        this.ch.checkAssignStmt(stmt, kind);
+        const rval = this.lowerExpr(kind.value);
+        switch (kind.assignType) {
+            case "=":
+                return this.assignToExpr(kind.subject, rval, []);
+            case "+=":
+            case "-=":
+                todo();
+        }
+    }
+
+    private assignToExpr(expr: ast.Expr, rval: RVal, proj: ProjElem[]) {
+        const k = expr.kind;
         switch (k.tag) {
-            case "error":
-                return;
-            case "bind": {
-                const patLocal = this.reLocals.get(pat.id)!;
+            case "path": {
+                const re = this.re.exprRes(expr.id);
+                if (re.kind.tag !== "local") {
+                    throw new Error("cannot assign. checker should catch");
+                }
+                const patRe = this.re.patRes(re.kind.id);
+                const local = this.reLocals.get(patRe.pat.id)!;
                 this.addStmt({
                     tag: "assign",
-                    place: { local: patLocal, proj: [] },
-                    rval: {
-                        tag: "use",
-                        operand: this.copyOrMoveLocal(
-                            local,
-                            this.locals.get(local)!.ty,
-                        ),
-                    },
+                    place: { local, proj: [] },
+                    rval,
                 });
                 return;
             }
-            case "path":
-                return todo();
+            case "error":
+            case "null":
+            case "int":
+            case "bool":
+            case "str":
+            case "group":
+            case "array":
+            case "repeat":
+            case "struct":
+            case "ref":
+            case "deref":
+            case "elem":
+            case "field":
+            case "index":
+            case "call":
+            case "unary":
+            case "binary":
+            case "block":
+            case "if":
+            case "loop":
+            case "while":
+            case "for":
+            case "c_for":
+                throw new Error("not assignable. checker should catch");
         }
         exhausted(k);
     }
@@ -454,7 +488,13 @@ export class FnLowerer {
 
     private local(ty: Ty, ident?: ast.Ident): LocalId {
         const id = this.localIds.nextThenStep();
-        this.locals.set(id, { id, ty, ident });
+        this.locals.set(id, { id, ty, mut: false, ident });
+        return id;
+    }
+
+    private localMut(ty: Ty, ident?: ast.Ident): LocalId {
+        const id = this.localIds.nextThenStep();
+        this.locals.set(id, { id, ty, mut: true, ident });
         return id;
     }
 
