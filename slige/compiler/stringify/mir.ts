@@ -26,11 +26,35 @@ export class MirFnStringifyer {
     ) {}
 
     public fn(fn: Fn): string {
-        return `fn ${fn.label} {\n${
-            fn.locals.values().toArray()
-                .map((local) => this.localDef(local))
-                .join("\n")
-        }\n${
+        for (
+            const [idx, id] of fn.blocks
+                .keys()
+                .toArray()
+                .entries()
+        ) {
+            this.blockIds.set(id, idx);
+        }
+        for (
+            const [idx, id] of fn.locals
+                .keys()
+                .toArray()
+                .entries()
+        ) {
+            this.localIds.set(id, idx);
+        }
+        const locals = fn.locals.values().toArray();
+        const paramsStr = locals
+            .filter((local) => fn.paramLocals.has(local.id))
+            .map((local) => [local, fn.paramLocals.get(local.id)!] as const)
+            .toSorted((a, b) => a[1] - b[1])
+            .map(([local]) => fn.locals.get(local.id)!)
+            .map((local) => this.localDef(local))
+            .join(", ");
+        const localsStr = locals
+            .filter((local) => !fn.paramLocals.has(local.id))
+            .map((local) => `#let ${this.localDef(local)}`)
+            .join("\n");
+        return `fn ${fn.label}(${paramsStr}) {\n${localsStr}\n${
             fn.blocks.values().toArray()
                 .map((block) => this.block(block))
                 .join("\n")
@@ -38,19 +62,20 @@ export class MirFnStringifyer {
     }
 
     private localDef(local: Local): string {
-        const id = this.localIds.size;
-        this.localIds.set(local.id, id);
-        return `#let %${id}: ${tyToString(this.ctx, local.ty)}`;
+        const ident = local.ident && ` // ${local.ident.text}` || "";
+        return `${this.local(local.id)}: ${this.ty(local.ty)}${ident}`;
     }
 
     private block(block: Block): string {
-        const id = this.blockIds.size;
-        this.blockIds.set(block.id, id);
+        const id = this.blockIds.get(block.id);
         return `#.b${id}: {\n${
-            block.stmts
-                .map((stmt) => this.stmt(stmt))
+            [
+                ...block.stmts
+                    .map((stmt) => this.stmt(stmt)),
+                this.ter(block.terminator),
+            ]
                 .join("\n")
-        }\n${this.ter(block.terminator)}\n#}`;
+        }\n#}`;
     }
 
     private stmt(stmt: Stmt): string {
@@ -76,8 +101,17 @@ export class MirFnStringifyer {
             case "unset":
                 return "##<unset>;";
             case "goto":
-            case "switch":
-                return todo(k.tag);
+                return `##goto ${this.blockId(k.target)}`;
+            case "switch": {
+                const discr = this.operand(k.discr);
+                const targets = k.targets
+                    .map((target) =>
+                        `\n###${target.value} => ${this.blockId(target.target)}`
+                    )
+                    .join("");
+                const otherwise = this.blockId(k.otherwise);
+                return `##switch ${discr}${targets}\n###_ => ${otherwise}`;
+            }
             case "return":
                 return `##return;`;
             case "unreachable":
@@ -122,14 +156,16 @@ export class MirFnStringifyer {
             case "ref":
             case "ptr":
                 return todo(rval.tag);
-            case "binary":
-                return `${this.operand(rval.left)} ${rval.binaryType} ${
-                    this.operand(rval.right)
-                }`;
+            case "binary": {
+                const op = rval.binaryType;
+                const left = this.operand(rval.left);
+                const right = this.operand(rval.right);
+                return `${op}(${left}, ${right})`;
+            }
             case "unary":
                 return todo(rval.tag);
             case "call":
-                return `${this.operand(rval.func)}(${
+                return `call ${this.operand(rval.func)}(${
                     rval.args.map((arg) => this.operand(arg)).join(", ")
                 })`;
         }
@@ -138,6 +174,8 @@ export class MirFnStringifyer {
 
     private operand(operand: Operand): string {
         switch (operand.tag) {
+            case "error":
+                return `<error>`;
             case "copy":
                 return `copy ${this.place(operand.place)}`;
             case "move":
@@ -154,15 +192,23 @@ export class MirFnStringifyer {
                 return `null`;
             case "int":
                 return `${val.value}`;
-            case "bool":
-                return `${val.value}`;
-            case "string":
+            case "str":
                 return `"${val.value}"`;
+            case "fn":
+                return `${val.item.ident.text}`;
         }
         exhausted(val);
     }
 
+    private blockId(id: BlockId): string {
+        return `.b${this.blockIds.get(id)!}`;
+    }
+
     private local(local: LocalId): string {
-        return `%${this.localIds.get(local)!}`;
+        return `_${this.localIds.get(local)!}`;
+    }
+
+    private ty(ty: Ty): string {
+        return tyToString(this.ctx, ty);
     }
 }

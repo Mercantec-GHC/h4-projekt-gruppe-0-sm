@@ -5,7 +5,10 @@ fn add(lhs: int, rhs: int) -> int {
 
 fn main() {
     let a = 5;
-    let b = 7;
+    let b = 7 + a;
+
+    if true {}
+
     let c = add(a, b);
 }
 

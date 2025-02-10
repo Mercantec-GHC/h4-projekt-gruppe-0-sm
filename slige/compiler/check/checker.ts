@@ -26,7 +26,7 @@ export class Checker {
     public constructor(
         private ctx: Ctx,
         private entryFileAst: ast.File,
-        private resols: resolve.Resols,
+        private re: resolve.Resols,
     ) {
         this.currentFile = ctx.entryFile();
     }
@@ -48,20 +48,20 @@ export class Checker {
 
         const exprTy = kind.expr && Ok(this.exprTy(kind.expr));
         const tyTy = kind.ty && Ok(this.tyTy(kind.ty));
-        const ty = exprTy !== undefined
-            ? tyTy !== undefined
-                ? this.resolveTys(exprTy.val, tyTy.val)
-                : exprTy
-            : exprTy;
+        const ty = exprTy !== undefined && tyTy !== undefined
+            ? this.resolveTys(exprTy.val, tyTy.val)
+            : exprTy || tyTy;
 
         this.stmtChecked.add(stmt.id);
 
         if (ty === undefined) {
+            this.assignPatTy(kind.pat, Ty({ tag: "error" }));
             this.report("type amfibious, specify type or value", stmt.span);
             return Ty({ tag: "error" });
         }
 
         if (!ty.ok) {
+            this.assignPatTy(kind.pat, Ty({ tag: "error" }));
             this.report(ty.val, stmt.span);
             return Ty({ tag: "error" });
         }
@@ -116,7 +116,7 @@ export class Checker {
             case "int":
                 return Ty({ tag: "int" });
             case "bool":
-                return todo();
+                return Ty({ tag: "bool" });
             case "str":
                 return todo();
             case "group":
@@ -141,12 +141,58 @@ export class Checker {
                 return this.checkCallExpr(expr, k, expected);
             case "unary":
                 return todo();
-            case "binary":
-                return todo();
-            case "block":
-                return todo();
-            case "if":
-                return todo();
+            case "binary": {
+                const res = this.resolveTys(
+                    this.exprTy(k.left),
+                    this.exprTy(k.right),
+                );
+                if (!res.ok) {
+                    this.exprTys.set(expr.id, Ty({ tag: "error" }));
+                    this.report(res.val, expr.span);
+                    return Ty({ tag: "error" });
+                }
+                this.exprTys.set(expr.id, res.val);
+                return res.val;
+            }
+            case "block": {
+                const ty = this.checkBlock(k.block, expected);
+                return ty;
+            }
+            case "if": {
+                const cond = this.exprTy(k.cond);
+                const condRes = this.resolveTys(cond, Ty({ tag: "bool" }));
+                if (!condRes.ok) {
+                    this.exprTys.set(expr.id, Ty({ tag: "error" }));
+                    this.report("if-condition must be a boolean", k.cond.span);
+                    return Ty({ tag: "error" });
+                }
+                const truthy = this.exprTy(k.truthy);
+                if (!k.falsy) {
+                    const truthyRes = this.resolveTys(
+                        truthy,
+                        Ty({ tag: "null" }),
+                    );
+                    if (!truthyRes.ok) {
+                        this.exprTys.set(expr.id, Ty({ tag: "error" }));
+                        this.report(
+                            "if there isn't a falsy-clause, then the truthy clause must evaluate to null",
+                            k.truthy.span,
+                        );
+                        return Ty({ tag: "error" });
+                    }
+                    this.exprTys.set(expr.id, Ty({ tag: "null" }));
+                    return Ty({ tag: "null" });
+                }
+                const falsy = this.exprTy(k.falsy);
+                const bothRes = this.resolveTys(truthy, falsy);
+                if (!bothRes.ok) {
+                    this.exprTys.set(expr.id, Ty({ tag: "error" }));
+                    this.report(bothRes.val, k.truthy.span);
+                    return Ty({ tag: "error" });
+                }
+                this.exprTys.set(expr.id, bothRes.val);
+                return bothRes.val;
+            }
             case "loop":
                 return todo();
             case "while":
@@ -164,7 +210,7 @@ export class Checker {
         kind: ast.PathExpr,
         expected: Ty,
     ): Ty {
-        const res = this.resols.exprRes(expr.id);
+        const res = this.re.exprRes(expr.id);
         switch (res.kind.tag) {
             case "error":
                 return Ty({ tag: "error" });
@@ -179,7 +225,7 @@ export class Checker {
                 return resu.val;
             }
             case "local": {
-                const patRes = this.resols.patRes(res.kind.id);
+                const patRes = this.re.patRes(res.kind.id);
                 const ty = this.patTy(patRes.pat);
                 const resu = this.resolveTys(ty, expected);
                 if (!resu.ok) {
@@ -256,7 +302,7 @@ export class Checker {
     }
 
     private checkPat(pat: ast.Pat): Ty {
-        const patRes = this.resols.patRes(pat.id);
+        const patRes = this.re.patRes(pat.id);
         const k = pat.kind;
         switch (k.tag) {
             case "error":
@@ -303,12 +349,13 @@ export class Checker {
         if (b.kind.tag === "unknown") {
             return Res.Ok(a);
         }
-        const as = tyToString(this.ctx, a);
-        const bs = tyToString(this.ctx, b);
-        const incompat = () =>
-            Res.Err(
+        const incompat = () => {
+            const as = tyToString(this.ctx, a);
+            const bs = tyToString(this.ctx, b);
+            return Res.Err(
                 `type '${as}' not compatible with type '${bs}'`,
             );
+        };
         switch (a.kind.tag) {
             case "unknown":
                 return this.resolveTys(b, a);
@@ -320,6 +367,12 @@ export class Checker {
             }
             case "int": {
                 if (b.kind.tag !== "int") {
+                    return incompat();
+                }
+                return Res.Ok(a);
+            }
+            case "bool": {
+                if (b.kind.tag !== "bool") {
                     return incompat();
                 }
                 return Res.Ok(a);

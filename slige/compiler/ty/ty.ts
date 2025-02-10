@@ -11,6 +11,7 @@ export type TyKind =
     | { tag: "unknown" }
     | { tag: "null" }
     | { tag: "int" }
+    | { tag: "bool" }
     | {
         tag: "fn";
         item: ast.Item;

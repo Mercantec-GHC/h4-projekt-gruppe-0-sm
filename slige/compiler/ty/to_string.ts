@@ -12,6 +12,8 @@ export function tyToString(ctx: Ctx, ty: Ty): string {
             return `null`;
         case "int":
             return `int`;
+        case "bool":
+            return `bool`;
         case "fn": {
             const identText = ctx.identText(k.item.ident.id);
             const params = k.params

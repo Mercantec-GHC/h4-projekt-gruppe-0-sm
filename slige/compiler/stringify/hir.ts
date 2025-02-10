@@ -112,7 +112,9 @@ export class HirStringifyer {
                     this.expr(k.right)
                 }`;
             case "block":
+                return todo(k.tag);
             case "if":
+                return `if ${this.expr(k.cond)}`;
             case "loop":
             case "while":
             case "for":
@@ -164,6 +166,8 @@ export class HirStringifyer {
                 return "null";
             case "int":
                 return "int";
+            case "bool":
+                return "bool";
             case "fn":
                 return `fn ${k.item.ident}(${
                     k.params.map((param) => this.ty(param)).join(", ")

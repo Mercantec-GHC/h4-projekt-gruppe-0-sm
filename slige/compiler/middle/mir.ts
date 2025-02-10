@@ -1,4 +1,5 @@
 import { IdBase, IdMap } from "@slige/common";
+import * as ast from "@slige/ast";
 import { Ty } from "@slige/ty";
 
 export type Fn = {
@@ -6,6 +7,9 @@ export type Fn = {
     locals: IdMap<LocalId, Local>;
     blocks: IdMap<BlockId, Block>;
     entry: BlockId;
+    paramLocals: IdMap<LocalId, number>;
+    astItem: ast.Item;
+    astItemKind: ast.FnItem;
 };
 
 export type LocalId = IdBase & { readonly _: unique symbol };
@@ -13,6 +17,7 @@ export type LocalId = IdBase & { readonly _: unique symbol };
 export type Local = {
     id: LocalId;
     ty: Ty;
+    ident?: ast.Ident;
 };
 
 export type BlockId = IdBase & { readonly _: unique symbol };
@@ -102,6 +107,7 @@ export type BinaryType =
 export type UnaryType = "not" | "neg";
 
 export type Operand =
+    | { tag: "error" }
     | { tag: "copy"; place: Place }
     | { tag: "move"; place: Place }
     | { tag: "const"; val: Const };
@@ -109,5 +115,5 @@ export type Operand =
 export type Const =
     | { tag: "null" }
     | { tag: "int"; value: number }
-    | { tag: "bool"; value: boolean }
-    | { tag: "string"; value: string };
+    | { tag: "str"; value: string }
+    | { tag: "fn"; item: ast.Item; kind: ast.FnItem };
