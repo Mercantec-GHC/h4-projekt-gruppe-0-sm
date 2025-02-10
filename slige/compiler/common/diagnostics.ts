@@ -18,7 +18,6 @@ export const Span = {
 
 export type Report = {
     severity: "fatal" | "error" | "warning" | "info";
-    origin?: string;
     msg: string;
     file?: File;
     span?: Span;
@@ -29,16 +28,17 @@ export type ReportLocation =
     | { file: File; span: Span }
     | { file: File; pos: Pos };
 
-function severityColor(severity: "fatal" | "error" | "warning" | "info") {
+function severityColor(
+    severity: "fatal" | "error" | "warning" | "info",
+): string {
     switch (severity) {
         case "fatal":
-            return "\x1b[1m\x1b[31m";
         case "error":
-            return "\x1b[1m\x1b[31m";
+            return "red";
         case "warning":
-            return "\x1b[1m\x1b[33m";
+            return "yellow";
         case "info":
-            return "\x1b[1m\x1b[34m";
+            return "blue";
     }
     exhausted(severity);
 }
@@ -52,63 +52,76 @@ export function prettyPrintReport(ctx: Ctx, rep: Report) {
         });
     }
     const { severity, msg } = rep;
-    const origin = rep.origin ? `\x1b[1m${rep.origin}:\x1b[0m ` : "";
+    const sevColor = severityColor(severity);
     console.error(
-        `${origin}${severityColor(severity)}${severity}:\x1b[0m %c${msg}`,
-        "color: white; font-weight: bold;",
+        `%c${severity}%c: %c${msg}`,
+        `color: ${sevColor}; font-weight: bold`,
+        "",
+        "font-weight: bold;",
     );
     if (!rep.file) {
         return;
     }
-    const errorLineOffset = 2;
     const { absPath: path } = ctx.fileInfo(rep.file);
     const { line, col } = rep.span?.begin ?? rep.pos!;
-    console.error(`    --> ./${path}:${line}:${col}`);
+    console.error(
+        `    %c--> %c./${path}:${line}:${col}`,
+        "color: cyan",
+        "",
+    );
     if (rep.span) {
         const spanLines = ctx.fileSpanText(rep.file, rep.span).split("\n");
         spanLines.pop();
         if (spanLines.length == 1) {
+            const sqgPad = " ".repeat(rep.span.begin.col - 1);
             console.error(
-                `${rep.span.begin.line.toString().padStart(4, " ")}| ${
-                    spanLines[0]
-                }`,
+                `    %c|`,
+                "color: cyan",
             );
             console.error(
-                `    | ${severityColor(severity)}${
-                    " ".repeat(rep.span.begin.col - 1)
-                }${
+                `${rep.span.begin.line.toString().padStart(4, " ")}%c| %c${
+                    spanLines[0]
+                }`,
+                "color: cyan",
+                "",
+            );
+            console.error(
+                `    %c| %c${sqgPad}${
                     "~".repeat(rep.span.end.col - rep.span.begin.col + 1)
-                }\x1b[0m`,
+                }`,
+                "color: cyan",
+                `color: ${sevColor}; font-weight: bold`,
             );
             return;
         }
         for (let i = 0; i < spanLines.length; i++) {
             console.error(
-                `${(rep.span.begin.line + i).toString().padStart(4, " ")}| ${
+                `${(rep.span.begin.line + i).toString().padStart(4, " ")}%c| ${
                     spanLines[i]
                 }`,
+                "color: cyan",
             );
             if (i == 0) {
                 console.error(
-                    `    | ${" ".repeat(rep.span.begin.col - 1)}${
-                        severityColor(severity)
-                    }${
+                    `    %c| ${" ".repeat(rep.span.begin.col - 1)}%c${
                         "~".repeat(
                             spanLines[i].length - (rep.span.begin.col - 1),
                         )
-                    }\x1b[0m`,
+                    }`,
+                    "color: cyan",
+                    `color: ${sevColor}; font-weight: bold`,
                 );
             } else if (i == spanLines.length - 1) {
                 console.error(
-                    `    | ${severityColor(severity)}${
-                        "~".repeat(rep.span.end.col)
-                    }\x1b[0m`,
+                    `    %c| %c${"~".repeat(rep.span.end.col)}\x1b[0m`,
+                    "color: cyan",
+                    `color: ${sevColor}; font-weight: bold`,
                 );
             } else {
                 console.error(
-                    `    | ${severityColor(severity)}${
-                        "~".repeat(spanLines[i].length)
-                    }\x1b[0m`,
+                    `    %c| %c${"~".repeat(spanLines[i].length)}\x1b[0m`,
+                    "color: cyan",
+                    `color: ${sevColor}; font-weight: bold`,
                 );
             }
         }
@@ -119,9 +132,9 @@ export function prettyPrintReport(ctx: Ctx, rep: Report) {
             }`,
         );
         console.error(
-            `    | ${severityColor(severity)}${
-                " ".repeat(rep.pos.col - 1)
-            }^\x1b[0m`,
+            `    %c| %c${" ".repeat(rep.pos.col - 1)}^\x1b[0m`,
+            "color: cyan",
+            `color: ${sevColor}; font-weight: bold`,
         );
     }
 }

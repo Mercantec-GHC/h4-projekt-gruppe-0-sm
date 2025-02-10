@@ -1233,7 +1233,6 @@ export class Parser {
     private report(msg: string, span = this.span()) {
         this.ctx.report({
             severity: "error",
-            origin: "parser",
             msg,
             file: this.file,
             span,

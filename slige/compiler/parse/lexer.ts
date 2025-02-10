@@ -260,7 +260,6 @@ export class Lexer implements TokenIter {
     private report(msg: string, pos: Pos) {
         this.ctx.report({
             severity: "error",
-            origin: "parser",
             file: this.file,
             msg,
             pos,
