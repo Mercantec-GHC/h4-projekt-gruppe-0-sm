@@ -134,8 +134,8 @@ export class Parser {
         this.step();
     }
 
-    private parseExpr(): Expr {
-        return this.parseBinary();
+    private parseExpr(rs: ExprRestricts = 0): Expr {
+        return this.parseBinary(rs);
     }
 
     private parseBlock(): ParseRes<Block, undefined> {
@@ -698,12 +698,12 @@ export class Parser {
     private parseIf(): Expr {
         const pos = this.span();
         this.step();
-        const cond = this.parseExpr();
+        const cond = this.parseExpr(ExprRestricts.NoStructs);
         if (!this.test("{")) {
             this.report("expected block");
             return this.expr({ tag: "error" }, pos);
         }
-        const truthy = this.parseExpr();
+        const truthy = this.parseBlockExpr();
         if (!this.test("else")) {
             return this.expr({ tag: "if", cond, truthy }, pos);
         }
@@ -721,16 +721,16 @@ export class Parser {
         return this.expr({ tag: "if", cond, truthy, falsy }, pos);
     }
 
-    private parseBinary(): Expr {
-        return this.parseOr();
+    private parseBinary(rs: ExprRestricts): Expr {
+        return this.parseOr(rs);
     }
 
-    private parseOr(): Expr {
+    private parseOr(rs: ExprRestricts): Expr {
         const pos = this.span();
-        let left = this.parseAnd();
+        let left = this.parseAnd(rs);
         while (true) {
             if (this.test("or")) {
-                left = this.parBinTail(left, pos, this.parseAnd, "or");
+                left = this.parBinTail(left, pos, rs, this.parseAnd, "or");
             } else {
                 break;
             }
@@ -738,12 +738,12 @@ export class Parser {
         return left;
     }
 
-    private parseAnd(): Expr {
+    private parseAnd(rs: ExprRestricts): Expr {
         const pos = this.span();
-        let left = this.parseEquality();
+        let left = this.parseEq(rs);
         while (true) {
             if (this.test("and")) {
-                left = this.parBinTail(left, pos, this.parseEquality, "and");
+                left = this.parBinTail(left, pos, rs, this.parseEq, "and");
             } else {
                 break;
             }
@@ -751,46 +751,36 @@ export class Parser {
         return left;
     }
 
-    private parseEquality(): Expr {
+    private parseEq(rs: ExprRestricts): Expr {
         const pos = this.span();
-        const left = this.parseComparison();
-        if (this.test("==")) {
-            return this.parBinTail(left, pos, this.parseComparison, "==");
-        }
-        if (this.test("!=")) {
-            return this.parBinTail(left, pos, this.parseComparison, "!=");
+        const left = this.parseComparison(rs);
+        if (this.test("==") || this.test("!=")) {
+            const op = this.current().type as BinaryType;
+            return this.parBinTail(left, pos, rs, this.parseComparison, op);
         }
         return left;
     }
 
-    private parseComparison(): Expr {
+    private parseComparison(rs: ExprRestricts): Expr {
         const pos = this.span();
-        const left = this.parseAddSub();
-        if (this.test("<")) {
-            return this.parBinTail(left, pos, this.parseAddSub, "<");
-        }
-        if (this.test(">")) {
-            return this.parBinTail(left, pos, this.parseAddSub, ">");
-        }
-        if (this.test("<=")) {
-            return this.parBinTail(left, pos, this.parseAddSub, "<=");
-        }
-        if (this.test(">=")) {
-            return this.parBinTail(left, pos, this.parseAddSub, ">=");
+        const left = this.parseAddSub(rs);
+        if (
+            this.test("<") || this.test(">") || this.test("<=") ||
+            this.test(">=")
+        ) {
+            const op = this.current().type as BinaryType;
+            return this.parBinTail(left, pos, rs, this.parseAddSub, op);
         }
         return left;
     }
 
-    private parseAddSub(): Expr {
+    private parseAddSub(rs: ExprRestricts): Expr {
         const pos = this.span();
-        let left = this.parseMulDiv();
+        let left = this.parseMulDiv(rs);
         while (true) {
-            if (this.test("+")) {
-                left = this.parBinTail(left, pos, this.parseMulDiv, "+");
-                continue;
-            }
-            if (this.test("-")) {
-                left = this.parBinTail(left, pos, this.parseMulDiv, "-");
+            if (this.test("+") || this.test("-")) {
+                const op = this.current().type as BinaryType;
+                left = this.parBinTail(left, pos, rs, this.parseMulDiv, op);
                 continue;
             }
             break;
@@ -798,16 +788,13 @@ export class Parser {
         return left;
     }
 
-    private parseMulDiv(): Expr {
+    private parseMulDiv(rs: ExprRestricts): Expr {
         const pos = this.span();
-        let left = this.parsePrefix();
+        let left = this.parsePrefix(rs);
         while (true) {
-            if (this.test("*")) {
-                left = this.parBinTail(left, pos, this.parsePrefix, "*");
-                continue;
-            }
-            if (this.test("/")) {
-                left = this.parBinTail(left, pos, this.parsePrefix, "/");
+            if (this.test("*") || this.test("/")) {
+                const op = this.current().type as BinaryType;
+                left = this.parBinTail(left, pos, rs, this.parsePrefix, op);
                 continue;
             }
             break;
@@ -818,23 +805,24 @@ export class Parser {
     private parBinTail(
         left: Expr,
         span: Span,
-        parseRight: (this: Parser) => Expr,
+        rs: ExprRestricts,
+        parseRight: (this: Parser, rs: ExprRestricts) => Expr,
         binaryType: BinaryType,
     ): Expr {
         this.step();
-        const right = parseRight.call(this);
+        const right = parseRight.call(this, rs);
         return this.expr(
             { tag: "binary", binaryType, left, right },
             span,
         );
     }
 
-    private parsePrefix(): Expr {
+    private parsePrefix(rs: ExprRestricts): Expr {
         const pos = this.span();
         if (this.test("not") || this.test("-")) {
             const unaryType = this.current().type as UnaryType;
             this.step();
-            const expr = this.parsePrefix();
+            const expr = this.parsePrefix(rs);
             return this.expr({ tag: "unary", unaryType, expr }, pos);
         }
         if (this.test("&")) {
@@ -849,19 +837,19 @@ export class Parser {
                 this.step();
                 mut = true;
             }
-            const expr = this.parsePrefix();
+            const expr = this.parsePrefix(rs);
             return this.expr({ tag: "ref", expr, mut, refType }, pos);
         }
         if (this.test("*")) {
             this.step();
-            const expr = this.parsePrefix();
+            const expr = this.parsePrefix(rs);
             return this.expr({ tag: "deref", expr }, pos);
         }
-        return this.parsePostfix();
+        return this.parsePostfix(rs);
     }
 
-    private parsePostfix(): Expr {
-        let subject = this.parseOperand();
+    private parsePostfix(rs: ExprRestricts): Expr {
+        let subject = this.parseOperand(rs);
         while (true) {
             if (this.test(".")) {
                 subject = this.parseFieldTail(subject);
@@ -917,14 +905,14 @@ export class Parser {
         return Res.Ok(this.parseExpr());
     }
 
-    private parseOperand(): Expr {
+    private parseOperand(rs: ExprRestricts): Expr {
         const pos = this.span();
         if (this.test("ident")) {
             const pathRes = this.parsePath();
             if (!pathRes.ok) {
                 return this.expr({ tag: "error" }, pos);
             }
-            if (this.test("{")) {
+            if (this.test("{") && !(rs & ExprRestricts.NoStructs)) {
                 this.step();
                 const fields = this.parseDelimitedList(
                     this.parseExprField,
@@ -1264,3 +1252,9 @@ export class Parser {
         return this.cx.ty(kind, span);
     }
 }
+
+const ExprRestricts = {
+    NoStructs: 1 << 0,
+} as const;
+
+type ExprRestricts = (typeof ExprRestricts)[keyof typeof ExprRestricts];

@@ -45,7 +45,9 @@ export class PackCompiler {
         const resols = new Resolver(this.ctx, entryFileAst).resolve();
         const checker = new Checker(this.ctx, entryFileAst, resols);
         console.log(
-            "=== HIR ===\n" + new HirStringifyer(checker).file(entryFileAst),
+            "=== HIR ===\n" +
+                new HirStringifyer(this.ctx, checker)
+                    .file(entryFileAst),
         );
         const astLowerer = new AstLowerer(
             this.ctx,

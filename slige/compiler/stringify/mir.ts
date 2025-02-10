@@ -10,11 +10,9 @@ import {
     ProjElem,
     RVal,
     Stmt,
-    StmtKind,
     Ter,
 } from "@slige/middle";
 import { Ctx, exhausted, IdMap, todo } from "@slige/common";
-import { Checker } from "@slige/check";
 import { Ty, tyToString } from "@slige/ty";
 
 export class MirFnStringifyer {

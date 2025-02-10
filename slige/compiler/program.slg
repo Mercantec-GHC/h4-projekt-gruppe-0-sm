@@ -4,12 +4,12 @@ fn add(lhs: int, rhs: int) -> int {
 }
 
 fn main() {
-    let a = 5;
-    let b = 7 + a;
+    let foo = 5;
+    let bar = 7 + foo;
 
-    if true {}
+    if foo {} else {}
 
-    let c = add(a, b);
+    let c = add(foo, bar);
 }
 
 

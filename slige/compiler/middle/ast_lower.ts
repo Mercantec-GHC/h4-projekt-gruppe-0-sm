@@ -178,7 +178,10 @@ export class FnLowerer {
                     place: { local: patLocal, proj: [] },
                     rval: {
                         tag: "use",
-                        operand: { tag: "move", place: { local, proj } },
+                        operand: this.copyOrMoveLocal(
+                            local,
+                            this.locals.get(local)!.ty,
+                        ),
                     },
                 });
                 return;
@@ -290,10 +293,40 @@ export class FnLowerer {
     }
 
     private lowerIfExpr(expr: ast.Expr, kind: ast.IfExpr): RVal {
-        const cond = this.lowerExprToOperand(kind.cond);
+        const ty = this.ch.exprTy(expr);
+        const discr = this.lowerExprToOperand(kind.cond);
         const condBlock = this.currentBlock!;
         if (kind.falsy) {
-            return todo();
+            const local = this.local(ty);
+
+            const truthBlock = this.pushBlock();
+            const truthy = this.lowerExpr(kind.truthy);
+            this.addStmt({
+                tag: "assign",
+                place: { local, proj: [] },
+                rval: truthy,
+            });
+
+            const falsyBlock = this.pushBlock();
+            const falsy = this.lowerExpr(kind.falsy);
+            this.addStmt({
+                tag: "assign",
+                place: { local, proj: [] },
+                rval: falsy,
+            });
+
+            const exit = this.pushBlock();
+            this.setTer({ tag: "goto", target: exit.id }, truthBlock);
+            this.setTer({ tag: "goto", target: exit.id }, falsyBlock);
+
+            this.setTer({
+                tag: "switch",
+                discr,
+                targets: [{ value: 1, target: truthBlock.id }],
+                otherwise: falsyBlock.id,
+            }, condBlock);
+
+            return { tag: "use", operand: this.copyOrMoveLocal(local, ty) };
         } else {
             if (this.ch.exprTy(expr).kind.tag !== "null") {
                 throw new Error();
@@ -304,7 +337,7 @@ export class FnLowerer {
             this.setTer({ tag: "goto", target: exit.id }, truthBlock);
             this.setTer({
                 tag: "switch",
-                discr: cond,
+                discr,
                 targets: [{ value: 1, target: truthBlock.id }],
                 otherwise: exit.id,
             }, condBlock);
@@ -361,7 +394,7 @@ export class FnLowerer {
                     place: { local, proj: [] },
                     rval,
                 });
-                return { tag: "move", place: { local, proj: [] } };
+                return this.copyOrMoveLocal(local, ty);
             }
         }
         exhausted(k);
@@ -388,24 +421,7 @@ export class FnLowerer {
                 if (patRes.kind.tag === "fn_param") {
                     this.paramLocals.set(local, patRes.kind.paramIdx);
                 }
-                const isCopyable = (() => {
-                    switch (ty.kind.tag) {
-                        case "error":
-                        case "unknown":
-                            return false;
-                        case "null":
-                        case "int":
-                        case "bool":
-                            return true;
-                        case "fn":
-                            return false;
-                    }
-                    exhausted(ty.kind);
-                })();
-                return {
-                    tag: isCopyable ? "copy" : "move",
-                    place: { local, proj: [] },
-                };
+                return this.copyOrMoveLocal(local, ty);
             }
             case "fn": {
                 const { item, kind } = re.kind;
@@ -413,6 +429,27 @@ export class FnLowerer {
             }
         }
         exhausted(re.kind);
+    }
+
+    private copyOrMoveLocal(local: LocalId, ty: Ty): Operand {
+        const isCopyable = (() => {
+            switch (ty.kind.tag) {
+                case "error":
+                case "unknown":
+                    return false;
+                case "null":
+                case "int":
+                case "bool":
+                    return true;
+                case "fn":
+                    return false;
+            }
+            exhausted(ty.kind);
+        })();
+        return {
+            tag: isCopyable ? "copy" : "move",
+            place: { local, proj: [] },
+        };
     }
 
     private local(ty: Ty, ident?: ast.Ident): LocalId {

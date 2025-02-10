@@ -1,10 +1,11 @@
 import * as ast from "@slige/ast";
-import { exhausted, todo } from "@slige/common";
+import { Ctx, exhausted, todo } from "@slige/common";
 import { Checker } from "@slige/check";
-import { Ty } from "@slige/ty";
+import { Ty, tyToString } from "@slige/ty";
 
 export class HirStringifyer {
     public constructor(
+        private ctx: Ctx,
         private ch: Checker,
     ) {}
 
@@ -14,7 +15,7 @@ export class HirStringifyer {
         ).join("\n");
     }
 
-    public stmt(stmt: ast.Stmt, depth = 0): string {
+    public stmt(stmt: ast.Stmt, d = 0): string {
         const k = stmt.kind;
         switch (k.tag) {
             case "error":
@@ -23,18 +24,18 @@ export class HirStringifyer {
                 return this.item(k.item);
             case "let":
                 return `let ${this.pat(k.pat)}${
-                    k.expr && ` = ${this.expr(k.expr)}` || ""
+                    k.expr && ` = ${this.expr(k.expr, d)}` || ""
                 };`;
             case "return":
-                return `return${k.expr && ` ${this.expr(k.expr)}` || ""};`;
+                return `return${k.expr && ` ${this.expr(k.expr, d)}` || ""};`;
             case "break":
-                return `break${k.expr && ` ${this.expr(k.expr)}` || ""};`;
+                return `break${k.expr && ` ${this.expr(k.expr, d)}` || ""};`;
             case "continue":
                 return `continue;`;
             case "assign":
-                return `${this.expr(k.subject)} = ${this.expr(k.value)};`;
+                return `${this.expr(k.subject, d)} = ${this.expr(k.value, d)};`;
             case "expr":
-                return `${this.expr(k.expr)};`;
+                return `${this.expr(k.expr, d)};`;
         }
         exhausted(k);
     }
@@ -76,7 +77,7 @@ export class HirStringifyer {
         exhausted(k);
     }
 
-    public expr(expr: ast.Expr, depth = 0): string {
+    public expr(expr: ast.Expr, d: number): string {
         const k = expr.kind;
         switch (k.tag) {
             case "error":
@@ -102,19 +103,21 @@ export class HirStringifyer {
             case "index":
                 return todo(k.tag);
             case "call":
-                return `${this.expr(k.expr)}(${
-                    k.args.map((arg) => this.expr(arg)).join(", ")
+                return `${this.expr(k.expr, d)}(${
+                    k.args.map((arg) => this.expr(arg, d)).join(", ")
                 })`;
             case "unary":
                 return todo(k.tag);
             case "binary":
-                return `${this.expr(k.left)} ${k.binaryType} ${
-                    this.expr(k.right)
+                return `${this.expr(k.left, d)} ${k.binaryType} ${
+                    this.expr(k.right, d)
                 }`;
             case "block":
-                return todo(k.tag);
+                return this.block(k.block, d);
             case "if":
-                return `if ${this.expr(k.cond)}`;
+                return `if ${this.expr(k.cond, d)} ${this.expr(k.truthy, d)}${
+                    k.falsy && ` else ${this.expr(k.falsy, d)}` || ""
+                }`;
             case "loop":
             case "while":
             case "for":
@@ -124,7 +127,7 @@ export class HirStringifyer {
         exhausted(k);
     }
 
-    public pat(pat: ast.Pat, depth = 0): string {
+    public pat(pat: ast.Pat): string {
         const k = pat.kind;
         switch (k.tag) {
             case "error":
@@ -139,41 +142,29 @@ export class HirStringifyer {
         exhausted(k);
     }
 
-    public block(block: ast.Block, depth = 0): string {
+    public block(block: ast.Block, d: number): string {
+        if (block.stmts.length === 0 && !block.expr) {
+            return "{}";
+        }
         return `{\n${
             [
                 ...block.stmts
-                    .map((stmt) => this.stmt(stmt, depth + 1)),
-                ...(block.expr ? [this.expr(block.expr)] : []),
+                    .map((stmt) => this.stmt(stmt, d + 1)),
+                ...(block.expr ? [this.expr(block.expr, d + 1)] : []),
             ]
-                .map((str) => indent(depth + 1) + str)
+                .map((str) => indent(d + 1) + str)
                 .join("\n")
-        }\n${indent(depth)}}`;
+        }\n${indent(d)}}`;
     }
 
     public path(path: ast.Path): string {
-        return path.segments.map((seg) => seg.ident.text).join("::");
+        return path.segments
+            .map((seg) => seg.ident.text)
+            .join("::");
     }
 
     public ty(ty: Ty): string {
-        const k = ty.kind;
-        switch (k.tag) {
-            case "error":
-                return "<error>";
-            case "unknown":
-                return "<unknown>";
-            case "null":
-                return "null";
-            case "int":
-                return "int";
-            case "bool":
-                return "bool";
-            case "fn":
-                return `fn ${k.item.ident}(${
-                    k.params.map((param) => this.ty(param)).join(", ")
-                }) -> ${this.ty(k.returnTy)}`;
-        }
-        exhausted(k);
+        return tyToString(this.ctx, ty);
     }
 }
 
