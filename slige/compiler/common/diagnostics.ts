@@ -127,9 +127,15 @@ export function prettyPrintReport(ctx: Ctx, rep: Report) {
         }
     } else if (rep.pos) {
         console.error(
-            `${rep.pos.line.toString().padStart(4, " ")}| ${
+            `    %c|`,
+            "color: cyan",
+        );
+        console.error(
+            `%c${rep.pos.line.toString().padStart(4, " ")}| %c${
                 ctx.filePosLineText(rep.file, rep.pos)
             }`,
+            "color: cyan",
+            "",
         );
         console.error(
             `    %c| %c${" ".repeat(rep.pos.col - 1)}^\x1b[0m`,

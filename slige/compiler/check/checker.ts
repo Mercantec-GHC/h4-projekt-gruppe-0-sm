@@ -141,19 +141,59 @@ export class Checker {
     }
 
     private checkAssignableExpr(expr: ast.Expr, ty: Ty, valSpan: Span) {
-        todo();
-        switch (ty.kind.tag) {
+        const k = expr.kind;
+        switch (k.tag) {
             case "error":
-                this.exprTys.set(expr.id, ty);
                 return;
-            case "unknown":
-                this.exprTys.set(expr.id, ty);
+            case "path": {
+                if (k.qty || k.path.segments.length !== 1) {
+                    this.report("cannot assign to expression", expr.span);
+                    return;
+                }
+                const re = this.re.exprRes(expr.id);
+                if (re.kind.tag !== "local") {
+                    this.report("cannot assign to expression", expr.span);
+                    return;
+                }
+                const patRe = this.re.patRes(re.kind.id);
+                if (patRe.pat.kind.tag !== "bind") {
+                    throw new Error();
+                }
+                if (!patRe.pat.kind.mut) {
+                    this.report("local is not declared mutable", expr.span);
+                    return;
+                }
                 return;
+            }
+            case "group":
+                this.checkAssignableExpr(expr, ty, valSpan);
+                return;
+            case "array":
+            case "repeat":
+            case "struct":
+            case "deref":
+            case "elem":
+            case "field":
+            case "index":
+                return todo();
             case "null":
             case "int":
             case "bool":
-            case "fn":
+            case "str":
+            case "ref":
+            case "call":
+            case "unary":
+            case "binary":
+            case "block":
+            case "if":
+            case "loop":
+            case "while":
+            case "for":
+            case "c_for":
+                this.report("cannot assign to expression", expr.span);
+                return;
         }
+        exhausted(k);
     }
 
     public fnItemTy(item: ast.Item, kind: ast.FnItem): Ty {
