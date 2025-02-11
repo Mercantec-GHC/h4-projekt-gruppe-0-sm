@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/results.dart';
 
 class ProductRepo extends ChangeNotifier {
   int _nextId = 0;
@@ -31,6 +32,15 @@ class ProductRepo extends ChangeNotifier {
       }).toList();
     }
     notifyListeners();
+  }
+
+  Result<Product, String> productWithBarcode(String barcode) {
+    for (var i = 0; i < products.length; i++) {
+      if (products[i].barcode == barcode) {
+        return Ok(products[i]);
+      }
+    }
+    return Err("Product with barcode $barcode doesn't exist");
   }
 
   void _addAllProducts() {
@@ -76,6 +86,12 @@ class ProductRepo extends ChangeNotifier {
           name: "Jägermeister 750 ml",
           price: 60,
           description: ""),
+      Product(
+          id: _nextId++,
+          barcode: "5711953068881",
+          name: "Protein Chokoladedrik",
+          price: 15,
+          description: "Arla's protein chokolade drik der giver store muskler"),
     ];
   }
 }
@@ -93,11 +109,13 @@ class Product {
   final String description;
   final int price;
   final Coordinate? location;
+  final String? barcode;
 
   Product(
       {required this.id,
       required this.name,
       required this.price,
       required this.description,
-      this.location});
+      this.location,
+      this.barcode});
 }

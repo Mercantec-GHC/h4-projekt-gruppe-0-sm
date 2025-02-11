@@ -1,6 +1,11 @@
+import 'package:barcode_scan2/model/android_options.dart';
+import 'package:barcode_scan2/model/scan_options.dart';
+import 'package:barcode_scan2/platform_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/pages/finish_shopping_page.dart';
 import 'package:mobile/repos/cart.dart';
+import 'package:mobile/repos/product.dart';
+import 'package:mobile/results.dart';
 import 'package:mobile/widgets/primary_button.dart';
 import 'package:mobile/widgets/primary_card.dart';
 import 'package:provider/provider.dart';
@@ -181,7 +186,68 @@ class CartPage extends StatelessWidget {
                       child: Container(
                         margin: const EdgeInsets.only(left: 10),
                         child: PrimaryButton(
-                            onPressed: () {}, child: const Text("Skan vare")),
+                            onPressed: () async {
+                              final result = await BarcodeScanner.scan(
+                                  options: const ScanOptions(
+                                      android: AndroidOptions(
+                                          appBarTitle: "Skan varer"),
+                                      strings: {
+                                    "cancel": "Annullér",
+                                    "flash_on": "Lommelygte til",
+                                    "flash_off": "Lommelygte fra"
+                                  }));
+                              switch (result.type.name) {
+                                case "Cancelled":
+                                  final snackBar = const SnackBar(
+                                      content:
+                                          Text("Skanning af varer annulleret"));
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(snackBar);
+                                  }
+                                case "Barcode":
+                                  if (!context.mounted) {
+                                    return;
+                                  }
+                                  final CartRepo cartRepo =
+                                      context.read<CartRepo>();
+                                  final ProductRepo productRepo =
+                                      context.read<ProductRepo>();
+                                  final productResult = productRepo
+                                      .productWithBarcode(result.rawContent);
+                                  switch (productResult) {
+                                    case Ok<Product, String>():
+                                      {
+                                        cartRepo.addToCart(productResult.value);
+                                        final snackBar = SnackBar(
+                                            content: Text(
+                                                "Tilføjet ${productResult.value.name} til indkøbskurven"));
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(snackBar);
+                                      }
+                                    case Err<Product, String>():
+                                      final snackBar = const SnackBar(
+                                          content: Text(
+                                              "Varen du prøver at tilføje eksistere ikke"));
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(snackBar);
+                                  }
+
+                                case "Error":
+                                  if (!context.mounted) {
+                                    return;
+                                  }
+                                  final snackBar = const SnackBar(
+                                      content:
+                                          Text("Der skete en fejl, prøv igen"));
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(snackBar);
+
+                                default:
+                                  throw Exception("Unreachable");
+                              }
+                            },
+                            child: const Text("Skan vare")),
                       ),
                     ),
                   ],
