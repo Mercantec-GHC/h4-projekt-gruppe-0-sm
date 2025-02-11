@@ -178,7 +178,58 @@ class CartPage extends StatelessWidget {
                       child: Container(
                         margin: const EdgeInsets.only(right: 10),
                         child: PrimaryButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              final inputController = TextEditingController();
+                              showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) =>
+                                      AlertDialog(
+                                        title: const Text(
+                                            "Indtast stregkode nummer"),
+                                        content: TextField(
+                                          keyboardType: TextInputType.number,
+                                          controller: inputController,
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(context).pop(),
+                                              child: const Text("Cancel")),
+                                          TextButton(
+                                              onPressed: () {
+                                                final ProductRepo productRepo =
+                                                    context.read<ProductRepo>();
+                                                final CartRepo cartRepo =
+                                                    context.read<CartRepo>();
+                                                final productResult =
+                                                    productRepo
+                                                        .productWithBarcode(
+                                                            inputController
+                                                                .text);
+                                                switch (productResult) {
+                                                  case Ok<Product, String>():
+                                                    cartRepo.addToCart(
+                                                        productResult.value);
+                                                    final snackBar = SnackBar(
+                                                        content: Text(
+                                                            "Tilføjet ${productResult.value.name} til indkøbskurven"));
+                                                    ScaffoldMessenger.of(
+                                                            context)
+                                                        .showSnackBar(snackBar);
+                                                  case Err<Product, String>():
+                                                    final snackBar = const SnackBar(
+                                                        content: Text(
+                                                            "Den indtastede stregkode eksistere ikke"));
+                                                    ScaffoldMessenger.of(
+                                                            context)
+                                                        .showSnackBar(snackBar);
+                                                }
+                                                Navigator.of(context).pop();
+                                              },
+                                              child: const Text("Ok"))
+                                        ],
+                                      ));
+                            },
                             child: const Text("Indtast vare")),
                       ),
                     ),
