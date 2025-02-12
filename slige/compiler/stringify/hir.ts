@@ -22,10 +22,11 @@ export class HirStringifyer {
                 return "<error>;";
             case "item":
                 return this.item(k.item);
-            case "let":
+            case "let": {
                 return `let ${this.pat(k.pat)}${
                     k.expr && ` = ${this.expr(k.expr, d)}` || ""
                 };`;
+            }
             case "return":
                 return `return${k.expr && ` ${this.expr(k.expr, d)}` || ""};`;
             case "break":
@@ -33,7 +34,9 @@ export class HirStringifyer {
             case "continue":
                 return `continue;`;
             case "assign":
-                return `${this.expr(k.subject, d)} = ${this.expr(k.value, d)};`;
+                return `${this.expr(k.subject, d)} ${k.assignType} ${
+                    this.expr(k.value, d)
+                };`;
             case "expr":
                 return `${this.expr(k.expr, d)};`;
         }
@@ -119,10 +122,17 @@ export class HirStringifyer {
                     k.falsy && ` else ${this.expr(k.falsy, d)}` || ""
                 }`;
             case "loop":
+                return `loop ${this.expr(k.body, d)}`;
             case "while":
+                return `while ${this.expr(k.cond, d)} ${this.expr(k.body, d)}`;
             case "for":
-            case "c_for":
                 return todo(k.tag);
+            case "c_for":
+                return `for (${k.decl && this.stmt(k.decl, d) || ";"}${
+                    k.cond && ` ${this.expr(k.cond, d)}` || ""
+                };${k.incr && ` ${this.stmt(k.incr, d)}` || ""}) ${
+                    this.expr(k.body, d)
+                }`;
         }
         exhausted(k);
     }

@@ -52,11 +52,13 @@ export class MirFnStringifyer {
             .filter((local) => !fn.paramLocals.has(local.id))
             .map((local) => `#let ${this.localDef(local)}`)
             .join("\n");
-        return `fn ${fn.label}(${paramsStr}) {\n${localsStr}\n${
-            fn.blocks.values().toArray()
-                .map((block) => this.block(block))
-                .join("\n")
-        }\n}`.replaceAll("#", "    ");
+        const blocks = fn.blocks
+            .values()
+            .toArray()
+            .map((block) => this.block(block))
+            .join("\n");
+        return `fn ${fn.label}(${paramsStr}) {\n${localsStr}\n${blocks}\n}`
+            .replaceAll("#", "    ");
     }
 
     private localDef(local: Local): string {
