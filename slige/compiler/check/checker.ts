@@ -37,7 +37,7 @@ export class Checker {
             Ty({ tag: "null" });
     }
 
-    private checkLetStmtTy(stmt: ast.Stmt, kind: ast.LetStmt) {
+    private checkLetStmt(stmt: ast.Stmt, kind: ast.LetStmt) {
         if (this.stmtChecked.has(stmt.id)) {
             return;
         }
@@ -82,6 +82,42 @@ export class Checker {
                 return todo();
         }
         exhausted(k);
+    }
+
+    public checkBreakStmt(stmt: ast.Stmt, kind: ast.BreakStmt) {
+        if (this.stmtChecked.has(stmt.id)) {
+            return;
+        }
+        this.stmtChecked.add(stmt.id);
+        const re = this.re.loopRes(stmt.id);
+        if (re.tag === "error") {
+            return;
+        }
+        if (re.tag !== "loop") {
+            if (kind.expr) {
+                this.report(
+                    `'${re.tag}'-style loop cannot break with value`,
+                    stmt.span,
+                );
+                return;
+            }
+            return;
+        }
+        const exTy = this.exprTys.get(re.expr.id)!;
+        if (!kind.expr) {
+            const ty = Ty({ tag: "null" });
+            const tyRes = this.resolveTys(ty, exTy);
+            if (!tyRes.ok) {
+                this.report(tyRes.val, stmt.span);
+                return;
+            }
+            this.exprTys.set(re.expr.id, tyRes.val)!;
+            return;
+        }
+        const ty = this.exprTy(kind.expr, exTy);
+        if (ty.kind.tag !== "error") {
+            this.exprTys.set(re.expr.id, ty);
+        }
     }
 
     public checkAssignStmt(stmt: ast.Stmt, kind: ast.AssignStmt) {
@@ -207,9 +243,9 @@ export class Checker {
         return Ty({ tag: "fn", item, kind, params, returnTy });
     }
 
-    public exprTy(expr: ast.Expr): Ty {
+    public exprTy(expr: ast.Expr, expected = Ty({ tag: "unknown" })): Ty {
         return this.exprTys.get(expr.id) ||
-            this.checkExpr(expr, Ty({ tag: "unknown" }));
+            this.checkExpr(expr, expected);
     }
 
     private checkExpr(expr: ast.Expr, expected: Ty): Ty {
@@ -256,13 +292,13 @@ export class Checker {
             case "if":
                 return this.checkIfExpr(expr, k, expected);
             case "loop":
-                return todo();
+                return this.checkLoopExpr(expr, k, expected);
             case "while":
-                return todo();
+                return this.checkWhileExpr(expr, k, expected);
             case "for":
                 return todo();
             case "c_for":
-                return todo();
+                return this.checkCForExpr(expr, k, expected);
         }
         exhausted(k);
     }
@@ -427,6 +463,80 @@ export class Checker {
         return bothRes.val;
     }
 
+    private checkLoopExpr(
+        expr: ast.Expr,
+        kind: ast.LoopExpr,
+        expected: Ty,
+    ): Ty {
+        this.exprTys.set(expr.id, expected);
+
+        const body = this.exprTy(kind.body, Ty({ tag: "unknown" }));
+        if (body.kind.tag !== "null") {
+            if (body.kind.tag !== "error") {
+                this.report("loop body must not yield a value", kind.body.span);
+            }
+            const ty = Ty({ tag: "error" });
+            this.exprTys.set(expr.id, ty);
+            return ty;
+        }
+
+        for (const { stmt, kind } of this.re.loopBreaks(expr.id)) {
+            this.checkBreakStmt(stmt, kind);
+        }
+
+        return this.exprTys.get(expr.id)!;
+    }
+
+    private checkWhileExpr(
+        expr: ast.Expr,
+        kind: ast.LoopExpr,
+        expected: Ty,
+    ): Ty {
+        const ty = Ty({ tag: "null" });
+        this.exprTys.set(expr.id, ty);
+
+        const body = this.exprTy(kind.body, Ty({ tag: "unknown" }));
+        if (body.kind.tag !== "null") {
+            if (body.kind.tag !== "error") {
+                this.report("loop body must not yield a value", kind.body.span);
+            }
+            const ty = Ty({ tag: "error" });
+            this.exprTys.set(expr.id, ty);
+            return ty;
+        }
+
+        for (const { stmt, kind } of this.re.loopBreaks(expr.id)) {
+            this.checkBreakStmt(stmt, kind);
+        }
+
+        return ty;
+    }
+
+    private checkCForExpr(
+        expr: ast.Expr,
+        kind: ast.LoopExpr,
+        expected: Ty,
+    ): Ty {
+        const ty = Ty({ tag: "null" });
+        this.exprTys.set(expr.id, ty);
+
+        const body = this.exprTy(kind.body, Ty({ tag: "unknown" }));
+        if (body.kind.tag !== "null") {
+            if (body.kind.tag !== "error") {
+                this.report("loop body must not yield a value", kind.body.span);
+            }
+            const ty = Ty({ tag: "error" });
+            this.exprTys.set(expr.id, ty);
+            return ty;
+        }
+
+        for (const { stmt, kind } of this.re.loopBreaks(expr.id)) {
+            this.checkBreakStmt(stmt, kind);
+        }
+
+        return ty;
+    }
+
     private tyTy(ty: ast.Ty): Ty {
         return this.tyTys.get(ty.id) ||
             this.checkTy(ty);
@@ -484,7 +594,7 @@ export class Checker {
                         return ty;
                     }
                     case "let": {
-                        this.checkLetStmtTy(patRes.kind.stmt, patRes.kind.kind);
+                        this.checkLetStmt(patRes.kind.stmt, patRes.kind.kind);
                         const ty = this.patTy(pat);
                         this.patTys.set(pat.id, ty);
                         return ty;

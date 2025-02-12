@@ -50,6 +50,12 @@ export class FnLowerer {
 
     private paramLocals = new IdMap<LocalId, number>();
 
+    private loopInfos = new IdMap<AstId, {
+        loopBlock: BlockId;
+        endBlock: BlockId;
+        resultLocal?: LocalId;
+    }>();
+
     public constructor(
         private ctx: Ctx,
         private re: Resols,
@@ -107,7 +113,9 @@ export class FnLowerer {
             case "let":
                 return this.lowerLetStmt(stmt, k);
             case "return":
+                return todo(k.tag);
             case "break":
+                return this.lowerBreakStmt(stmt, k);
             case "continue":
                 return todo(k.tag);
             case "assign":
@@ -167,6 +175,27 @@ export class FnLowerer {
                 return todo();
         }
         exhausted(k);
+    }
+
+    private lowerBreakStmt(stmt: ast.Stmt, kind: ast.BreakStmt) {
+        this.ch.checkBreakStmt(stmt, kind);
+        const re = this.re.loopRes(stmt.id);
+        if (re.tag === "error") {
+            return;
+        }
+        const info = this.loopInfos.get(re.expr.id)!;
+        if (kind.expr) {
+            const ty = this.ch.exprTy(kind.expr);
+            info.resultLocal = info.resultLocal ?? this.local(ty);
+            const rval = this.lowerExpr(kind.expr);
+            this.addStmt({
+                tag: "assign",
+                place: { local: info.resultLocal, proj: [] },
+                rval,
+            });
+        }
+        this.setTer({ tag: "goto", target: info.endBlock });
+        this.pushBlock();
     }
 
     private lowerAssignStmt(stmt: ast.Stmt, kind: ast.AssignStmt) {
@@ -262,10 +291,13 @@ export class FnLowerer {
             case "if":
                 return this.lowerIfExpr(expr, k);
             case "loop":
+                return this.lowerLoopExpr(expr, k);
             case "while":
+                return this.lowerWhileExpr(expr, k);
             case "for":
-            case "c_for":
                 return todo(k.tag);
+            case "c_for":
+                return this.lowerCForExpr(expr, k);
         }
         exhausted(k);
     }
@@ -367,8 +399,11 @@ export class FnLowerer {
             }
             const truthBlock = this.pushBlock();
             this.lowerExpr(kind.truthy);
-            const exit = this.pushBlock();
-            this.setTer({ tag: "goto", target: exit.id }, truthBlock);
+            const exit = this.createBlock();
+
+            this.setTer({ tag: "goto", target: exit.id });
+            this.pushCreatedBlock(exit);
+
             this.setTer({
                 tag: "switch",
                 discr,
@@ -380,6 +415,146 @@ export class FnLowerer {
                 operand: { tag: "const", val: { tag: "null" } },
             };
         }
+    }
+
+    private lowerLoopExpr(expr: ast.Expr, kind: ast.LoopExpr): RVal {
+        const entryBlock = this.currentBlock!;
+        const loopBlock = this.pushBlock();
+
+        const endBlock = this.createBlock();
+
+        const info = {
+            loopBlock: loopBlock.id,
+            endBlock: endBlock.id,
+            resultLocal: undefined,
+        };
+        this.loopInfos.set(expr.id, info);
+
+        const rval = this.lowerExpr(kind.body);
+        // ignore value;
+        void rval;
+
+        this.setTer({ tag: "goto", target: loopBlock.id });
+        this.setTer({ tag: "goto", target: loopBlock.id }, entryBlock);
+
+        this.pushCreatedBlock(endBlock);
+
+        if (info.resultLocal) {
+            const ty = this.ch.exprTy(expr);
+            return {
+                tag: "use",
+                operand: this.copyOrMoveLocal(info.resultLocal, ty),
+            };
+        } else {
+            return {
+                tag: "use",
+                operand: { tag: "const", val: { tag: "null" } },
+            };
+        }
+    }
+
+    private lowerWhileExpr(expr: ast.Expr, kind: ast.WhileExpr): RVal {
+        const enterBlock = this.currentBlock!;
+        const condBlock = this.pushBlock();
+        this.setTer({ tag: "goto", target: condBlock.id }, enterBlock);
+        const condTy = this.ch.exprTy(kind.cond);
+        const condLocal = this.localMut(condTy);
+        const condVal = this.lowerExpr(kind.cond);
+        this.addStmt({
+            tag: "assign",
+            place: { local: condLocal, proj: [] },
+            rval: condVal,
+        });
+
+        if (this.ch.exprTy(expr).kind.tag !== "null") {
+            throw new Error();
+        }
+        const bodyBlock = this.pushBlock();
+        const exitBlock = this.createBlock();
+
+        this.loopInfos.set(expr.id, {
+            loopBlock: condBlock.id,
+            endBlock: exitBlock.id,
+        });
+
+        this.lowerExpr(kind.body);
+        this.setTer({ tag: "goto", target: condBlock.id });
+
+        this.pushCreatedBlock(exitBlock);
+
+        this.setTer({
+            tag: "switch",
+            discr: this.copyOrMoveLocal(condLocal, condTy),
+            targets: [{ value: 1, target: bodyBlock.id }],
+            otherwise: exitBlock.id,
+        }, condBlock);
+        return {
+            tag: "use",
+            operand: { tag: "const", val: { tag: "null" } },
+        };
+    }
+
+    private lowerCForExpr(expr: ast.Expr, kind: ast.CForExpr): RVal {
+        kind.decl && this.lowerStmt(kind.decl);
+        const enterBlock = this.currentBlock!;
+
+        if (this.ch.exprTy(expr).kind.tag !== "null") {
+            throw new Error();
+        }
+
+        let loopBlock: Block;
+        const exitBlock = this.createBlock();
+
+        if (kind.cond) {
+            const condBlock = this.pushBlock();
+            this.setTer({ tag: "goto", target: condBlock.id }, enterBlock);
+            const condTy = this.ch.exprTy(kind.cond);
+            const condLocal = this.localMut(condTy);
+            const condVal = this.lowerExpr(kind.cond);
+            this.addStmt({
+                tag: "assign",
+                place: { local: condLocal, proj: [] },
+                rval: condVal,
+            });
+
+            const bodyBlock = this.pushBlock();
+
+            this.setTer({
+                tag: "switch",
+                discr: this.copyOrMoveLocal(condLocal, condTy),
+                targets: [{ value: 1, target: bodyBlock.id }],
+                otherwise: exitBlock.id,
+            }, condBlock);
+
+            loopBlock = condBlock;
+
+            this.loopInfos.set(expr.id, {
+                loopBlock: condBlock.id,
+                endBlock: exitBlock.id,
+            });
+        } else {
+            loopBlock = this.pushBlock();
+
+            this.setTer({ tag: "goto", target: loopBlock.id }, loopBlock);
+
+            this.loopInfos.set(expr.id, {
+                loopBlock: loopBlock.id,
+                endBlock: exitBlock.id,
+            });
+        }
+
+        this.lowerExpr(kind.body);
+        if (kind.incr) {
+            this.lowerStmt(kind.incr);
+        }
+
+        this.setTer({ tag: "goto", target: loopBlock.id });
+
+        this.pushCreatedBlock(exitBlock);
+        return {
+            tag: "use",
+            operand: { tag: "const", val: { tag: "null" } },
+        };
     }
 
     private lowerExprToOperand(expr: ast.Expr): Operand {
@@ -508,6 +683,21 @@ export class FnLowerer {
         this.blocks.set(id, block);
         this.currentBlock = block;
         return block;
+    }
+
+    private createBlock(): Block {
+        const id = this.blockIds.nextThenStep();
+        const block: Block = {
+            id,
+            stmts: [],
+            terminator: { kind: { tag: "unset" } },
+        };
+        return block;
+    }
+
+    private pushCreatedBlock(block: Block) {
+        this.blocks.set(block.id, block);
+        this.currentBlock = block;
     }
 
     private setTer(kind: TerKind, block = this.currentBlock!) {

@@ -33,6 +33,18 @@ export const ResolveError = (ident: ast.Ident): Resolve => ({
     kind: { tag: "error" },
 });
 
+export type LoopResolve =
+    | { tag: "error" }
+    | { tag: "loop"; expr: ast.Expr; kind: ast.LoopExpr }
+    | { tag: "while"; expr: ast.Expr; kind: ast.WhileExpr }
+    | { tag: "for"; expr: ast.Expr; kind: ast.ForExpr }
+    | { tag: "cfor"; expr: ast.Expr; kind: ast.CForExpr };
+
+export type LoopBreakResolve = {
+    stmt: ast.Stmt;
+    kind: ast.BreakStmt;
+};
+
 export type Redef = {
     ident: ast.Ident;
 };

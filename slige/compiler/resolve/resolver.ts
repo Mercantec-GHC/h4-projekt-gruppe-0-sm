@@ -13,6 +13,8 @@ import {
 import {
     FnSyms,
     LocalSyms,
+    LoopBreakResolve,
+    LoopResolve,
     PatResolve,
     PatResolveKind,
     Redef,
@@ -26,6 +28,8 @@ export class Resols {
     public constructor(
         private exprResols: IdMap<AstId, Resolve>,
         private patResols: IdMap<AstId, PatResolve>,
+        private loopsResols: IdMap<AstId, LoopResolve>,
+        private loopBreakResols: IdMap<AstId, LoopBreakResolve[]>,
     ) {}
 
     public exprRes(id: AstId): Resolve {
@@ -41,6 +45,20 @@ export class Resols {
         }
         return this.patResols.get(id)!;
     }
+
+    public loopRes(id: AstId): LoopResolve {
+        if (!this.loopsResols.has(id)) {
+            throw new Error();
+        }
+        return this.loopsResols.get(id)!;
+    }
+
+    public loopBreaks(id: AstId): LoopBreakResolve[] {
+        if (!this.loopBreakResols.has(id)) {
+            throw new Error();
+        }
+        return this.loopBreakResols.get(id)!;
+    }
 }
 
 export class Resolver implements ast.Visitor {
@@ -49,9 +67,13 @@ export class Resolver implements ast.Visitor {
     private syms: Syms = this.rootSyms;
 
     private exprResols = new IdMap<AstId, Resolve>();
-    private patResols = new IdMap<AstId, PatResolve>();
 
+    private patResols = new IdMap<AstId, PatResolve>();
     private patResolveStack: PatResolveKind[] = [];
+
+    private loopsResols = new IdMap<AstId, LoopResolve>();
+    private loopBreakResols = new IdMap<AstId, LoopBreakResolve[]>();
+    private loopResolveStack: LoopResolve[] = [{ tag: "error" }];
 
     public constructor(
         private ctx: Ctx,
@@ -63,6 +85,8 @@ export class Resolver implements ast.Visitor {
         return new Resols(
             this.exprResols,
             this.patResols,
+            this.loopsResols,
+            this.loopBreakResols,
         );
     }
 
@@ -99,6 +123,25 @@ export class Resolver implements ast.Visitor {
     visitModFileItem(item: ast.Item, kind: ast.ModFileItem): ast.VisitRes {
         ast.visitFile(this, kind.ast!);
         todo();
+    }
+
+    visitBreakStmt(stmt: ast.Stmt, kind: ast.BreakStmt): ast.VisitRes {
+        const res = this.loopResolveStack.at(-1)!;
+        if (res.tag === "error") {
+            this.report("no loop to break", stmt.span);
+            return;
+        }
+        this.loopsResols.set(stmt.id, res);
+        this.loopBreakResols.get(res.expr.id)!.push({ stmt, kind });
+    }
+
+    visitContinueStmt(stmt: ast.Stmt): ast.VisitRes {
+        const res = this.loopResolveStack.at(-1)!;
+        if (res.tag === "error") {
+            this.report("no loop to continue", stmt.span);
+            return;
+        }
+        this.loopsResols.set(stmt.id, res);
     }
 
     visitEnumItem(item: ast.Item, kind: ast.EnumItem): ast.VisitRes {
@@ -174,6 +217,42 @@ export class Resolver implements ast.Visitor {
 
     visitTypeAliasItem(item: ast.Item, kind: ast.TypeAliasItem): ast.VisitRes {
         todo();
+    }
+
+    visitLoopExpr(expr: ast.Expr, kind: ast.LoopExpr): ast.VisitRes {
+        this.genericVisitLoop(expr, kind.body, { tag: "loop", expr, kind });
+        return "stop";
+    }
+
+    visitWhileExpr(expr: ast.Expr, kind: ast.WhileExpr): ast.VisitRes {
+        ast.visitExpr(this, kind.cond);
+        this.genericVisitLoop(expr, kind.body, { tag: "while", expr, kind });
+        return "stop";
+    }
+
+    visitForExpr(expr: ast.Expr, kind: ast.ForExpr): ast.VisitRes {
+        todo();
+        return "stop";
+    }
+
+    visitCForExpr(expr: ast.Expr, kind: ast.CForExpr): ast.VisitRes {
+        const outerSyms = this.syms;
+        this.syms = new LocalSyms(this.syms);
+
+        kind.decl && ast.visitStmt(this, kind.decl);
+        kind.cond && ast.visitExpr(this, kind.cond);
+        kind.incr && ast.visitStmt(this, kind.incr);
+        this.genericVisitLoop(expr, kind.body, { tag: "cfor", expr, kind });
+        this.syms = outerSyms;
+        return "stop";
+    }
+
+    private genericVisitLoop(expr: ast.Expr, body: ast.Expr, res: LoopResolve) {
+        this.loopResolveStack.push(res);
+        this.loopBreakResols.set(expr.id, []);
+        ast.visitExpr(this, body);
+        this.loopResolveStack.pop();
+        return "stop";
     }
 
     visitBindPat(pat: ast.Pat, kind: ast.BindPat): ast.VisitRes {
