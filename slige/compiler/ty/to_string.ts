@@ -1,5 +1,5 @@
 import { Ctx, exhausted } from "@slige/common";
-import { Ty } from "./ty.ts";
+import { Ty, VariantData } from "./ty.ts";
 
 export function tyToString(ctx: Ctx, ty: Ty): string {
     const k = ty.kind;
@@ -21,6 +21,10 @@ export function tyToString(ctx: Ctx, ty: Ty): string {
                 .join(", ");
             const reTy = tyToString(ctx, k.returnTy);
             return `fn ${identText}(${params}) -> ${reTy}`;
+        }
+        case "struct": {
+            const identText = ctx.identText(k.item.ident.id);
+            return identText;
         }
     }
     exhausted(k);

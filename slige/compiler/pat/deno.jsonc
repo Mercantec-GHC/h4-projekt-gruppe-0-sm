@@ -1,0 +1,4 @@
+{
+    "name": "@slige/pat",
+    "exports": "./mod.ts",
+}

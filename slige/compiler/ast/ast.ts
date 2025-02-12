@@ -48,6 +48,7 @@ export type Item = {
     span: Span;
     ident: Ident;
     pub: boolean;
+    attrs: Attr[];
 };
 
 export type ItemKind =
@@ -95,11 +96,11 @@ export type VariantDataKind =
     | { tag: "tuple" } & TupleVariantData
     | { tag: "struct" } & StructVariantData;
 
-export type TupleVariantData = { elems: VariantData[] };
+export type TupleVariantData = { elems: FieldDef[] };
 export type StructVariantData = { fields: FieldDef[] };
 
 export type FieldDef = {
-    ident: Ident;
+    ident?: Ident;
     ty: Ty;
     pub: boolean;
     span: Span;
@@ -251,6 +252,7 @@ export type AnonFieldDef = {
 };
 
 export type Path = {
+    id: AstId;
     segments: PathSegment[];
     span: Span;
 };
@@ -264,5 +266,11 @@ export type PathSegment = {
 export type Ident = {
     id: IdentId;
     text: string;
+    span: Span;
+};
+
+export type Attr = {
+    ident: Ident;
+    args?: Expr[];
     span: Span;
 };

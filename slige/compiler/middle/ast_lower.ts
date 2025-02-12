@@ -307,6 +307,11 @@ export class FnLowerer {
         switch (re.kind.tag) {
             case "error":
                 return { tag: "error" };
+            case "enum":
+            case "struct":
+            case "variant":
+            case "field":
+                return todo();
             case "fn":
             case "local":
                 return {
@@ -617,6 +622,11 @@ export class FnLowerer {
         switch (re.kind.tag) {
             case "error":
                 return { tag: "error" };
+            case "enum":
+            case "struct":
+            case "variant":
+            case "field":
+                return todo();
             case "local": {
                 const patRes = this.re.patRes(re.kind.id);
                 const ty = this.ch.exprTy(expr);
@@ -651,6 +661,7 @@ export class FnLowerer {
                 case "bool":
                     return true;
                 case "fn":
+                case "struct":
                     return false;
             }
             exhausted(ty.kind);

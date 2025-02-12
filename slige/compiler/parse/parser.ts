@@ -1,12 +1,14 @@
 import {
     AnonFieldDef,
     AssignType,
+    Attr,
     BinaryType,
     Block,
     Cx,
     Expr,
     ExprField,
     ExprKind,
+    FieldDef,
     File,
     GenericParam,
     Ident,
@@ -23,8 +25,10 @@ import {
     Ty,
     TyKind,
     UnaryType,
+    Variant,
+    VariantData,
 } from "@slige/ast";
-import { Ctx, File as CtxFile, Res, Span } from "@slige/common";
+import { Ctx, File as CtxFile, Res, Span, todo } from "@slige/common";
 import { Lexer } from "./lexer.ts";
 import { TokenIter } from "./token.ts";
 import { SigFilter } from "./token.ts";
@@ -63,12 +67,15 @@ export class Parser {
     }
 
     private parseStmt(): Stmt {
+        const attrs = this.parseAttrs();
         if (
-            ["#", "pub", "mod", "fn"].some((tt) => this.test(tt))
+            ["pub", "mod", "enum", "struct", "fn", "type_alias"].some((tt) =>
+                this.test(tt)
+            )
         ) {
-            return this.parseItemStmt();
+            return this.parseItemStmt(undefined, false, attrs);
         } else if (
-            ["let", "type_alias", "return", "break"].some((tt) => this.test(tt))
+            ["let", "return", "break"].some((tt) => this.test(tt))
         ) {
             const expr = this.parseSingleLineBlockStmt();
             this.eatSemicolon();
@@ -83,6 +90,45 @@ export class Parser {
             this.eatSemicolon();
             return expr;
         }
+    }
+
+    private parseAttrs(): Attr[] {
+        const attrs: Attr[] = [];
+        while (this.test("#")) {
+            const begin = this.span();
+            this.step();
+            if (!this.test("[")) {
+                this.report("expected '['");
+                return attrs;
+            }
+            this.step();
+            if (!this.test("ident")) {
+                this.report("expected 'ident'");
+                return attrs;
+            }
+            const ident = this.parseIdent();
+            let args: Expr[] | undefined = undefined;
+            if (this.test("(")) {
+                this.step();
+                args = this.parseDelimitedList(
+                    this.parseAttrArg,
+                    ")",
+                    ",",
+                );
+            }
+            if (!this.test("]")) {
+                this.report("expected ']'");
+                return attrs;
+            }
+            const end = this.span();
+            this.step();
+            attrs.push({ ident, args, span: Span.fromto(begin, end) });
+        }
+        return attrs;
+    }
+
+    private parseAttrArg(): Res<Expr, undefined> {
+        return Res.Ok(this.parseExpr());
     }
 
     private parseMultiLineBlockExpr(): Expr {
@@ -110,9 +156,6 @@ export class Parser {
         const begin = this.span();
         if (this.test("let")) {
             return this.parseLet();
-        }
-        if (this.test("type_alias")) {
-            return this.parseTypeAlias();
         }
         if (this.test("return")) {
             return this.parseReturn();
@@ -143,16 +186,19 @@ export class Parser {
         this.step();
         const stmts: Stmt[] = [];
         while (!this.done()) {
+            const attrs = this.parseAttrs();
             if (this.test("}")) {
                 const span = Span.fromto(begin, this.span());
                 this.step();
                 return Res.Ok({ stmts, span });
             } else if (
-                ["#", "pub", "mod", "fn"].some((tt) => this.test(tt))
+                ["pub", "mod", "enum", "struct", "fn", "type_alias"].some((
+                    tt,
+                ) => this.test(tt))
             ) {
-                stmts.push(this.parseItemStmt());
+                stmts.push(this.parseItemStmt(undefined, false, attrs));
             } else if (
-                ["let", "type_alias", "return", "break"]
+                ["let", "return", "break"]
                     .some((tt) => this.test(tt))
             ) {
                 stmts.push(this.parseSingleLineBlockStmt());
@@ -210,67 +256,29 @@ export class Parser {
 
     private parseItemStmt(
         pos = this.span(),
-        details: StmtDetails = {
-            pub: false,
-            annos: [],
-        },
+        pub: boolean,
+        attrs: Attr[],
     ): Stmt {
-        const sbegin = this.span();
-        if (this.test("#") && !details.pub) {
+        if (this.test("pub") && !pub) {
             this.step();
-            if (!this.test("[")) {
-                this.report("expected '['");
-                return this.stmt({ tag: "error" }, sbegin);
-            }
-            this.step();
-            if (!this.test("ident")) {
-                this.report("expected 'ident'");
-                return this.stmt({ tag: "error" }, sbegin);
-            }
-            const ident = this.parseIdent();
-            const args: Expr[] = [];
-            if (this.test("(")) {
-                this.step();
-                if (!this.done() && !this.test(")")) {
-                    args.push(this.parseExpr());
-                    while (this.test(",")) {
-                        this.step();
-                        if (this.done() || this.test(")")) {
-                            break;
-                        }
-                        args.push(this.parseExpr());
-                    }
-                }
-                if (!this.test(")")) {
-                    this.report("expected ')'");
-                    return this.stmt({ tag: "error" }, sbegin);
-                }
-                this.step();
-            }
-            if (!this.test("]")) {
-                this.report("expected ']'");
-                return this.stmt({ tag: "error" }, sbegin);
-            }
-            this.step();
-            const anno = { ident, args, pos: sbegin };
-            return this.parseItemStmt(pos, {
-                ...details,
-                annos: [...details.annos, anno],
-            });
-        } else if (this.test("pub") && !details.pub) {
-            this.step();
-            return this.parseItemStmt(pos, { ...details, pub: true });
+            return this.parseItemStmt(pos, pub, attrs);
         } else if (this.test("mod")) {
-            return this.parseMod(details);
+            return this.parseModItem(pub, attrs);
+        } else if (this.test("enum")) {
+            return this.parseEnumItem(pub, attrs);
+        } else if (this.test("struct")) {
+            return this.parseStructItem(pub, attrs);
         } else if (this.test("fn")) {
-            return this.parseFn(details);
+            return this.parseFnItem(pub, attrs);
+        } else if (this.test("type_alias")) {
+            return this.parseTypeAliasItem(pub, attrs);
         } else {
             this.report("expected item statement");
             return this.stmt({ tag: "error" }, pos);
         }
     }
 
-    private parseMod(details: StmtDetails): Stmt {
+    private parseModItem(pub: boolean, attrs: Attr[]): Stmt {
         const pos = this.span();
         this.step();
         if (!this.test("ident")) {
@@ -288,7 +296,8 @@ export class Parser {
                     { tag: "mod_file", filePath },
                     pos,
                     ident,
-                    details.pub,
+                    pub,
+                    attrs,
                 ),
             }, pos);
         }
@@ -322,12 +331,123 @@ export class Parser {
                 },
                 pos,
                 ident,
-                details.pub,
+                pub,
+                attrs,
             ),
         }, pos);
     }
 
-    private parseFn(details: StmtDetails): Stmt {
+    private parseEnumItem(pub: boolean, attrs: Attr[]): Stmt {
+        const begin = this.span();
+        this.step();
+        if (!this.test("ident")) {
+            this.report("expected ident");
+            return this.stmt({ tag: "error" }, begin);
+        }
+        const ident = this.parseIdent();
+        if (!this.test("{")) {
+            this.report("expected '{'");
+            return this.stmt({ tag: "error" }, begin);
+        }
+        this.step();
+        const endSpan: [Span] = [begin];
+        const variants = this.parseDelimitedList(
+            this.parseVariant,
+            "}",
+            ",",
+            endSpan,
+        );
+        const span = Span.fromto(begin, endSpan[0]);
+        return this.stmt({
+            tag: "item",
+            item: this.item({ tag: "enum", variants }, span, ident, pub, attrs),
+        }, span);
+    }
+
+    private parseVariant(): Res<Variant, undefined> {
+        const begin = this.span();
+        let pub = false;
+        if (this.test("pub")) {
+            this.step();
+            pub = true;
+        }
+        if (!this.test("ident")) {
+            this.report("expected 'ident'");
+            return Res.Err(undefined);
+        }
+        const ident = this.parseIdent();
+        const data = this.parseVariantData();
+        return Res.Ok({
+            ident,
+            data,
+            pub,
+            span: Span.fromto(begin, data.span),
+        });
+    }
+
+    private parseStructItem(pub: boolean, attrs: Attr[]): Stmt {
+        const begin = this.span();
+        this.step();
+        if (!this.test("ident")) {
+            this.report("expected ident");
+            return this.stmt({ tag: "error" }, begin);
+        }
+        const ident = this.parseIdent();
+        const data = this.parseVariantData();
+        const span = Span.fromto(begin, data.span);
+        return this.stmt({
+            tag: "item",
+            item: this.item({ tag: "struct", data }, span, ident, pub, attrs),
+        }, span);
+    }
+
+    private parseVariantData(): VariantData {
+        const begin = this.span();
+        if (this.test("(")) {
+            const elems = this.parseDelimitedList(this.parseFieldDef, ")", ",");
+            return {
+                kind: { tag: "tuple", elems },
+                span: Span.fromto(begin, elems.at(-1)?.span ?? begin),
+            };
+        } else if (this.test("{")) {
+            const fields = this.parseDelimitedList(
+                this.parseFieldDef,
+                "}",
+                ",",
+            );
+            return {
+                kind: { tag: "struct", fields },
+                span: Span.fromto(begin, fields.at(-1)?.span ?? begin),
+            };
+        } else {
+            return {
+                kind: { tag: "unit" },
+                span: { begin: begin.end, end: begin.end },
+            };
+        }
+    }
+
+    private parseFieldDef(): Res<FieldDef, undefined> {
+        const begin = this.span();
+        let pub = false;
+        if (this.test("pub")) {
+            this.step();
+            pub = true;
+        }
+        let ident: Ident | undefined = undefined;
+        if (this.test("ident")) {
+            ident = this.parseIdent();
+            if (!this.test(":")) {
+                this.report("expected ':'");
+                return Res.Err(undefined);
+            }
+            this.step();
+        }
+        const ty = this.parseTy();
+        return Res.Ok({ ident, ty, pub, span: Span.fromto(begin, ty.span) });
+    }
+
+    private parseFnItem(pub: boolean, attrs: Attr[]): Stmt {
         const pos = this.span();
         this.step();
         if (!this.test("ident")) {
@@ -373,7 +493,8 @@ export class Parser {
                 },
                 pos,
                 ident,
-                details.pub,
+                pub,
+                attrs,
             ),
         }, pos);
     }
@@ -400,6 +521,7 @@ export class Parser {
         parseElem: (this: Parser, index: number) => ParseRes<T>,
         endToken: string,
         delimiter: string,
+        outEndSpan?: [Span],
     ): T[] {
         this.step();
         if (this.test(endToken)) {
@@ -430,6 +552,7 @@ export class Parser {
             this.report(`expected '${endToken}'`);
             return elems;
         }
+        outEndSpan && (outEndSpan[0] = this.span());
         this.step();
         return elems;
     }
@@ -468,7 +591,7 @@ export class Parser {
         return this.stmt({ tag: "let", pat, ty, expr }, pos);
     }
 
-    private parseTypeAlias(): Stmt {
+    private parseTypeAliasItem(pub: boolean, attrs: Attr[]): Stmt {
         const begin = this.span();
         this.step();
         if (!this.test("ident")) {
@@ -491,7 +614,8 @@ export class Parser {
                 },
                 Span.fromto(begin, ty.span),
                 ident,
-                false,
+                pub,
+                attrs,
             ),
         }, begin);
     }
@@ -644,7 +768,7 @@ export class Parser {
         return this.expr({ tag: "array", exprs }, pos);
     }
 
-    private parseStruct(): Expr {
+    private parseAnonStructExpr(): Expr {
         const pos = this.span();
         this.step();
         if (!this.test("{")) {
@@ -906,7 +1030,6 @@ export class Parser {
                 return this.expr({ tag: "error" }, pos);
             }
             if (this.test("{") && !(rs & ExprRestricts.NoStructs)) {
-                this.step();
                 const fields = this.parseDelimitedList(
                     this.parseExprField,
                     "}",
@@ -955,7 +1078,7 @@ export class Parser {
             return this.parseArray();
         }
         if (this.test("struct")) {
-            return this.parseStruct();
+            return this.parseAnonStructExpr();
         }
         if (this.test("{")) {
             return this.parseBlockExpr();
@@ -1166,7 +1289,7 @@ export class Parser {
                 span: Span.fromto(begin, end),
             });
         }
-        return Res.Ok({ segments, span: Span.fromto(begin, end) });
+        return Res.Ok(this.path(segments, Span.fromto(begin, end)));
     }
 
     private parseTyRes(): ParseRes<Ty> {
@@ -1229,8 +1352,9 @@ export class Parser {
         span: Span,
         ident: Ident,
         pub: boolean,
+        attrs: Attr[],
     ): Item {
-        return this.cx.item(kind, span, ident, pub);
+        return this.cx.item(kind, span, ident, pub, attrs);
     }
 
     private expr(kind: ExprKind, span: Span): Expr {
@@ -1243,6 +1367,10 @@ export class Parser {
 
     private ty(kind: TyKind, span: Span): Ty {
         return this.cx.ty(kind, span);
+    }
+
+    private path(segments: PathSegment[], span: Span): Path {
+        return this.cx.path(segments, span);
     }
 }
 

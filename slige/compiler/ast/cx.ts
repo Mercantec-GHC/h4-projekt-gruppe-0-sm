@@ -1,11 +1,14 @@
 import { AstId, Ids, Span } from "@slige/common";
 import {
+    Attr,
     Expr,
     ExprKind,
     Ident,
     Item,
     ItemKind,
     Pat,
+    Path,
+    PathSegment,
     PatKind,
     Stmt,
     StmtKind,
@@ -30,9 +33,10 @@ export class Cx {
         span: Span,
         ident: Ident,
         pub: boolean,
+        attrs: Attr[],
     ): Item {
         const id = this.id();
-        return { id, kind, span, ident, pub };
+        return { id, kind, span, ident, pub, attrs };
     }
 
     public expr(kind: ExprKind, span: Span): Expr {
@@ -48,5 +52,10 @@ export class Cx {
     public ty(kind: TyKind, span: Span): Ty {
         const id = this.id();
         return { id, kind, span };
+    }
+
+    public path(segments: PathSegment[], span: Span): Path {
+        const id = this.id();
+        return { id, segments, span };
     }
 }

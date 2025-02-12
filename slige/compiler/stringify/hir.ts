@@ -59,7 +59,9 @@ export class HirStringifyer {
             case "enum":
                 return todo();
             case "struct":
-                return todo();
+                return `struct ${ident}: ${
+                    this.ty(this.ch.structItemTy(item, k))
+                };`;
             case "fn": {
                 const ty = this.ch.fnItemTy(item, k);
                 if (ty.kind.tag !== "fn") {
@@ -98,7 +100,19 @@ export class HirStringifyer {
             case "group":
             case "array":
             case "repeat":
+                return todo(k.tag);
             case "struct":
+                return `${k.path ? `${this.path(k.path)}` : "struct "} {${
+                    [
+                        k.fields
+                            .map((field) =>
+                                `${indent(d + 1)}${field.ident.text}: ${
+                                    this.expr(field.expr, d + 1)
+                                },`
+                            )
+                            .join("\n"),
+                    ].map((s) => `\n${s}\n${indent(d)}`)
+                }}`;
             case "ref":
             case "deref":
             case "elem":

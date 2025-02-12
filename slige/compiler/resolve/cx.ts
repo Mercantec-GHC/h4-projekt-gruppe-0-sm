@@ -1,5 +1,5 @@
 import * as ast from "@slige/ast";
-import { AstId, IdBase, IdentId, IdMap, Res } from "@slige/common";
+import { AstId, IdentId, IdMap, Res } from "@slige/common";
 
 export interface Syms {
     getVal(ident: ast.Ident): Resolve;
@@ -16,7 +16,17 @@ export type Resolve = {
 
 export type ResolveKind =
     | { tag: "error" }
+    | { tag: "enum"; item: ast.Item; kind: ast.EnumItem }
+    | { tag: "struct"; item: ast.Item; kind: ast.StructItem }
     | { tag: "fn"; item: ast.Item; kind: ast.FnItem }
+    | {
+        tag: "variant";
+        item: ast.Item;
+        kind: ast.EnumItem;
+        variant: ast.Variant;
+        variantIdx: number;
+    }
+    | { tag: "field"; item: ast.Item; field: ast.FieldDef }
     | { tag: "local"; id: AstId };
 
 export type PatResolve = {
@@ -103,6 +113,31 @@ export class RootSyms implements Syms {
 }
 
 export class FnSyms implements Syms {
+    private syms = new SymsNsTab();
+
+    public constructor(
+        private parent: Syms,
+    ) {}
+
+    getVal(ident: ast.Ident): Resolve {
+        const res = this.syms.getVal(ident) || this.parent.getVal(ident);
+        if (res.kind.tag === "local") {
+            return ResolveError(ident);
+        }
+        return res;
+    }
+    getTy(ident: ast.Ident): Resolve {
+        return this.syms.getTy(ident) || this.parent.getTy(ident);
+    }
+    defVal(ident: ast.Ident, kind: ResolveKind): Res<void, Redef> {
+        return this.syms.defVal(ident, kind);
+    }
+    defTy(ident: ast.Ident, kind: ResolveKind): Res<void, Redef> {
+        return this.syms.defTy(ident, kind);
+    }
+}
+
+export class ItemSyms implements Syms {
     private syms = new SymsNsTab();
 
     public constructor(

@@ -12,6 +12,7 @@ import {
 } from "@slige/common";
 import {
     FnSyms,
+    ItemSyms,
     LocalSyms,
     LoopBreakResolve,
     LoopResolve,
@@ -27,6 +28,8 @@ import {
 export class Resols {
     public constructor(
         private exprResols: IdMap<AstId, Resolve>,
+        private tyResols: IdMap<AstId, Resolve>,
+        private pathResols: IdMap<AstId, Resolve>,
         private patResols: IdMap<AstId, PatResolve>,
         private loopsResols: IdMap<AstId, LoopResolve>,
         private loopBreakResols: IdMap<AstId, LoopBreakResolve[]>,
@@ -37,6 +40,20 @@ export class Resols {
             throw new Error();
         }
         return this.exprResols.get(id)!;
+    }
+
+    public tyRes(id: AstId): Resolve {
+        if (!this.tyResols.has(id)) {
+            throw new Error();
+        }
+        return this.tyResols.get(id)!;
+    }
+
+    public pathRes(id: AstId): Resolve {
+        if (!this.pathResols.has(id)) {
+            throw new Error();
+        }
+        return this.pathResols.get(id)!;
     }
 
     public patRes(id: AstId): PatResolve {
@@ -67,6 +84,8 @@ export class Resolver implements ast.Visitor {
     private syms: Syms = this.rootSyms;
 
     private exprResols = new IdMap<AstId, Resolve>();
+    private tyResols = new IdMap<AstId, Resolve>();
+    private pathResols = new IdMap<AstId, Resolve>();
 
     private patResols = new IdMap<AstId, PatResolve>();
     private patResolveStack: PatResolveKind[] = [];
@@ -84,6 +103,8 @@ export class Resolver implements ast.Visitor {
         ast.visitFile(this, this.entryFileAst);
         return new Resols(
             this.exprResols,
+            this.tyResols,
+            this.pathResols,
             this.patResols,
             this.loopsResols,
             this.loopBreakResols,
@@ -145,11 +166,33 @@ export class Resolver implements ast.Visitor {
     }
 
     visitEnumItem(item: ast.Item, kind: ast.EnumItem): ast.VisitRes {
-        todo();
+        this.syms.defTy(item.ident, { tag: "enum", item, kind });
+        const outerSyms = this.syms;
+        this.syms = new ItemSyms(this.syms);
+        for (const variant of kind.variants) {
+            ast.visitVariant(this, variant);
+        }
+        this.syms = outerSyms;
+        return "stop";
     }
 
     visitStructItem(item: ast.Item, kind: ast.StructItem): ast.VisitRes {
-        todo();
+        this.syms.defTy(item.ident, { tag: "struct", item, kind });
+        const outerSyms = this.syms;
+        this.syms = new ItemSyms(this.syms);
+        ast.visitVariantData(this, kind.data);
+        this.syms = outerSyms;
+        return "stop";
+    }
+
+    visitVariant(variant: ast.Variant): ast.VisitRes {
+        ast.visitVariantData(this, variant.data);
+        return "stop";
+    }
+
+    visitFieldDef(field: ast.FieldDef): ast.VisitRes {
+        ast.visitTy(this, field.ty);
+        return "stop";
     }
 
     private fnBodiesToCheck: [ast.Item, ast.FnItem][][] = [];
@@ -158,6 +201,14 @@ export class Resolver implements ast.Visitor {
         this.syms.defVal(item.ident, { tag: "fn", item, kind });
         this.fnBodiesToCheck.at(-1)!.push([item, kind]);
         return "stop";
+    }
+
+    visitUseItem(item: ast.Item, kind: ast.UseItem): ast.VisitRes {
+        todo();
+    }
+
+    visitTypeAliasItem(item: ast.Item, kind: ast.TypeAliasItem): ast.VisitRes {
+        todo();
     }
 
     private popAndVisitFnBodies() {
@@ -182,41 +233,20 @@ export class Resolver implements ast.Visitor {
     }
 
     visitPathExpr(expr: ast.Expr, kind: ast.PathExpr): ast.VisitRes {
-        if (kind.path.segments.length === 1) {
-            const res = this.syms.getVal(kind.path.segments[0].ident);
-            switch (res.kind.tag) {
-                case "error":
-                    return "stop";
-                case "fn":
-                    this.exprResols.set(expr.id, res);
-                    return "stop";
-                case "local":
-                    this.exprResols.set(expr.id, res);
-                    return "stop";
-            }
-            exhausted(res.kind);
+        if (kind.qty) {
+            return todo();
         }
-        const pathRes = this.resolveInnerPath(kind.path);
-        switch (pathRes.kind.tag) {
-            case "error":
-                todo();
-                return "stop";
-            case "fn":
-                todo();
-                return "stop";
-            case "local":
-                todo();
-                return "stop";
-        }
-        exhausted(pathRes.kind);
+        const res = this.resolveValPath(kind.path);
+        this.exprResols.set(expr.id, res);
+        return "stop";
     }
 
-    visitUseItem(item: ast.Item, kind: ast.UseItem): ast.VisitRes {
-        todo();
-    }
-
-    visitTypeAliasItem(item: ast.Item, kind: ast.TypeAliasItem): ast.VisitRes {
-        todo();
+    visitStructExpr(expr: ast.Expr, kind: ast.StructExpr): ast.VisitRes {
+        if (!kind.path) {
+            return todo();
+        }
+        this.resolveValPath(kind.path);
+        return "stop";
     }
 
     visitLoopExpr(expr: ast.Expr, kind: ast.LoopExpr): ast.VisitRes {
@@ -272,6 +302,15 @@ export class Resolver implements ast.Visitor {
         todo(pat, kind);
     }
 
+    visitPathTy(ty: ast.Ty, kind: ast.PathTy): ast.VisitRes {
+        if (kind.qty) {
+            return todo();
+        }
+        const res = this.resolveTyPath(kind.path);
+        this.tyResols.set(ty.id, res);
+        return "stop";
+    }
+
     visitPath(_path: ast.Path): ast.VisitRes {
         throw new Error("should not be reached");
     }
@@ -280,33 +319,78 @@ export class Resolver implements ast.Visitor {
         throw new Error("should not be reached");
     }
 
-    private resolveInnerPath(path: ast.Path): Resolve {
-        const res = path.segments.slice(1, path.segments.length)
-            .reduce((innerRes, seg) => {
-                const k = innerRes.kind;
+    private resolveValPath(path: ast.Path): Resolve {
+        let res: Resolve;
+        if (path.segments.length === 0) {
+            res = this.syms.getVal(path.segments[0].ident);
+        } else {
+            res = path.segments
+                .slice(1)
+                .reduce((inner, seg): Resolve => {
+                    const k = inner.kind;
+                    switch (k.tag) {
+                        case "error":
+                            return inner;
+                        case "enum":
+                            return this.resolveEnumVariant(k.item, k.kind, seg);
+                        case "struct":
+                        case "fn":
+                        case "variant":
+                        case "field":
+                        case "local":
+                            return todo();
+                    }
+                    exhausted();
+                }, this.syms.getTy(path.segments[0].ident));
+        }
+        this.pathResols.set(path.id, res);
+        return res;
+    }
+
+    private resolveTyPath(path: ast.Path): Resolve {
+        const res = path.segments
+            .slice(1)
+            .reduce((inner, seg): Resolve => {
+                const k = inner.kind;
                 switch (k.tag) {
                     case "error":
-                        return innerRes;
+                        return inner;
+                    case "enum":
+                        return this.resolveEnumVariant(k.item, k.kind, seg);
+                    case "struct":
                     case "fn":
-                        this.ctx.report({
-                            severity: "error",
-                            file: this.currentFile,
-                            span: seg.ident.span,
-                            msg: "function, not pathable",
-                        });
-                        return ResolveError(seg.ident);
+                    case "variant":
+                    case "field":
                     case "local":
-                        this.ctx.report({
-                            severity: "error",
-                            file: this.currentFile,
-                            span: seg.ident.span,
-                            msg: "local variable, not pathable",
-                        });
-                        return ResolveError(seg.ident);
+                        return todo();
                 }
-                exhausted(k);
+                exhausted();
             }, this.syms.getTy(path.segments[0].ident));
+        this.pathResols.set(path.id, res);
         return res;
+    }
+
+    private resolveEnumVariant(
+        item: ast.Item,
+        kind: ast.EnumItem,
+        seg: ast.PathSegment,
+    ): Resolve {
+        const { ident } = seg;
+        const found = kind.variants
+            .map((v, idx) => [v, idx] as const)
+            .find(([variant]) => variant.ident.id === ident.id);
+        if (!found) {
+            this.report(
+                `enum ${item.ident.text} has no member '${ident.text}'`,
+                seg.span,
+            );
+            return ResolveError(ident);
+        }
+        const [variant, variantIdx] = found;
+        return {
+            ident,
+            kind: { tag: "variant", item, kind, variant, variantIdx },
+        };
     }
 
     private report(msg: string, span: Span) {

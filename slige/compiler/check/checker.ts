@@ -12,7 +12,7 @@ import {
     todo,
 } from "@slige/common";
 import * as resolve from "@slige/resolve";
-import { Ty, tyToString } from "@slige/ty";
+import { ElemDef, FieldDef, Ty, tyToString, VariantData } from "@slige/ty";
 
 export class Checker {
     private stmtChecked = new IdSet<AstId>();
@@ -232,6 +232,44 @@ export class Checker {
         exhausted(k);
     }
 
+    public structItemTy(item: ast.Item, kind: ast.StructItem): Ty {
+        return this.itemTys.get(item.id) ?? this.checkStructItem(item, kind);
+    }
+
+    private checkStructItem(item: ast.Item, kind: ast.StructItem): Ty {
+        const data = this.checkVariantData(kind.data);
+        return Ty({ tag: "struct", item, kind, data });
+    }
+
+    private checkVariantData(data: ast.VariantData): VariantData {
+        const k = data.kind;
+        switch (k.tag) {
+            case "error":
+                return { tag: "error" };
+            case "unit":
+                return { tag: "unit" };
+            case "tuple": {
+                const elems = k.elems
+                    .map(({ ty, pub }): ElemDef => ({
+                        ty: this.tyTy(ty),
+                        pub,
+                    }));
+                return { tag: "tuple", elems };
+            }
+            case "struct": {
+                const fields = k.fields
+                    .map(({ ident, ty, pub }): FieldDef => {
+                        if (!ident) {
+                            throw new Error();
+                        }
+                        return { ident: ident.id, ty: this.tyTy(ty), pub };
+                    });
+                return { tag: "struct", fields };
+            }
+        }
+        exhausted(k);
+    }
+
     public fnItemTy(item: ast.Item, kind: ast.FnItem): Ty {
         return this.itemTys.get(item.id) ?? this.checkFnItem(item, kind);
     }
@@ -270,7 +308,7 @@ export class Checker {
             case "repeat":
                 return todo();
             case "struct":
-                return todo();
+                return this.checkStructExpr(expr, k, expected);
             case "ref":
                 return todo();
             case "deref":
@@ -312,6 +350,13 @@ export class Checker {
         switch (res.kind.tag) {
             case "error":
                 return Ty({ tag: "error" });
+            case "enum":
+            case "struct":
+                return todo("return a ctor here");
+            case "variant":
+                return todo("return a ctor here");
+            case "field":
+                throw new Error();
             case "fn": {
                 const fn = res.kind.item;
                 const ty = this.fnItemTy(fn, res.kind.kind);
@@ -334,6 +379,70 @@ export class Checker {
             }
         }
         exhausted(res.kind);
+    }
+
+    private checkStructExpr(
+        expr: ast.Expr,
+        kind: ast.StructExpr,
+        expected: Ty,
+    ): Ty {
+        if (!kind.path) {
+            return todo();
+        }
+        const res = this.re.pathRes(kind.path.id);
+        if (res.kind.tag !== "struct") {
+            this.report("type is not a struct", kind.path.span);
+            const ty = Ty({ tag: "error" });
+            this.exprTys.set(expr.id, ty);
+            return ty;
+        }
+        const ty = this.structItemTy(res.kind.item, res.kind.kind);
+        this.exprTys.set(expr.id, ty);
+        if (ty.kind.tag === "error") {
+            return ty;
+        }
+        if (ty.kind.tag !== "struct") {
+            throw new Error();
+        }
+        const data = ty.kind.data;
+        if (data.tag !== "struct") {
+            this.report("struct data not a struct", kind.path.span);
+            const ty = Ty({ tag: "error" });
+            this.exprTys.set(expr.id, ty);
+            return ty;
+        }
+        const notCovered = new Set<FieldDef>();
+        for (const field of data.fields) {
+            notCovered.add(field);
+        }
+        for (const field of kind.fields) {
+            const found = data.fields
+                .find((f) => f.ident === field.ident.id);
+            if (!found) {
+                this.report(`no field named '${field.ident.text}'`, field.span);
+                return ty;
+            }
+            const fieldTy = this.exprTy(field.expr);
+            const tyRes = this.resolveTys(fieldTy, found.ty);
+            if (!tyRes.ok) {
+                this.report(tyRes.val, field.span);
+                return ty;
+            }
+            notCovered.delete(found);
+        }
+        if (notCovered.size !== 0) {
+            this.report(
+                `fields ${
+                    notCovered
+                        .keys()
+                        .toArray()
+                        .map((field) => `'${field}'`)
+                        .join(", ")
+                } not covered`,
+                expr.span,
+            );
+        }
+        return ty;
     }
 
     private checkCallExpr(
@@ -552,13 +661,32 @@ export class Checker {
                 return Ty({ tag: "int" });
             case "bool":
             case "str":
-            case "path":
+                return todo(k.tag);
+            case "path": {
+                const re = this.re.tyRes(ty.id);
+                const k = re.kind;
+                switch (k.tag) {
+                    case "error":
+                        return Ty({ tag: "error" });
+                    case "enum":
+                        return todo();
+                    case "struct":
+                        return this.structItemTy(k.item, k.kind);
+                    case "fn":
+                    case "variant":
+                    case "field":
+                    case "local":
+                        return todo();
+                }
+                exhausted(k);
+                return todo();
+            }
             case "ref":
             case "ptr":
             case "slice":
             case "array":
             case "anon_struct":
-                return todo(k);
+                return todo(k.tag);
         }
         exhausted(k);
     }
@@ -611,7 +739,7 @@ export class Checker {
 
     private resolveTys(a: Ty, b: Ty): Res<Ty, string> {
         if (a.kind.tag === "error" || b.kind.tag === "error") {
-            return Res.Ok(a);
+            return Res.Ok(Ty({ tag: "error" }));
         }
         if (b.kind.tag === "unknown") {
             return Res.Ok(a);
@@ -649,6 +777,15 @@ export class Checker {
                     return incompat();
                 }
                 if (b.kind.item.id === a.kind.item.id) {
+                    return incompat();
+                }
+                return Res.Ok(a);
+            }
+            case "struct": {
+                if (b.kind.tag !== "struct") {
+                    return incompat();
+                }
+                if (a.kind.item.id !== b.kind.item.id) {
                     return incompat();
                 }
                 return Res.Ok(a);

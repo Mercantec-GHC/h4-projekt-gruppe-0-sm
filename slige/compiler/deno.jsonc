@@ -4,6 +4,7 @@
         "./check",
         "./middle",
         "./parse",
+        "./pat",
         "./resolve",
         "./ty",
         "./common",

@@ -18,6 +18,7 @@ import {
     EnumItem,
     Expr,
     ExprStmt,
+    FieldDef,
     FieldExpr,
     File,
     FnItem,
@@ -91,6 +92,8 @@ export interface Visitor<
     visitTypeAliasItem?(item: Item, kind: TypeAliasItem, ...p: P): R;
 
     visitVariant?(variant: Variant, ...p: P): R;
+    visitVariantData?(data: VariantData, ...p: P): R;
+    visitFieldDef?(field: FieldDef, ...p: P): R;
 
     visitExpr?(expr: Expr, ...p: P): R;
     visitErrorExpr?(expr: Expr, ...p: P): R;
@@ -291,6 +294,7 @@ export function visitVariantData<
     data: VariantData,
     ...p: P
 ) {
+    if (v.visitVariantData?.(data, ...p) === "stop") return;
     const dk = data.kind;
     switch (dk.tag) {
         case "error":
@@ -299,17 +303,28 @@ export function visitVariantData<
             return;
         case "tuple":
             for (const elem of dk.elems) {
-                visitVariantData(v, elem, ...p);
+                visitFieldDef(v, elem, ...p);
             }
             return;
         case "struct":
             for (const field of dk.fields) {
-                visitIdent(v, field.ident, ...p);
-                visitTy(v, field.ty, ...p);
+                visitFieldDef(v, field, ...p);
             }
             return;
     }
     exhausted(dk);
+}
+
+export function visitFieldDef<
+    P extends PM = [],
+>(
+    v: Visitor<P>,
+    field: FieldDef,
+    ...p: P
+) {
+    if (v.visitFieldDef?.(field, ...p) === "stop") return;
+    field.ident && visitIdent(v, field.ident, ...p);
+    visitTy(v, field.ty, ...p);
 }
 
 export function visitGenerics<
