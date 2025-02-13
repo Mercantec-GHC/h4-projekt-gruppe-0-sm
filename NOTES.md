@@ -1,6 +1,137 @@
 
 # Noter
 
+## Reflektion af sprint 13-02-2025
+
+Sprintet startede fredag d. 7 efter sprint-planlægning.
+
+### Projektstyring
+
+For det første var vi nødt til at flytte vores projektstyring fra whiteboardet til online, dvs. Github Projects. Vi oprettede et Projekt-board med 5 kolonner: Stores & spikes, Backlog, Committed, In Progress og Done. Vi gik derfor fra at have vores estimerede Todo-pool til at have 2 kolonner: Backlog og Committed. Committed er her de tasks vi har planlagt til et specifikt sprint.
+
+#### Projektboard
+
+Vi har i dette sprint bøvlet en del med Github Projects, da dens måde at håndtere opslag på er anderledes end måden vi selv gjorde det på whiteboardet. For det første er det besværligt at skelne mellem stories, spikes og tasks. For det andet er det besværligt at tracke hvilke tasks, der hører til hvilke stories og spikes. Vi mistede også vores estimerende positionering af tasks i Todo-kolonnen, hvilket gør at de 2 karakteristika nu ikke gemmes på boardet. Det er muligt at tilfæje arbitrært information til tasks, men dette er tidskrævende sammenlignet med stickynotes. Vores projektboard er gået fra et projektstyringsværktøj til et tracking-værktøj, primært til at vores lærer har indsigt i hvad vi laver.
+
+#### Arbejdslokation
+
+I ugerne op til har vi begge i gruppen arbejdet på skolen. Her har vi siden tæt på hinanden med projektboardet indenfor rækkevidde. Vi har arbejdet selvstændigt og også pairprogrammet on-demand. Dette gjorde, at vi begge have nogenlunde indsigt i hinandens arbejde.
+
+I dette sprint har MTK arbejdet delvist hjemme og på skolen, mens SFJ har arbejdet fra en hytte i Norge. Kommunikation internt i gruppen har bestået af både chat over Discord og Daily Sit-down Teams-møde kl. 10 hver dag. Dette har indtil videre fungeret, da vi har haft forskellige opgaver at løse. Dog er det just opstået et problem, hvor det ville være smart med pair-programming af en sværer opgave.
+
+#### Sprint-estimering
+
+Da scrum-agtig process er blevet nedtvunget over os, har vi planlagt dette sprint, ved at estimere tasks og committe til et specifikt sæt tasks fra backlog’en. Vi har oplevet, at vores problemstilling er svær at dele op på forhånd. Dette er grundet, at en stor del af vores projekt inkludere research og udvikling af software i områder, vi ikke kender i forvejen. Vi har derfor svært ved, dels hvor lang tasks kommer til at tage, og dels hvad vi skal lave i første omgang; mange af vores tasks er udarbejdet ud fra den nuværende task vi arbejder på, på et given tidspunkt.
+
+Et eksempel på fejlestimering var omkring Estimer/design bytecode. Denne task giver ikke mening for os at lave nu, da vi arbejder med noget helt andet, men dette vidste vi ikke da vi planlagde sprintet. Tilgengæld havde vi en anden task Compiler: structs og enums, som vi fandt ud af, gav god mening at tilføje til sprintet. Denne task er fornuværende under Doing.
+
+Det virker for os, som om at commitment er fast efter en sprint planning, og at man skal vente på, eller lave en ny sprint planning, for man legalt på ændre commitment. Dette giver lille mening for vores arbejde nuværende. Vi overvejde at starte ud med mindre sprint (2-3 dage istedet for en uge). Dette introducerer et andet problem, som er den mængde arbejde, der kræves af os, ved planlægning og afslutning af hver sprint. I sidste uge kørte vi i et kontinuum af sprint og planlægning, med løbende retrospektiv per behov. Dette virkede markant bedre sammenlignet med nuværende sprint i forhold til projektstyring.
+
+Det er svært at teoretisere en løsning til dette problem, da “projektstyringen”, dvs. “scrum”-processen er tvunget på os, for at gøre det nemmere for vore lærere at tracke vores process. En mulighed, som også er den vi uintentionelt realisere, er at ignorere projektboardet som projektstyring og istedet bare lave projektstyring implicit. Andre muligheder kræver vi *bryder reglerne*, for stadig at kunne bruge det til projektstyring i vores projekt.
+
+Opsummeret: vi er blevet påtvunget en meget uagil “scrum”-agtig process, som ikke passer til vores projekt. For at tilfredstille opgavestillerne samtidig med at benytte processen til vores fordel, er vi nødt til at bryde reglerne for processen. Dette er meget utilfredsstillende for os som udviklere. Det føles som en klods om benet, altså en arbitrær arbejdsopgave der egentlig bare holder os tilbage fra den relle softwareudvikling, som er den vi får noget ud af i vores læringsforløb.
+
+#### Appen
+
+Vi har lavet appen færdig, i forhold til de stories vi har udarbejdet med kunden. Vi skal have planlagt og udført et kundemøde, for at bekræfte vores løsning til stories’ne. Dvs. vi ikke mangler noget frontend-mæssigt i vores system. Dog har appen nuværende ingen funktionalitet ift. backend eller lignende, da vi ikke har nogen backend at udvikle op imod.
+
+#### Slige
+
+Vi har udviklet videre på version 2 af Slige. Runtimen er stadig ikke påbegyndt. Bytekoden er stadig ikke estimeret. Udviklingen er foregået på compileren. Her er der tilføjet funktioner, variabler, assignment, ifs og loops. Alle disse komponenter kan kompileres ned til et nyt lag vi har introduceret (MIR). Derudover er vi på nuværende tidspunkt begyndt på implementering af structs og enums. Indtil videre virker deklaration og typechecking af structs. Lowering af structs er ikke just implementeret. Enum er kun implementeret i mindre grad.
+
+Som sagt har vi introduceret et nyt kompileringslag i Slige. Kompileringsprocessen kan nu nogenlunde forklares sådan:
+- **Parser:** Tekst → AST
+- **Resolver:** AST → AST + Resols
+- **Checker:** AST + Resols →AST + Resols + Ty
+- **AstLowerer:** AST + Resols + Ty → **MIR** (mid-level intermediary representation)
+- **MirChecker:** MIR → MIR + drops
+
+Som nævnt tidligere er **Parser**’en genbrugt fra version 1 med visse adaptioner. **Resolver**’en fungerer på samme måde som version 1’s. Resolutionslaget muterer ikke AST’et, istedet produceres der en datastruktur, Resols, som mapper hvert navn til dets definition.
+
+**Checker**’en er implementeret anderledes end version 1’s. I version 1 lavede **Checker**’en en upfront trætravers, hvor den løste alle typer. Version 2’s fungerer on-demand, dvs. den først checker typerne for en ekspression, når man spørger den om den specifikke ekspression. Dette gør **Checker**’en selv simplere at implementere, det løser også spørgsmålet om opbevaring af typer og så undgår det unødvendig typechecking.
+
+**MIR** er et nyt repræsentationslag vi har introduceret i compileren. Vores AST opflylder 2 funktioner, dels som AST (abstract syntax tree), men også, efter resolution og checking, som HIR (high-level intermediary repræsentation). HIR repræsenterer high-level-konstruktioner i et korrekt program (både syntaktisk og semantisk korrekt). Det nye lag er MIR (mid-level intermediary repræsentation). Dette lag repræsenterer en program i en form, der tillader forskellige analyseværktøjer. Disse værktøjer inkluderer eksempelvis controlflow-analyse (CFA/CFG) og dataflow-analyse (DFA). Til både HIR og MIR har vi taget inspiration fra Rustc. Vi har tænkt os at bruge MIR-laget til forskellige analyser. Dette inkluderer primært borrow-checking-analyse. For at forklare forskellen på AST, HIR og MIR, vil vi bruge følgende eksempel:
+
+```rs
+fn main() {
+    let mut i = 0;
+
+    loop {
+        if i >= 10 {
+            break;
+        }
+        i = i + 1;
+    }
+}
+```
+```rs
+=== HIR ===
+fn main() -> null {
+    let mut i: int = 0;
+    loop {
+        if i >= 10 {
+            break;
+        };
+        i = i + 1;
+    }
+}
+```
+```rs
+=== MIR ===
+fn main() {
+    let _0: null
+    let mut _1: int // i
+    let _2: bool
+    .b0: {
+        _1 = 0
+        goto .b1
+    }
+    .b1: {
+        _2 = gte(copy _1, 10)
+        switch copy _2
+            1 => .b2
+            _ => .b3
+    }
+    .b2: {
+        goto .b3
+    }
+    .b3: {
+        _1 = add(copy _1, 1)
+        goto .b1
+    }
+    .b4: {
+        _0 = null
+        return;
+    }
+}
+```
+I første kodeblok ses inputtekst til et program. Dette er hvad AST-strukturen vil repræsentere efter parsing. I anden blok ses MIR-repræsentation af programmet efter resolution og checking. Her ses at alle typer skrevet eksplicit, men konstruktionerne er stadig de samme. I tredje og sidste kodeblok ses MIR-repræsentationen efter AST-lowering. Her ses det, at alle værdi er deklareret som variabler i toppen af funktionen. Det ses også at koden istedet for nestede bloks er organiseret som sekventielle bloks med labels. Herfra ses det tydeligt, at denne repræsentation stort set inviterer til controlflow-analyse.
+
+**AstLowerer** konverterer HIR (AST) til MIR. Dette gør den ved at ‘elaborate’ (udfolde) alle statements og ekspressions i funktioner. Lowereren sørger for at allokere ‘locals’ til alle værdier og konvertere alle high-level konstruktioner, eksempelvis ifs og loops, til mid-level konstruktioner, som bloks og int-switch. I dette lag lever MIR stadig i fuld typekontekst, dvs. generiske funktioner med generiske typer eksisterer stadig som generiske funktioner med generiske typer.
+
+#### Slige reflektion
+
+Originalt havde jeg tænkt version 2 ville tage mig to uger at implementerer. Dog har det indtil videre taget fire uger. Dette er dels fordi scopet har ændret sig, men også fordi jeg i første omgang ikke vidste det totale omfang. Der er en klar prioriteringsmulighed for os i denne udviklingsprocess. Vi kan vælge at sige, vi bare skal bruge en barebones compiler og runtime. Dette kunne essentielt bare have været version 1. Men vi har istedet valgt, at vi gerne vil undersøger videregående compilerteori, og vi har derfor valgt at udvide scopet af version 2. Vi har fornuværende ikke scopet ned. Dette er af 2 årsager. Den første er, at vi har opretholdt en relativ høj udviklingshastighed, som ikke har inspireret til begræsninger af scopet. Det andet er, at vi på nuværende tidspunkt hverkan kan forholde os til en deadline eller præcise krav, for hvad vi skal bruge. Vi vurderer, at dette ikke er problematisk, da vi synes, vi har tid nok. Vi vælger derfor at fortsætte med denne udviklingsmåde. Dog vil vi være opmærksomme på overordnet roadmap, for ikke pludselig at løbe tør for tid.
+
+#### Visioner for Slige
+
+Som nævnt er vi ved at implementere structs og enums i compileren. Dette skal ende ud i komplekse datatyper (ADT - abstract data type) med pattern-matching-funktionalitet. For at kunne implementere, skal vi implementere brugbarhedsanalyse. Vi kan kigge på Rustc, for at se hvordan dette kan implementeres.
+
+Derudover giver det sig selv, at alle konstruktioner skal kunne kompileres til MIR. Dette gælder også projektioner (eksempelvis arrayindeksering), som vi indtil videre ikke har implementeret ret meget. Vi har valgt at implementere projektioner på samme måde som Rustc, så vi kan kigge på deres kodebase som hjælp.
+
+Når alt kan kompileres til MIR vil vi gerne udføre borrow-checking-analyse. Dette analyselag vil kunne tillade den memory-model, vi gerne vil have. Vi har allerede eksperimenteret med borrow-checking på MIR ­i en fork-version af version 1 af Slige. Vi ved ikke hvor lang tid, det vil kræve at implementere borrow-checking. Dette finder vi først ud af, når vi går igang.
+
+Når vi har analyseret, checket og valideret MIR-repræsentationen, vil vi gerne kompilere programmet til en form for bytecode. Vi ved ikke endnu, om vi vil pass igennem et LIR-lag (low-level intermediary repræsentation). Dette ville kunne tillade yderligere dataflow-analyse og forskellige relaterede optimeringer. Vi syntes, det ville være interessant at eksperimentere med SSA-form (single static assignment). Dog har vi anekdotisk, at SSA-form gør en compilere markant mere kompliceret, og at det ikke nødvendigvis er fordelagtigt.
+
+Compileren skal outputte en slags bytecode, som vi kan afvikle på en runtime. Vi har ikke designet sådanne bytekode, og derfor heller ikke implementeret en runtime. Vi vil gerne have en bytecode og en runtime der tillader, at compileren kan outputte et optimeret program, og runtimen så kan afvikle programmet med god afviklings-performance. For at tillade dette, ville det give mening at bytekoden tillader kontrol over forskellige aspekter relateret eksempelvis til memory-layout og cache-locality. 
+
+#### Konklusion
+
+Nu har vi afsluttet første sprint. Næste 2 uger skal vi på ML-kursus, og vi vil derfor ikke officielt fortsætte denne process. Dog har vi tænkt at fortsætte udviklingen, specielt af Slige. Når vi genoptager processen, skal vi finde ud af, hvordan vi håndtere førnævnte problemer, specielt med forplanlægning af uestimerbare arbejdsopgaver. Siden dette først er relevant om 2 uger, har vi svært ved at komme til konklusioner på nuværende tidspunkt.
+
+TL;DR: fortsæt arbejdet og undersøg muligheder for begrænset planlægning, når muligheden opstår.
+
+
 ## 7-2-2025 Pre-reflektion
 
 ### Kunder/Produkt
