@@ -1,7 +1,7 @@
 
 # Noter
 
-## 7-2-2025
+## 7-2-2025 Pre-reflektion
 
 ### Kunder/Produkt
 
@@ -73,9 +73,80 @@ Med version 1 af compileren var der nogle problemer med kompilering af visse udt
 
 I version 1 understøttede vi kun ‘simple’ variabler. Vi vil gerne kunne understøtte *patterns*, som man kender dem fra Rust. Patterns, til vores formål, gør det nemmere at skrive korrekt kode. For at kunne implementere patterns, krævede et stor restrukturering af compileren. For det første kræver patterns mere kompleks symbol-resolution end med simple variabler. For det andet kræver patterns mere kode-generering. Og så kræver patterns mere ift. analyse og validering. Med det ekstra analyse og validering har vi også mulighed for at tilføje en anden feature inspireret af Rust, Rust-enums. Når validering af patterns er på plads, kræver det ikke meget ekstra implementering for også at kunne understøtte både Rust-enums, men også Rust-structs med *unit*-, *tuple*- og *struct*-varianter.
 
-I version 1 håndteret compileren flere filer og packages ufordelagtigt. Vi har derfor et behov for et ordentligt modul-system, så det er muligt eksempelvis at implementere standard library seperat fra et enkelt program.
+I version 1 håndteret compileren flere filer og packages ufordelagtigt. Vi har derfor et behov for et ordentligt modul-system, så det er muligt eksempelvis at implementere standard library seperat fra et enkelt program. I version 1 bestod kompileringen af én enkelt ‘package’ (crate i Rust), hvor main-filen var roden. Undermoduler var implementeret ved at koden i AST-form blev sat ind på module-deklarationens plads. Dette er det samme vi har tænkt i version 2. Problemet var med, hvad man ville tænke som seperate packages, standard-library’et eksempelvis. I version 1 var `std` et hardcoded package-navn, som pastede standard-library-koden ind.
 
-TODO: runtime, struct- og enum-defs, compiler-backend, http-server
+Version 1 brugte en runtime til at køre kompileret bytekode. Bytekoden var stack-baseret og designet til at være meget simpel på at køre og kompilere til. Runtimen var implementeret til at kunne køre bytekoden med en simpel implementation. Der var også yderligere features i version 1’s runtime, som understøttede teknikfagsprojektet. Dette drejer sig om flame-graph- og code-coverage-funktionalitet. Dette har vi ikke længere brug for, og vil derfor ikke bringe med over i version 1. Et problem med version 1’s runtime og bytecode, er den meget forsimplede VM-speficifikation, altså designet af bytecode’en og runtimen. Dette fjernede en del kontrol fra kompileren, til eksempelvis hvordan værdier skulle håndteres. I version 2 vil vi gerne have, at bytekoden og runtime’en understøtter mere komplekse memory-layouts og værdihåndtering. Derfor er vi nødt til at redesigne bytekoden og derved også genimplementere runtime’en.
+
+En anden karakteristik med version 1’s runtime var omkring afviklings-performance. Grundet den *naive* bytekode og VM-implementation var afviklingstiden for programmer suboptimalt. Yderligere tillod bytekoden ikke kompileren optimere ouputet særligt meget. Vores undersøgelser viste en 8x til 14x performance-forskel fra Slige version 1 til Python version 3.13.1 på undertegnedes bærbar. Det er ikke et krav for os, at øge afvikllings-performancen i version 2, men vi vil gerne kunne lave mere optimering af kompilerens output, og derfor vil vi redesigne bytekoden og reimplementere runtime’en i version 2, så de understøtter mere optimering.
+
+I version 1 af slige understøttede vi kun ‘simple’ datatyper. Vi har tænkt os at implementere en webserver og resten af vores server-funktionalitet i Slige, og derfor tænker vi, at vi kræver ‘komplekse’ datatyper. Vi tager inspiration fra Rust og tænker at implementere structs og enums på samme måde, som man finder dem i Rust. Dette giver os også mulighed for at undersøge pattern-matching, som vi vil implementere i størrre eller mindre grad i version 2. Komplekse datatyper kræver mere kompleks værdihåndtering og memory-layout og, som nævnt før, kræver dette også et redesign af bytekodee og runtime’en ligesom compileren.
+
+I version 1 kompilerede compileren næsten direkte fra high-level AST (syntax-tree) til stack-based bytekode. Dette gjorde optimeringer og andet analyse svært at implementere. Vi vil gerne kunne udføre mere analyse på koden. Denne analyse skal primært bruges til at give programmøren feedback på koden, dvs. statisk korrekthedsanalyse. Vi vil også gerne kunne bruge analysen til at lave optimeringer på compiler-outputtet, men dette er ikke en prioritet. Vi har valgt at introducere et kompileringslag i version 2: MIR (mid-level intermediary repræsentation). Meget abstrakt kan kompileringsprocessorne beskrives sådan:
+
+Version 1:
+- **Parser:** Tekst → AST (abstract syntax tree)
+- **Resolver:** AST → AST + resolutions
+- **Checker:** AST + resolutions → AST + resolutions + types
+- **Monomorphization:** AST + resolutions + types → Mono-functions
+- **Lower:** Mono-functions → Bytecode-assembly
+- **Assembler:** Bytecode-assembly → Bytecode
+
+**Parser**’en, herunder **Lexer**’en (lexical analysis) laver tekst “abc + 123” om til tokens [ident(“abc”), +, int(123)]. Dette kan **Parser**’en parse, ud fra syntax-grammatiske regler, specifikt context-free LL(1)-grammatik (der sætter færre krav til parseren), til en træstruktur AST (abstract syntax tree). **Parser**’en opdager i samme process mange syntaktiske fejl i input-programmet. Dette lag kan betegnes som grammatisk analyse.
+
+**Resolver**’en er det første lag af semantisk analyse. Den traverserer AST’en (træstruktur) og ‘løser’ referencer, dvs. forbinder navne (identifiers) med dets definition, og laver derved navne (identifiers) om til betydningsfulde reference (symbols). Definitionsreferencers indkodes ind i AST’en, dvs dette lag *mutere* AST’en. Navne som ikke henviser til definitioner rapporteres som fejl.
+
+**Checker**’en er det næste lag af semantisk analyse. Den traversere AST’en med symbol-løsninger. **Checker**’ens primære opgave er type-checking. Her konverteres eksplicitte typer (EType) til værdityper (VType), og udtryk uden typer får tildelt typer gennem inferens (type inference). I sammenhæng med dette tjekkes alle typer for kompatibilitet (eksempelvis er `a` og `5` i `let a: int = 5` kompatible). Dette lag tjekker også andet, eksempelvis at argumenter til funktionskald stemmer overens med funktionens parametre. Generiske funktioner tjekkes med generiske typer (istedetfor at blive tjekket efter konkretisering. Dette er forskellen imellem Rust generics og C++ template generics). Alle værdityper bliver indkodet i AST’en, og dette lag mutere derfor også AST’et. Ukompatible typer og instanser og ambigiøse typer raporteres som fejl til brugeren.
+
+**Monomorphization** er det lag, som ‘udskære’ generiske funktioner ud i konkrete instanser. Eksempel følger:
+Slige-koden:
+```rs
+fn inner<T>(v: T) -> T { v }
+fn main() {
+    let a = inner(true); // type inferred: inner::<bool>
+    let b = inner(123);
+}
+```
+bliver gennem monomorphization til
+```rs
+fn inner­#1(v: bool) -> bool { v }
+fn inner#2(v: int) -> int { v }
+fn main() {
+    let a = inner#1(true);
+    let b = inner#2(123);
+}
+```
+Monomorphizeren’en starter i `main` og traverserer gennem funktionkaldshiarkiet. For hvert funktionskald den støder på til en unik funktion-instans (funktion + generiske argumenter), laver den en MonoFn-instans (monomorphized function). Dette lag mutere ikke AST’et. Resultatet af dette lag, er en liste af mono-funktioner.
+
+**Lower**’en har sit navn fra, at den sænker repræsentationen fra high-level repræsentation (AST er high-level) til low-level repræsentation. **Lower**’en køre igennem hver mono-funktion og oversætter alle erklæringer (statements) og udtryk (expressions) til bytekode-assembly. Eksempel følger:
+Slige-koden:
+```rs
+let a: int;
+a = 3 + 4;
+```
+bliver oversat til
+```
+PushInt 3
+PushInt 4
+Add
+Store a
+```
+Udtrykket `3 + 4` bliver omdannet til sekventiel stack-baseret udregning (omvendt polsk notation), og resultaten gemmes i en ‘local’, som er en scope-afhængig variabel i bytekoden. Som nævnt producerer **Lower**’en bytekode-*assembly*. Forskellen på bytekode og bytekode-assembly, er at assembly’en bruger ‘labels’ til at lave inter- og intra-proceduelle referencer, hvor at bytekoden bruger rå addresser. De rå addresser kan først beregnes efter størrelserne på programmets komponenters bytekode er fundet. Dette er først muligt, efter at bytekoden er genereret. Efter lowering til bytekode-assembly, kører vi **Assembler**’en, som indsætter rå addresser istedet for labels. Efter denne process har vi et program i bytekode-form, som kan afvikles på runtime’en.
+
+### Version 2
+
+Som hintet til tidligere, har vi tænkt, at implementere vores backend-funktionalitet i Slige. Dette betyder vi både skal lave low-level http-webserver-funktionalitet og high-level business-kode. Vi vil også gerne have mulighed for at benytte en database. Dette sætter nogle krav til, hvad Slige-miljøet skal kunne.
+
+Det første krav er mulighed for at implementere en HTTP-webserver i Slige. Dette kræver interoperabilitet med operativsystemet, hvilket i vores tilfælde vil konkretisere sig i interoperabilitet med runtimen, dvs. C eller C++. Webserver-funktionalitet kræver dels stærke string-faciliteter, forskellig buffer-funktionalitet og en vis grad af asynkronitet.
+
+Det andet krav er muligheden for at kunne modelere vores program efter vores problem (DDD). Dette kræver en måde at definere og arbejde med komplekse datatyper. Konkret har vi brug for komplekse typer og ADT’er (abstract data type). Vi har også brug for funktionalitet til at arbejde med disse.
+
+Fordi der er så mange ændringer fra version 1 til version 2, har vi besluttet at lave både compileren og runtimen fra bunden. Indtil videre har vi arbejdet på version 2 af compileren. Version 2 af bytekoden er ikke designet og runtimen er ikke påbegyndt.
+
+Version 2 af compileren tager udgangspunkt i Lexer’en og Parser’en fra version 1, altså genbruges disse komponenter. Disse er de eneste genbrugte komponenter indtil videre. Version 2’s AST-typer er omdefineret med ugangspunkt i Rustc’s (Rust er sproget, Rustc er compiler-implementation til Rust) AST og HIR (high-level intermediary implementation). Den største forskel på version 1 og version 2 er at Items, hvilket er module-level konstruktioner, er defineret seperat fra Statements. Derudover indeholder version 2 mere ekspressiv syntax og definitionen i sig selv er større. Udover det udfører version 2 af Lexer’en *interning* af identiifers.
+
+Version 2 af compileren bruger også en Resolver. Denne fungerer grundlæggende på samme måde som version 1’s. Dog benytter version 2 Ribs (koncept fra Rustc) istedet for symbol-tabeller til løsning af symboler. Dette gør det konceptuelt simplere at skelne mellem type-navne og værdi-navne, og så gør det eksempelvist, at man kan omdeklarere lokale variabler i samme scope.
+
+Vi startede ud med i version 2 at implementere compileren med en central kontekst-datastruktur (Ctx). Dette gjorde vi, fordi dele af Rustc er implementeret på sådanne måde. Specifikt opbevarer Rustc både HIR og Ty (typer) interned i kontekst-strukturen (Tcx/Tctxt/type-context af historiske årsager). Rustc benytter andre repræsentationer, som de ikke håndtere med konteksten. Vi har senere konkluderet, at kontekst-designet løser et problem for Rustc, som vi ikke har i Slige-compileren. Efter vi kom til denne konklusion, har vi forsøgt at minimere brugen af kontekststrukturen. Nuværende bruges den primært til opbevaring af packages, filer, associerede AST-træer, interning af identifiers og håndtering af error-rapportering. Vi benytter seperate centrale datastrukturer når nødvendigt, eksempelvis `ast.Cx`.
 
 ## Src
 
