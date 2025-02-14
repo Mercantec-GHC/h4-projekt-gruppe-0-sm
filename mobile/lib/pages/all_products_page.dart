@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/repos/product.dart';
-import 'package:mobile/widgets/primary_card.dart';
+import 'package:mobile/widgets/sized_card.dart';
 import 'package:provider/provider.dart';
 import 'product_page.dart';
 
@@ -18,7 +18,7 @@ class ProductListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PrimaryCard(
+    return SizedCard(
       child: InkWell(
           borderRadius: const BorderRadius.all(Radius.circular(10)),
           onTap: () {

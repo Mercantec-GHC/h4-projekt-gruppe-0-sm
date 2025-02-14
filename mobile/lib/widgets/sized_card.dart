@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-class PrimaryCard extends StatelessWidget {
+class SizedCard extends StatelessWidget {
   final Widget child;
 
-  const PrimaryCard({
+  const SizedCard({
     super.key,
     required this.child,
   });

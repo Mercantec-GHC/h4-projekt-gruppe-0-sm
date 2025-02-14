@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/pages/register_page.dart';
 import 'package:mobile/repos/user.dart';
 import 'package:mobile/results.dart';
 import 'package:mobile/widgets/error_box.dart';
@@ -34,6 +35,7 @@ class LogInFormState extends State<LogInForm> {
     final passwordController = TextEditingController();
 
     return Column(
+      spacing: 10,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
@@ -48,7 +50,7 @@ class LogInFormState extends State<LogInForm> {
           },
         ),
         PrimaryInput(
-          label: "Mail/Tlf",
+          label: "Mail",
           placeholderText: "f.eks. example@example.com",
           controller: mailController,
         ),
@@ -63,17 +65,40 @@ class LogInFormState extends State<LogInForm> {
               final usersRepo = context.read<UsersRepo>();
               final loginResult =
                   usersRepo.login(mailController.text, passwordController.text);
+
               if (loginResult is Ok) {
+                setState(() => loginError = false);
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) =>
                         Dashboard(user: (loginResult as Ok).value)));
               } else {
-                setState(() {
-                  loginError = true;
-                });
+                setState(() => loginError = true);
               }
             },
-            child: const Text("Log ind"))
+            child: const Text("Log ind")),
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const RegisterPage()));
+          },
+          child: RichText(
+              text: const TextSpan(children: [
+            TextSpan(
+              text: 'Har du ikke en konto? Klik ',
+              style: TextStyle(color: Colors.black),
+            ),
+            TextSpan(
+              text: 'her',
+              style: TextStyle(
+                  color: Color.fromARGB(255, 0, 94, 255),
+                  decoration: TextDecoration.underline),
+            ),
+            TextSpan(
+              text: ' for at oprette en konto',
+              style: TextStyle(color: Colors.black),
+            ),
+          ])),
+        )
       ],
     );
   }

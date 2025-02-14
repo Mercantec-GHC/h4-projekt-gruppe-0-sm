@@ -7,7 +7,7 @@ import 'package:mobile/repos/cart.dart';
 import 'package:mobile/repos/product.dart';
 import 'package:mobile/results.dart';
 import 'package:mobile/widgets/primary_button.dart';
-import 'package:mobile/widgets/primary_card.dart';
+import 'package:mobile/widgets/sized_card.dart';
 import 'package:provider/provider.dart';
 
 class CartItemView extends StatelessWidget {
@@ -29,7 +29,7 @@ class CartItemView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PrimaryCard(
+    return SizedCard(
       child: Row(
         children: [
           Expanded(

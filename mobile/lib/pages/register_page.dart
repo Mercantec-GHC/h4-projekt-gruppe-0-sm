@@ -5,7 +5,6 @@ import 'package:mobile/widgets/error_box.dart';
 import 'package:mobile/widgets/primary_button.dart';
 import 'package:mobile/widgets/primary_input.dart';
 import 'package:provider/provider.dart';
-import 'log_in_page.dart';
 
 class RegisterPage extends StatelessWidget {
   const RegisterPage({super.key});
@@ -35,6 +34,7 @@ class RegisterFormState extends State<RegisterForm> {
     final mailController = TextEditingController();
     final passwordController = TextEditingController();
     return Column(
+      spacing: 10,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
@@ -55,7 +55,7 @@ class RegisterFormState extends State<RegisterForm> {
           controller: nameController,
         ),
         PrimaryInput(
-          label: "Mail/Tlf",
+          label: "Mail",
           placeholderText: "f.eks. example@example.com",
           controller: mailController,
         ),
@@ -74,15 +74,35 @@ class RegisterFormState extends State<RegisterForm> {
               final usersRepo = context.read<UsersRepo>();
               if (usersRepo.addUser(nameController.text, mailController.text,
                   passwordController.text) is Ok) {
-                Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => const LogInPage()));
+                setState(() => registerError = false);
+                Navigator.of(context).pop();
               } else {
-                setState(() {
-                  registerError = true;
-                });
+                setState(() => registerError = true);
               }
             },
-            child: const Text("Opret bruger"))
+            child: const Text("Opret bruger")),
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: RichText(
+              text: const TextSpan(children: [
+            TextSpan(
+              text: 'Har du allerede en konto? Klik ',
+              style: TextStyle(color: Colors.black),
+            ),
+            TextSpan(
+              text: 'her',
+              style: TextStyle(
+                  color: Color.fromARGB(255, 0, 94, 255),
+                  decoration: TextDecoration.underline),
+            ),
+            TextSpan(
+              text: ' for at logge ind',
+              style: TextStyle(color: Colors.black),
+            ),
+          ])),
+        )
       ],
     );
   }

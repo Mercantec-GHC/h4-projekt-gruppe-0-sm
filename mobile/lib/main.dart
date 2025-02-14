@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/pages/log_in_page.dart';
 import 'package:mobile/repos/add_to_cart_state.dart';
 import 'package:mobile/repos/cart.dart';
 import 'package:mobile/repos/location_image.dart';
@@ -7,7 +8,6 @@ import 'package:mobile/repos/product.dart';
 import 'package:mobile/repos/receipt.dart';
 import 'package:mobile/repos/user.dart';
 import 'package:provider/provider.dart';
-import 'pages/landing_page.dart';
 import 'package:mobile/repos/bottom_navigation_bar.dart';
 
 void main() {
@@ -43,7 +43,7 @@ class MyApp extends StatelessWidget {
           ),
           useMaterial3: true,
         ),
-        home: const LandingPage(),
+        home: const LogInPage(),
       ),
     );
   }
