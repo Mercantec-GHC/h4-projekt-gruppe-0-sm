@@ -436,7 +436,7 @@ export class Checker {
                     notCovered
                         .keys()
                         .toArray()
-                        .map((field) => `'${field}'`)
+                        .map((field) => `'${this.ctx.identText(field.ident)}'`)
                         .join(", ")
                 } not covered`,
                 expr.span,

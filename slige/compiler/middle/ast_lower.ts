@@ -273,7 +273,9 @@ export class FnLowerer {
             case "group":
             case "array":
             case "repeat":
+                return todo(k.tag);
             case "struct":
+                return this.lowerStructExpr(expr, k);
             case "ref":
             case "deref":
             case "elem":
@@ -320,6 +322,13 @@ export class FnLowerer {
                 };
         }
         exhausted(re.kind);
+    }
+
+    private lowerStructExpr(expr: ast.Expr, kind: ast.StructExpr): RVal {
+        const ty = this.ch.exprTy(expr);
+        const fields = kind.fields
+            .map((field) => this.lowerExprToOperand(field.expr));
+        return { tag: "struct", ty, fields };
     }
 
     private lowerCallExpr(expr: ast.Expr, kind: ast.CallExpr): RVal {

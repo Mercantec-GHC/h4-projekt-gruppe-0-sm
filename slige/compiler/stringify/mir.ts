@@ -165,6 +165,26 @@ export class MirFnStringifyer {
             }
             case "unary":
                 return todo(rval.tag);
+            case "struct": {
+                const tyk = rval.ty.kind;
+                if (tyk.tag === "struct") {
+                    const datak = tyk.kind.data.kind;
+                    if (datak.tag !== "struct") {
+                        throw new Error();
+                    }
+                    const name = tyk.item.ident.text;
+                    const fields = rval.fields
+                        .map((field, idx) =>
+                            `${datak.fields[idx].ident!.text}: ${
+                                this.operand(field)
+                            }`
+                        )
+                        .join(", ");
+                    return `${name} { ${fields} }`;
+                } else {
+                    return todo();
+                }
+            }
             case "call":
                 return `call ${this.operand(rval.func)}(${
                     rval.args.map((arg) => this.operand(arg)).join(", ")
