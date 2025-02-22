@@ -351,8 +351,29 @@ export class Checker {
             case "error":
                 return Ty({ tag: "error" });
             case "enum":
-            case "struct":
-                return todo("return a ctor here");
+                return todo("return enum type here");
+            case "struct": {
+                const data = res.kind.kind.data;
+                switch (data.kind.tag) {
+                    case "error":
+                        return Ty({ tag: "error" });
+                    case "struct":
+                        this.report(
+                            "expected value, got struct type",
+                            expr.span,
+                        );
+                        return Ty({ tag: "error" });
+                    case "unit":
+                        return this.structItemTy(res.kind.item, res.kind.kind);
+                    case "tuple":
+                        this.report(
+                            "expected value, got struct type",
+                            expr.span,
+                        );
+                        return Ty({ tag: "error" });
+                }
+                return exhausted(data.kind);
+            }
             case "variant":
                 return todo("return a ctor here");
             case "field":
@@ -450,6 +471,9 @@ export class Checker {
         kind: ast.CallExpr,
         expected: Ty,
     ): Ty {
+        if (this.callExprIsTupleStructCtor(kind)) {
+            return this.checkCallExprTupleStructCtor(expr, kind, expected);
+        }
         const fnTy = this.exprTy(kind.expr);
         if (fnTy.kind.tag !== "fn") {
             if (fnTy.kind.tag === "error") {
@@ -474,6 +498,55 @@ export class Checker {
 
         const ty = fnTy.kind.returnTy;
         this.exprTys.set(expr.id, ty);
+        return ty;
+    }
+
+    private callExprIsTupleStructCtor(kind: ast.CallExpr): boolean {
+        if (kind.expr.kind.tag !== "path") {
+            return false;
+        }
+        const res = this.re.exprRes(kind.expr.id);
+        return res.kind.tag === "struct";
+    }
+
+    private checkCallExprTupleStructCtor(
+        expr: ast.Expr,
+        kind: ast.CallExpr,
+        expected: Ty,
+    ): Ty {
+        if (kind.expr.kind.tag !== "path") {
+            throw new Error();
+        }
+        const res = this.re.exprRes(kind.expr.id);
+        if (res.kind.tag !== "struct") {
+            throw new Error();
+        }
+        const ty = this.structItemTy(res.kind.item, res.kind.kind);
+        this.exprTys.set(expr.id, ty);
+        if (ty.kind.tag === "error") {
+            return ty;
+        }
+        if (ty.kind.tag !== "struct") {
+            throw new Error();
+        }
+        const data = ty.kind.data;
+        if (data.tag !== "tuple") {
+            this.report(
+                "struct data not a tuple",
+                kind.expr.kind.path.span,
+            );
+            const ty = Ty({ tag: "error" });
+            this.exprTys.set(expr.id, ty);
+            return ty;
+        }
+        for (const [i, arg] of kind.args.entries()) {
+            const argTy = this.exprTy(arg);
+            const tyRes = this.resolveTys(argTy, data.elems[i].ty);
+            if (!tyRes.ok) {
+                this.report(tyRes.val, arg.span);
+                return ty;
+            }
+        }
         return ty;
     }
 

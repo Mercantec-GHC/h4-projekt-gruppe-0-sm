@@ -394,6 +394,9 @@ export class Parser {
         }
         const ident = this.parseIdent();
         const data = this.parseVariantData();
+        if (data.kind.tag === "unit" || data.kind.tag === "tuple") {
+            this.eatSemicolon();
+        }
         const span = Span.fromto(begin, data.span);
         return this.stmt({
             tag: "item",

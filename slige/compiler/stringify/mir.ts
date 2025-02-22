@@ -169,18 +169,31 @@ export class MirFnStringifyer {
                 const tyk = rval.ty.kind;
                 if (tyk.tag === "struct") {
                     const datak = tyk.kind.data.kind;
-                    if (datak.tag !== "struct") {
-                        throw new Error();
+                    switch (datak.tag) {
+                        case "error":
+                            return "<error>";
+                        case "unit":
+                            return todo();
+                        case "tuple": {
+                            const name = tyk.item.ident.text;
+                            const fields = rval.fields
+                                .map((field, idx) => this.operand(field))
+                                .join(", ");
+                            return `${name}(${fields})`;
+                        }
+                        case "struct": {
+                            const name = tyk.item.ident.text;
+                            const fields = rval.fields
+                                .map((field, idx) =>
+                                    `${datak.fields[idx].ident!.text}: ${
+                                        this.operand(field)
+                                    }`
+                                )
+                                .join(", ");
+                            return `${name} { ${fields} }`;
+                        }
                     }
-                    const name = tyk.item.ident.text;
-                    const fields = rval.fields
-                        .map((field, idx) =>
-                            `${datak.fields[idx].ident!.text}: ${
-                                this.operand(field)
-                            }`
-                        )
-                        .join(", ");
-                    return `${name} { ${fields} }`;
+                    return exhausted(datak);
                 } else {
                     return todo();
                 }

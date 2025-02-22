@@ -241,11 +241,31 @@ export class Resolver implements ast.Visitor {
         return "stop";
     }
 
+    visitCallExpr(expr: ast.Expr, kind: ast.CallExpr): ast.VisitRes {
+        if (
+            kind.expr.kind.tag === "path" &&
+            kind.expr.kind.path.segments.length === 1
+        ) {
+            const res = this.resolveTyPath(kind.expr.kind.path);
+            if (res.kind.tag === "struct") {
+                this.exprResols.set(kind.expr.id, res);
+                for (const arg of kind.args) {
+                    ast.visitExpr(this, arg);
+                }
+                return "stop";
+            }
+        }
+        // otherwise, just continue as usual
+    }
+
     visitStructExpr(expr: ast.Expr, kind: ast.StructExpr): ast.VisitRes {
         if (!kind.path) {
             return todo();
         }
-        this.resolveValPath(kind.path);
+        this.resolveTyPath(kind.path);
+        for (const field of kind.fields) {
+            ast.visitExpr(this, field.expr);
+        }
         return "stop";
     }
 
@@ -321,7 +341,7 @@ export class Resolver implements ast.Visitor {
 
     private resolveValPath(path: ast.Path): Resolve {
         let res: Resolve;
-        if (path.segments.length === 0) {
+        if (path.segments.length === 1) {
             res = this.syms.getVal(path.segments[0].ident);
         } else {
             res = path.segments
@@ -342,6 +362,16 @@ export class Resolver implements ast.Visitor {
                     }
                     exhausted();
                 }, this.syms.getTy(path.segments[0].ident));
+        }
+        if (res.kind.tag === "error") {
+            if (path.segments.length === 1) {
+                this.report(
+                    `could not resolve symbol '${path.segments[0].ident.text}'`,
+                    path.span,
+                );
+            } else {
+                this.report(`could not path`, path.span);
+            }
         }
         this.pathResols.set(path.id, res);
         return res;

@@ -1,10 +1,18 @@
 
-struct A {
+struct A(int);
+struct B(int, int);
+struct C {
+    a: A,
     v: int,
 }
 
 fn main() {
-    let a: A = A { v: 123 };
+    let a: A = A(123);
+    let b = B(1, 2);
+    let c = C {
+        a: a,
+        v: 123,
+    };
 }
 
 
