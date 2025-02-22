@@ -349,7 +349,6 @@ export class Parser {
             this.report("expected '{'");
             return this.stmt({ tag: "error" }, begin);
         }
-        this.step();
         const endSpan: [Span] = [begin];
         const variants = this.parseDelimitedList(
             this.parseVariant,

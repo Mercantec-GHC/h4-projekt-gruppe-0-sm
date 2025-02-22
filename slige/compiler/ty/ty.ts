@@ -21,11 +21,22 @@ export type TyKind =
         returnTy: Ty;
     }
     | {
+        tag: "enum";
+        item: ast.Item;
+        kind: ast.EnumItem;
+        variants: Variant[];
+    }
+    | {
         tag: "struct";
         item: ast.Item;
         kind: ast.StructItem;
         data: VariantData;
     };
+
+export type Variant = {
+    ident: IdentId;
+    data: VariantData;
+};
 
 export type VariantData =
     | { tag: "error" }

@@ -57,7 +57,9 @@ export class HirStringifyer {
                     this.file(k.ast!, depth + 1)
                 }\n}`;
             case "enum":
-                return todo();
+                return `enum ${ident}: ${
+                    this.ty(this.ch.enumItemTy(item, k))
+                };`;
             case "struct":
                 return `struct ${ident}: ${
                     this.ty(this.ch.structItemTy(item, k))

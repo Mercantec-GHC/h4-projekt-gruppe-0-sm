@@ -4,6 +4,7 @@ import {
     Ctx,
     exhausted,
     File,
+    IdentId,
     IdMap,
     IdSet,
     Ok,
@@ -12,7 +13,14 @@ import {
     todo,
 } from "@slige/common";
 import * as resolve from "@slige/resolve";
-import { ElemDef, FieldDef, Ty, tyToString, VariantData } from "@slige/ty";
+import {
+    ElemDef,
+    FieldDef,
+    Ty,
+    tyToString,
+    Variant,
+    VariantData,
+} from "@slige/ty";
 
 export class Checker {
     private stmtChecked = new IdSet<AstId>();
@@ -232,6 +240,27 @@ export class Checker {
         exhausted(k);
     }
 
+    public enumItemTy(item: ast.Item, kind: ast.EnumItem): Ty {
+        return this.itemTys.get(item.id) ?? this.checkEnumItem(item, kind);
+    }
+
+    private checkEnumItem(item: ast.Item, kind: ast.EnumItem): Ty {
+        const variantIdents = new Set<IdentId>();
+        const variants: Variant[] = [];
+        for (const variant of kind.variants) {
+            if (variantIdents.has(variant.ident.id)) {
+                this.report(`variant name already defined`, variant.span);
+                return Ty({ tag: "error" });
+            }
+            variantIdents.add(variant.ident.id);
+            variants.push({
+                ident: variant.ident.id,
+                data: this.checkVariantData(variant.data),
+            });
+        }
+        return Ty({ tag: "enum", item, kind, variants });
+    }
+
     public structItemTy(item: ast.Item, kind: ast.StructItem): Ty {
         return this.itemTys.get(item.id) ?? this.checkStructItem(item, kind);
     }
@@ -364,7 +393,8 @@ export class Checker {
                         );
                         return Ty({ tag: "error" });
                     case "unit":
-                        return this.structItemTy(res.kind.item, res.kind.kind);
+                        //return this.structItemTy(res.kind.item, res.kind.kind);
+                        return todo();
                     case "tuple":
                         this.report(
                             "expected value, got struct type",
@@ -374,8 +404,28 @@ export class Checker {
                 }
                 return exhausted(data.kind);
             }
-            case "variant":
-                return todo("return a ctor here");
+            case "variant": {
+                const data = res.kind.variant.data;
+                switch (data.kind.tag) {
+                    case "error":
+                        return Ty({ tag: "error" });
+                    case "struct":
+                        this.report(
+                            "expected value, got struct type",
+                            expr.span,
+                        );
+                        return Ty({ tag: "error" });
+                    case "unit":
+                        return todo();
+                    case "tuple":
+                        this.report(
+                            "expected value, got struct type",
+                            expr.span,
+                        );
+                        return Ty({ tag: "error" });
+                }
+                return exhausted(data.kind);
+            }
             case "field":
                 throw new Error();
             case "fn": {
@@ -411,21 +461,32 @@ export class Checker {
             return todo();
         }
         const res = this.re.pathRes(kind.path.id);
-        if (res.kind.tag !== "struct") {
+        let ty: Ty;
+        if (res.kind.tag === "struct") {
+            ty = this.structItemTy(res.kind.item, res.kind.kind);
+        } else if (res.kind.tag === "variant") {
+            ty = this.enumItemTy(res.kind.item, res.kind.kind);
+        } else {
             this.report("type is not a struct", kind.path.span);
             const ty = Ty({ tag: "error" });
             this.exprTys.set(expr.id, ty);
             return ty;
         }
-        const ty = this.structItemTy(res.kind.item, res.kind.kind);
         this.exprTys.set(expr.id, ty);
         if (ty.kind.tag === "error") {
             return ty;
         }
-        if (ty.kind.tag !== "struct") {
+        let data: VariantData;
+        if (ty.kind.tag === "struct") {
+            data = ty.kind.data;
+        } else if (ty.kind.tag === "enum") {
+            if (res.kind.tag !== "variant") {
+                throw new Error();
+            }
+            data = ty.kind.variants[res.kind.variantIdx].data;
+        } else {
             throw new Error();
         }
-        const data = ty.kind.data;
         if (data.tag !== "struct") {
             this.report("struct data not a struct", kind.path.span);
             const ty = Ty({ tag: "error" });
@@ -471,6 +532,9 @@ export class Checker {
         kind: ast.CallExpr,
         expected: Ty,
     ): Ty {
+        if (this.callExprIsTupleVariantCtor(kind)) {
+            return this.checkCallExprTupleVariantCtor(expr, kind, expected);
+        }
         if (this.callExprIsTupleStructCtor(kind)) {
             return this.checkCallExprTupleStructCtor(expr, kind, expected);
         }
@@ -498,6 +562,56 @@ export class Checker {
 
         const ty = fnTy.kind.returnTy;
         this.exprTys.set(expr.id, ty);
+        return ty;
+    }
+
+    private callExprIsTupleVariantCtor(kind: ast.CallExpr): boolean {
+        if (kind.expr.kind.tag !== "path") {
+            return false;
+        }
+        const res = this.re.exprRes(kind.expr.id);
+        return res.kind.tag === "variant" &&
+            res.kind.variant.data.kind.tag === "tuple";
+    }
+
+    private checkCallExprTupleVariantCtor(
+        expr: ast.Expr,
+        kind: ast.CallExpr,
+        expected: Ty,
+    ): Ty {
+        if (kind.expr.kind.tag !== "path") {
+            throw new Error();
+        }
+        const res = this.re.exprRes(kind.expr.id);
+        if (res.kind.tag !== "variant") {
+            throw new Error();
+        }
+        const ty = this.enumItemTy(res.kind.item, res.kind.kind);
+        this.exprTys.set(expr.id, ty);
+        if (ty.kind.tag === "error") {
+            return ty;
+        }
+        if (ty.kind.tag !== "enum") {
+            throw new Error();
+        }
+        const data = ty.kind.variants[res.kind.variantIdx].data;
+        if (data.tag !== "tuple") {
+            this.report(
+                "variant data not a tuple",
+                kind.expr.kind.path.span,
+            );
+            const ty = Ty({ tag: "error" });
+            this.exprTys.set(expr.id, ty);
+            return ty;
+        }
+        for (const [i, arg] of kind.args.entries()) {
+            const argTy = this.exprTy(arg);
+            const tyRes = this.resolveTys(argTy, data.elems[i].ty);
+            if (!tyRes.ok) {
+                this.report(tyRes.val, arg.span);
+                return ty;
+            }
+        }
         return ty;
     }
 
@@ -742,7 +856,7 @@ export class Checker {
                     case "error":
                         return Ty({ tag: "error" });
                     case "enum":
-                        return todo();
+                        return this.enumItemTy(k.item, k.kind);
                     case "struct":
                         return this.structItemTy(k.item, k.kind);
                     case "fn":
@@ -850,6 +964,15 @@ export class Checker {
                     return incompat();
                 }
                 if (b.kind.item.id === a.kind.item.id) {
+                    return incompat();
+                }
+                return Res.Ok(a);
+            }
+            case "enum": {
+                if (b.kind.tag !== "enum") {
+                    return incompat();
+                }
+                if (a.kind.item.id !== b.kind.item.id) {
                     return incompat();
                 }
                 return Res.Ok(a);

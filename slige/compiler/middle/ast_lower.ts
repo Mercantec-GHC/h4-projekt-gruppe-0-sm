@@ -326,14 +326,25 @@ export class FnLowerer {
 
     private lowerStructExpr(expr: ast.Expr, kind: ast.StructExpr): RVal {
         const ty = this.ch.exprTy(expr);
+        let variant: ast.Variant | undefined = undefined;
+        if (ty.kind.tag === "enum") {
+            const res = this.re.pathRes(kind.path!.id);
+            if (res.kind.tag !== "variant") {
+                throw new Error();
+            }
+            variant = res.kind.variant;
+        }
         const fields = kind.fields
             .map((field) => this.lowerExprToOperand(field.expr));
-        return { tag: "struct", ty, fields };
+        return { tag: "adt", ty, fields, variant };
     }
 
     private lowerCallExpr(expr: ast.Expr, kind: ast.CallExpr): RVal {
         if (this.callExprIsTupleStructCtor(kind)) {
             return this.lowerCallExprTupleStructCtor(expr, kind);
+        }
+        if (this.callExprIsTupleVariantCtor(kind)) {
+            return this.lowerCallExprTupleVariantCtor(expr, kind);
         }
         const args = kind.args.map((arg) => this.lowerExprToOperand(arg));
         const func = this.lowerExprToOperand(kind.expr);
@@ -355,7 +366,31 @@ export class FnLowerer {
         const ty = this.ch.exprTy(expr);
         const fields = kind.args
             .map((arg) => this.lowerExprToOperand(arg));
-        return { tag: "struct", ty, fields };
+        return { tag: "adt", ty, fields };
+    }
+
+    private callExprIsTupleVariantCtor(kind: ast.CallExpr): boolean {
+        if (kind.expr.kind.tag !== "path") {
+            return false;
+        }
+        const res = this.re.exprRes(kind.expr.id);
+        return res.kind.tag === "variant" &&
+            res.kind.variant.data.kind.tag === "tuple";
+    }
+
+    private lowerCallExprTupleVariantCtor(
+        expr: ast.Expr,
+        kind: ast.CallExpr,
+    ): RVal {
+        const res = this.re.exprRes(kind.expr.id);
+        if (res.kind.tag !== "variant") {
+            throw new Error();
+        }
+        const variant = res.kind.variant;
+        const ty = this.ch.exprTy(expr);
+        const fields = kind.args
+            .map((arg) => this.lowerExprToOperand(arg));
+        return { tag: "adt", ty, fields, variant };
     }
 
     private lowerBinaryExpr(expr: ast.Expr, kind: ast.BinaryExpr): RVal {
@@ -661,13 +696,23 @@ export class FnLowerer {
                         return { tag: "error" };
                     case "struct":
                     case "unit":
-                        return todo(data.kind.tag);
                     case "tuple":
                         return todo(data.kind.tag);
                 }
                 return exhausted(data.kind);
             }
-            case "variant":
+            case "variant": {
+                const data = re.kind.variant.data;
+                switch (data.kind.tag) {
+                    case "error":
+                        return { tag: "error" };
+                    case "struct":
+                    case "unit":
+                    case "tuple":
+                        return todo(data.kind.tag);
+                }
+                return exhausted(data.kind);
+            }
             case "field":
                 return todo();
             case "local": {
@@ -704,6 +749,7 @@ export class FnLowerer {
                 case "bool":
                     return true;
                 case "fn":
+                case "enum":
                 case "struct":
                     return false;
             }

@@ -22,6 +22,10 @@ export function tyToString(ctx: Ctx, ty: Ty): string {
             const reTy = tyToString(ctx, k.returnTy);
             return `fn ${identText}(${params}) -> ${reTy}`;
         }
+        case "enum": {
+            const identText = ctx.identText(k.item.ident.id);
+            return identText;
+        }
         case "struct": {
             const identText = ctx.identText(k.item.ident.id);
             return identText;
