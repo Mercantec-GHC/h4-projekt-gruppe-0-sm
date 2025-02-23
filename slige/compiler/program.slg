@@ -1,11 +1,15 @@
 
 enum S {
-    A,
-    B,
+    A(int),
+    B { v: int },
 }
 
 fn main() {
-    let v = S::A;
+    let s = S::A(123);
+    match s {
+        S::A(v) => {},
+        S::B { v: v } => {},
+    }
 }
 
 

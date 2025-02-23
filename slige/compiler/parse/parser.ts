@@ -14,8 +14,10 @@ import {
     Ident,
     Item,
     ItemKind,
+    MatchArm,
     Param,
     Pat,
+    PatField,
     Path,
     PathSegment,
     PatKind,
@@ -81,7 +83,9 @@ export class Parser {
             this.eatSemicolon();
             return expr;
         } else if (
-            ["{", "if", "loop", "while", "for"].some((tt) => this.test(tt))
+            ["{", "if", "match", "loop", "while", "for"].some((tt) =>
+                this.test(tt)
+            )
         ) {
             const expr = this.parseMultiLineBlockExpr();
             return (this.stmt({ tag: "expr", expr }, expr.span));
@@ -138,6 +142,9 @@ export class Parser {
         }
         if (this.test("if")) {
             return this.parseIf();
+        }
+        if (this.test("match")) {
+            return this.parseMatch();
         }
         if (this.test("loop")) {
             return this.parseLoop();
@@ -204,7 +211,9 @@ export class Parser {
                 stmts.push(this.parseSingleLineBlockStmt());
                 this.eatSemicolon();
             } else if (
-                ["{", "if", "loop", "while", "for"].some((tt) => this.test(tt))
+                ["{", "if", "match", "loop", "while", "for"].some((tt) =>
+                    this.test(tt)
+                )
             ) {
                 const expr = this.parseMultiLineBlockExpr();
                 const span = expr.span;
@@ -847,6 +856,53 @@ export class Parser {
         return this.expr({ tag: "if", cond, truthy, falsy }, pos);
     }
 
+    private parseMatch(): Expr {
+        const begin = this.span();
+        let end = begin;
+        this.step();
+        const expr = this.parseExpr(ExprRestricts.NoStructs);
+        if (!this.test("{")) {
+            this.report("expected '{'");
+            return this.expr({ tag: "error" }, begin);
+        }
+        this.step();
+        const arms: MatchArm[] = [];
+        if (!this.done() && !this.test("}")) {
+            let needsComma = false;
+            while (!this.done() && !this.test("}")) {
+                if (this.test(",")) {
+                    this.step();
+                } else if (needsComma) {
+                    this.report("expected ','");
+                }
+                if (this.done() || this.test("}")) {
+                    break;
+                }
+                const pat = this.parsePat();
+                if (!this.test("=>")) {
+                    this.report("expected '=>'");
+                    return this.expr({ tag: "error" }, begin);
+                }
+                this.step();
+                needsComma = !["{", "if", "match", "loop", "while", "for"]
+                    .some((tt) => this.test(tt));
+                const expr = this.parseExpr();
+                arms.push({
+                    pat,
+                    expr,
+                    span: Span.fromto(pat.span, expr.span),
+                });
+            }
+        }
+        if (!this.test("}")) {
+            this.report("expected '}'");
+            return this.expr({ tag: "error" }, begin);
+        }
+        end = this.span();
+        this.step();
+        return this.expr({ tag: "match", expr, arms }, Span.fromto(begin, end));
+    }
+
     private parseBinary(rs: ExprRestricts): Expr {
         return this.parseOr(rs);
     }
@@ -1117,23 +1173,79 @@ export class Parser {
     }
 
     private parsePat(): Pat {
-        const pos = this.span();
+        const begin = this.span();
         if (this.test("ident")) {
-            const ident = this.parseIdent();
-            return this.pat({ tag: "bind", ident, mut: false }, ident.span);
+            const pathRes = this.parsePath();
+            if (!pathRes.ok) {
+                return this.pat({ tag: "error" }, begin);
+            }
+            const path = pathRes.val;
+            if (this.test("(")) {
+                const end: [Span] = [begin];
+                const elems = this.parseDelimitedList(
+                    this.parsePatRes,
+                    ")",
+                    ",",
+                    end,
+                );
+                return this.pat(
+                    { tag: "tuple", path, elems },
+                    Span.fromto(begin, end[0]),
+                );
+            }
+            if (this.test("{")) {
+                const fields = this.parseDelimitedList(
+                    this.parsePatField,
+                    "}",
+                    ",",
+                );
+                return this.pat(
+                    { tag: "struct", path: pathRes.val, fields },
+                    pathRes.val.span,
+                );
+            }
+            if (path.segments.length === 1) {
+                const ident = path.segments[0].ident;
+                return this.pat({ tag: "bind", ident, mut: false }, ident.span);
+            } else {
+                return this.pat({ tag: "path", path }, path.span);
+            }
         }
         if (this.test("mut")) {
             this.step();
             if (!this.test("ident")) {
                 this.report("expected 'ident'");
-                return this.pat({ tag: "error" }, pos);
+                return this.pat({ tag: "error" }, begin);
             }
             const ident = this.parseIdent();
-            return this.pat({ tag: "bind", ident, mut: true }, pos);
+            return this.pat({ tag: "bind", ident, mut: true }, begin);
         }
-        this.report(`expected pattern, got '${this.current().type}'`, pos);
+        this.report(`expected pattern, got '${this.current().type}'`, begin);
         this.step();
-        return this.pat({ tag: "error" }, pos);
+        return this.pat({ tag: "error" }, begin);
+    }
+
+    private parsePatRes(): ParseRes<Pat> {
+        return Res.Ok(this.parsePat());
+    }
+
+    private parsePatField(): ParseRes<PatField> {
+        if (!this.test("ident")) {
+            this.report("expected 'ident'");
+            return Res.Err(undefined);
+        }
+        const ident = this.parseIdent();
+        if (!this.test(":")) {
+            this.report("expected ':'");
+            return Res.Err(undefined);
+        }
+        this.step();
+        const pat = this.parsePat();
+        return Res.Ok({
+            ident,
+            pat,
+            span: Span.fromto(ident.span, pat.span),
+        });
     }
 
     private parseTy(): Ty {

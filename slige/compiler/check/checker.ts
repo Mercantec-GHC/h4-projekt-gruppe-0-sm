@@ -88,6 +88,10 @@ export class Checker {
                 return Ok(undefined);
             case "path":
                 return todo();
+            case "tuple":
+                return todo();
+            case "struct":
+                return todo();
         }
         exhausted(k);
     }
@@ -230,6 +234,7 @@ export class Checker {
             case "binary":
             case "block":
             case "if":
+            case "match":
             case "loop":
             case "while":
             case "for":
@@ -358,6 +363,8 @@ export class Checker {
                 return this.checkBlock(k.block, expected);
             case "if":
                 return this.checkIfExpr(expr, k, expected);
+            case "match":
+                return this.checkMatchExpr(expr, k, expected);
             case "loop":
                 return this.checkLoopExpr(expr, k, expected);
             case "while":
@@ -760,6 +767,36 @@ export class Checker {
         return bothRes.val;
     }
 
+    private checkMatchExpr(
+        expr: ast.Expr,
+        kind: ast.MatchExpr,
+        expected: Ty,
+    ): Ty {
+        const ty = this.exprTy(kind.expr);
+        for (const arm of kind.arms) {
+            const res = this.assignPatTy(arm.pat, ty);
+            if (!res.ok) {
+                this.report(res.val, arm.pat.span);
+                continue;
+            }
+        }
+        const tyRes = kind.arms
+            .reduce<Res<Ty, string>>((earlier, arm) => {
+                if (!earlier.ok) {
+                    return earlier;
+                }
+                const exprTy = this.exprTy(arm.expr);
+                return this.resolveTys(exprTy, earlier.val);
+            }, Res.Ok(Ty({ tag: "null" })));
+        if (!tyRes.ok) {
+            this.report(tyRes.val, expr.span);
+            this.exprTys.set(expr.id, Ty({ tag: "error" }));
+            return Ty({ tag: "error" });
+        }
+        this.exprTys.set(expr.id, tyRes.val);
+        return todo();
+    }
+
     private checkLoopExpr(
         expr: ast.Expr,
         kind: ast.LoopExpr,
@@ -911,15 +948,23 @@ export class Checker {
                     }
                     case "let": {
                         this.checkLetStmt(patRes.kind.stmt, patRes.kind.kind);
-                        const ty = this.patTy(pat);
-                        this.patTys.set(pat.id, ty);
-                        return ty;
+                        return this.patTy(pat);
+                    }
+                    case "match": {
+                        this.checkMatchExpr(
+                            patRes.kind.expr,
+                            patRes.kind.kind,
+                            Ty({ tag: "unknown" }),
+                        );
+                        return this.patTy(pat);
                     }
                 }
                 exhausted(patRes.kind);
                 return todo();
             }
             case "path":
+            case "tuple":
+            case "struct":
                 return todo();
         }
         exhausted(k);

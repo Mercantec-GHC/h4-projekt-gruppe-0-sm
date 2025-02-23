@@ -148,6 +148,7 @@ export type ExprKind =
     | { tag: "binary" } & BinaryExpr
     | { tag: "block" } & BlockExpr
     | { tag: "if" } & IfExpr
+    | { tag: "match" } & MatchExpr
     | { tag: "loop" } & LoopExpr
     | { tag: "while" } & WhileExpr
     | { tag: "for" } & ForExpr
@@ -171,10 +172,17 @@ export type UnaryExpr = { unaryType: UnaryType; expr: Expr };
 export type BinaryExpr = { binaryType: BinaryType; left: Expr; right: Expr };
 export type BlockExpr = { block: Block };
 export type IfExpr = { cond: Expr; truthy: Expr; falsy?: Expr };
+export type MatchExpr = { expr: Expr; arms: MatchArm[] };
 export type LoopExpr = { body: Expr };
 export type WhileExpr = { cond: Expr; body: Expr };
 export type ForExpr = { pat: Pat; expr: Expr; body: Expr };
 export type CForExpr = { decl?: Stmt; cond?: Expr; incr?: Stmt; body: Expr };
+
+export type MatchArm = {
+    pat: Pat;
+    expr: Expr;
+    span: Span;
+};
 
 export type RefType = "ref" | "ptr";
 export type UnaryType = "not" | "-";
@@ -213,10 +221,20 @@ export type Pat = {
 export type PatKind =
     | { tag: "error" }
     | { tag: "bind" } & BindPat
-    | { tag: "path" } & PathPat;
+    | { tag: "path" } & PathPat
+    | { tag: "tuple" } & TuplePat
+    | { tag: "struct" } & StructPat;
 
 export type BindPat = { ident: Ident; mut: boolean };
 export type PathPat = { qty?: Ty; path: Path };
+export type TuplePat = { path?: Path; elems: Pat[] };
+export type StructPat = { path?: Path; fields: PatField[] };
+
+export type PatField = {
+    ident: Ident;
+    pat: Pat;
+    span: Span;
+};
 
 export type Ty = {
     id: AstId;

@@ -121,9 +121,12 @@ export class Resolver implements ast.Visitor {
 
     visitBlock(block: ast.Block): ast.VisitRes {
         this.fnBodiesToCheck.push([]);
+        const outerSyms = this.syms;
+        this.syms = new LocalSyms(this.syms);
         ast.visitStmts(this, block.stmts);
         this.popAndVisitFnBodies();
         block.expr && ast.visitExpr(this, block.expr);
+        this.syms = outerSyms;
         return "stop";
     }
 
@@ -289,6 +292,25 @@ export class Resolver implements ast.Visitor {
         return "stop";
     }
 
+    visitMatchExpr(expr: ast.Expr, kind: ast.MatchExpr): ast.VisitRes {
+        ast.visitExpr(this, kind.expr);
+        this.patResolveStack.push({ tag: "match", expr, kind });
+        for (const arm of kind.arms) {
+            ast.visitMatchArm(this, arm);
+        }
+        this.patResolveStack.pop();
+        return "stop";
+    }
+
+    visitMatchArm(arm: ast.MatchArm): ast.VisitRes {
+        const outerSyms = this.syms;
+        this.syms = new LocalSyms(this.syms);
+        ast.visitPat(this, arm.pat);
+        ast.visitExpr(this, arm.expr);
+        this.syms = outerSyms;
+        return "stop";
+    }
+
     visitBindPat(pat: ast.Pat, kind: ast.BindPat): ast.VisitRes {
         this.patResols.set(pat.id, { pat, kind: this.patResolveStack.at(-1)! });
         const res = this.syms.defVal(kind.ident, {
@@ -303,7 +325,30 @@ export class Resolver implements ast.Visitor {
     }
 
     visitPathPat(pat: ast.Pat, kind: ast.PathPat): ast.VisitRes {
-        todo(pat, kind);
+        this.resolveTyPath(kind.path);
+        return "stop";
+    }
+
+    visitTuplePat(pat: ast.Pat, kind: ast.TuplePat): ast.VisitRes {
+        if (!kind.path) {
+            return todo();
+        }
+        this.resolveTyPath(kind.path);
+        for (const elem of kind.elems) {
+            ast.visitPat(this, elem);
+        }
+        return "stop";
+    }
+
+    visitStructPat(pat: ast.Pat, kind: ast.StructPat): ast.VisitRes {
+        if (!kind.path) {
+            return todo();
+        }
+        this.resolveTyPath(kind.path);
+        for (const field of kind.fields) {
+            ast.visitPat(this, field.pat);
+        }
+        return "stop";
     }
 
     visitPathTy(ty: ast.Ty, kind: ast.PathTy): ast.VisitRes {

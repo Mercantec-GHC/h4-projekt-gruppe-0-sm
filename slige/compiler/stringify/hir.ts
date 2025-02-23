@@ -23,7 +23,7 @@ export class HirStringifyer {
             case "item":
                 return this.item(k.item);
             case "let": {
-                return `let ${this.pat(k.pat)}${
+                return `let ${this.pat(k.pat, d)}${
                     k.expr && ` = ${this.expr(k.expr, d)}` || ""
                 };`;
             }
@@ -43,7 +43,7 @@ export class HirStringifyer {
         exhausted(k);
     }
 
-    public item(item: ast.Item, depth = 0): string {
+    public item(item: ast.Item, d = 0): string {
         const ident = item.ident.text;
         const pub = item.pub ? "pub " : "";
         const k = item.kind;
@@ -51,11 +51,9 @@ export class HirStringifyer {
             case "error":
                 return "<error>;";
             case "mod_block":
-                return `${pub}mod ${ident} ${this.block(k.block, depth)}`;
+                return `${pub}mod ${ident} ${this.block(k.block, d)}`;
             case "mod_file":
-                return `${pub}mod ${ident} {\n${
-                    this.file(k.ast!, depth + 1)
-                }\n}`;
+                return `${pub}mod ${ident} {\n${this.file(k.ast!, d + 1)}\n}`;
             case "enum":
                 return `enum ${ident}: ${
                     this.ty(this.ch.enumItemTy(item, k))
@@ -70,11 +68,11 @@ export class HirStringifyer {
                     throw new Error();
                 }
                 const params = k.params
-                    .map((param) => this.pat(param.pat))
+                    .map((param) => this.pat(param.pat, d))
                     .join(", ");
                 return `${pub}fn ${ident}(${params}) -> ${
                     this.ty(ty.kind.returnTy)
-                } ${this.block(k.body!, depth)}`;
+                } ${this.block(k.body!, d)}`;
             }
             case "use":
                 return todo();
@@ -137,6 +135,17 @@ export class HirStringifyer {
                 return `if ${this.expr(k.cond, d)} ${this.expr(k.truthy, d)}${
                     k.falsy && ` else ${this.expr(k.falsy, d)}` || ""
                 }`;
+            case "match":
+                return `match ${this.expr(k.expr, d)} ${
+                    k.arms.length === 0
+                        ? "{}"
+                        : `{${
+                            k.arms.map((arm) => this.matchArm(arm, d + 1)).map(
+                                (s) =>
+                                    `\n${s},`,
+                            )
+                        }\n${indent(d)}}`
+                }`;
             case "loop":
                 return `loop ${this.expr(k.body, d)}`;
             case "while":
@@ -153,7 +162,11 @@ export class HirStringifyer {
         exhausted(k);
     }
 
-    public pat(pat: ast.Pat): string {
+    public matchArm(arm: ast.MatchArm, d: number): string {
+        return `${this.pat(arm.pat, d)} => ${this.expr(arm.expr, d + 1)}`;
+    }
+
+    public pat(pat: ast.Pat, d: number): string {
         const k = pat.kind;
         switch (k.tag) {
             case "error":
@@ -163,7 +176,23 @@ export class HirStringifyer {
                     this.ty(this.ch.patTy(pat))
                 }`;
             case "path":
-                return todo();
+                return this.path(k.path);
+            case "tuple":
+                return `${k.path && this.path(k.path) || ""}(${
+                    k.elems.map((pat) => this.pat(pat, d)).join(", ")
+                })`;
+            case "struct":
+                return `${k.path ? `${this.path(k.path)}` : "struct "} {${
+                    [
+                        k.fields
+                            .map((field) =>
+                                `${indent(d + 1)}${field.ident.text}: ${
+                                    this.pat(field.pat, d + 1)
+                                },`
+                            )
+                            .join("\n"),
+                    ].map((s) => `\n${s}\n${indent(d)}`)
+                }}`;
         }
         exhausted(k);
     }

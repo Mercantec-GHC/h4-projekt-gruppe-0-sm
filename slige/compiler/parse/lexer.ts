@@ -291,6 +291,7 @@ const keywords = new Set([
     "while",
     "for",
     "in",
+    "match",
     "mod",
     "pub",
     "use",
@@ -300,6 +301,7 @@ const keywords = new Set([
 const staticTokens = [
     "=",
     "==",
+    "=>",
     "<",
     "<=",
     ">",

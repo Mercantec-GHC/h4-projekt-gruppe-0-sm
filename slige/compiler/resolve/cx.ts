@@ -36,7 +36,8 @@ export type PatResolve = {
 
 export type PatResolveKind =
     | { tag: "fn_param"; item: ast.Item; kind: ast.FnItem; paramIdx: number }
-    | { tag: "let"; stmt: ast.Stmt; kind: ast.LetStmt };
+    | { tag: "let"; stmt: ast.Stmt; kind: ast.LetStmt }
+    | { tag: "match"; expr: ast.Expr; kind: ast.MatchExpr };
 
 export const ResolveError = (ident: ast.Ident): Resolve => ({
     ident,

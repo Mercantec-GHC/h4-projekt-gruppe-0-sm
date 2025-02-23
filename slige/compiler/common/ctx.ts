@@ -119,9 +119,15 @@ export class Ctx {
         return this.maxSeverity >= severityCode.error;
     }
 
+    private amountReportedImmediately = 0;
+
     public enableReportImmediately = false;
     public enableStacktrace = false;
     private reportImmediately(rep: Report) {
+        if (this.amountReportedImmediately >= 2) {
+            return;
+        }
+        this.amountReportedImmediately += 1;
         if (this.enableReportImmediately) {
             prettyPrintReport(this, rep);
             if (this.enableStacktrace) {

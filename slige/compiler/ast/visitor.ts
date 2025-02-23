@@ -33,6 +33,8 @@ import {
     ItemStmt,
     LetStmt,
     LoopExpr,
+    MatchArm,
+    MatchExpr,
     ModBlockItem,
     ModFileItem,
     Param,
@@ -51,6 +53,8 @@ import {
     StringExpr,
     StructExpr,
     StructItem,
+    StructPat,
+    TuplePat,
     TupleTy,
     Ty,
     TypeAliasItem,
@@ -116,15 +120,20 @@ export interface Visitor<
     visitBinaryExpr?(expr: Expr, kind: BinaryExpr, ...p: P): R;
     visitBlockExpr?(expr: Expr, kind: BlockExpr, ...p: P): R;
     visitIfExpr?(expr: Expr, kind: IfExpr, ...p: P): R;
+    visitMatchExpr?(expr: Expr, kind: MatchExpr, ...p: P): R;
     visitLoopExpr?(expr: Expr, kind: LoopExpr, ...p: P): R;
     visitWhileExpr?(expr: Expr, kind: WhileExpr, ...p: P): R;
     visitForExpr?(expr: Expr, kind: ForExpr, ...p: P): R;
     visitCForExpr?(expr: Expr, kind: CForExpr, ...p: P): R;
 
+    visitMatchArm?(arm: MatchArm, ...p: P): R;
+
     visitPat?(pat: Pat, ...p: P): R;
     visitErrorPat?(pat: Pat, ...p: P): R;
     visitBindPat?(pat: Pat, kind: BindPat, ...p: P): R;
     visitPathPat?(pat: Pat, kind: PathPat, ...p: P): R;
+    visitTuplePat?(pat: Pat, kind: TuplePat, ...p: P): R;
+    visitStructPat?(pat: Pat, kind: StructPat, ...p: P): R;
 
     visitTy?(ty: Ty, ...p: P): R;
     visitErrorTy?(ty: Ty, ...p: P): R;
@@ -453,6 +462,13 @@ export function visitExpr<
                 visitExpr(v, kind.falsy, ...p);
             }
             return;
+        case "match":
+            if (v.visitMatchExpr?.(expr, kind, ...p) === "stop") return;
+            visitExpr(v, kind.expr, ...p);
+            for (const arm of kind.arms) {
+                visitMatchArm(v, arm, ...p);
+            }
+            return;
         case "loop":
             if (v.visitLoopExpr?.(expr, kind, ...p) === "stop") return;
             visitExpr(v, kind.body, ...p);
@@ -484,6 +500,18 @@ export function visitExpr<
     exhausted(kind);
 }
 
+export function visitMatchArm<
+    P extends PM = [],
+>(
+    v: Visitor<P>,
+    arm: MatchArm,
+    ...p: P
+) {
+    if (v.visitMatchArm?.(arm, ...p) === "stop") return;
+    visitPat(v, arm.pat, ...p);
+    visitExpr(v, arm.expr, ...p);
+}
+
 export function visitPat<
     P extends PM = [],
 >(
@@ -503,6 +531,21 @@ export function visitPat<
         case "path":
             if (v.visitPathPat?.(pat, kind, ...p) === "stop") return;
             visitPath(v, kind.path, ...p);
+            return;
+        case "tuple":
+            if (v.visitTuplePat?.(pat, kind, ...p) === "stop") return;
+            kind.path && visitPath(v, kind.path, ...p);
+            for (const pat of kind.elems) {
+                visitPat(v, pat, ...p);
+            }
+            return;
+        case "struct":
+            if (v.visitStructPat?.(pat, kind, ...p) === "stop") return;
+            kind.path && visitPath(v, kind.path, ...p);
+            for (const field of kind.fields) {
+                visitIdent(v, field.ident, ...p);
+                visitPat(v, field.pat, ...p);
+            }
             return;
     }
     exhausted(kind);

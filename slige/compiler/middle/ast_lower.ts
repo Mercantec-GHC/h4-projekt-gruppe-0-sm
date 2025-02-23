@@ -152,6 +152,8 @@ export class FnLowerer {
                 return;
             }
             case "path":
+            case "tuple":
+            case "struct":
                 return todo();
         }
         exhausted(k);
@@ -172,6 +174,8 @@ export class FnLowerer {
                 return;
             }
             case "path":
+            case "tuple":
+            case "struct":
                 return todo();
         }
         exhausted(k);
@@ -246,6 +250,7 @@ export class FnLowerer {
             case "binary":
             case "block":
             case "if":
+            case "match":
             case "loop":
             case "while":
             case "for":
@@ -292,6 +297,8 @@ export class FnLowerer {
                 return this.lowerBlock(k.block);
             case "if":
                 return this.lowerIfExpr(expr, k);
+            case "match":
+                return this.lowerMatchExpr(expr, k);
             case "loop":
                 return this.lowerLoopExpr(expr, k);
             case "while":
@@ -507,6 +514,10 @@ export class FnLowerer {
         }
     }
 
+    private lowerMatchExpr(expr: ast.Expr, kind: ast.MatchExpr): RVal {
+        return todo();
+    }
+
     private lowerLoopExpr(expr: ast.Expr, kind: ast.LoopExpr): RVal {
         const entryBlock = this.currentBlock!;
         const loopBlock = this.pushBlock();
@@ -681,6 +692,7 @@ export class FnLowerer {
             case "binary":
             case "block":
             case "if":
+            case "match":
             case "loop":
             case "while":
             case "for":

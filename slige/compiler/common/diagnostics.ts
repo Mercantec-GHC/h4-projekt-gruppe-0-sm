@@ -79,7 +79,7 @@ export function prettyPrintReport(ctx: Ctx, rep: Report) {
                 "color: cyan",
             );
             console.error(
-                `${rep.span.begin.line.toString().padStart(4, " ")}%c| %c${
+                `%c${rep.span.begin.line.toString().padStart(4, " ")}| %c${
                     spanLines[0]
                 }`,
                 "color: cyan",
@@ -92,6 +92,7 @@ export function prettyPrintReport(ctx: Ctx, rep: Report) {
                 "color: cyan",
                 `color: ${sevColor}; font-weight: bold`,
             );
+            console.error(""); // empty newline
             return;
         }
         for (let i = 0; i < spanLines.length; i++) {
@@ -125,6 +126,7 @@ export function prettyPrintReport(ctx: Ctx, rep: Report) {
                 );
             }
         }
+        console.error(""); // empty newline
     } else if (rep.pos) {
         console.error(
             `    %c|`,
@@ -142,6 +144,7 @@ export function prettyPrintReport(ctx: Ctx, rep: Report) {
             "color: cyan",
             `color: ${sevColor}; font-weight: bold`,
         );
+        console.error(""); // empty newline
     }
 }
 
