@@ -405,6 +405,7 @@ export class Checker {
                 return exhausted(data.kind);
             }
             case "variant": {
+                const { item, kind } = res.kind;
                 const data = res.kind.variant.data;
                 switch (data.kind.tag) {
                     case "error":
@@ -416,7 +417,7 @@ export class Checker {
                         );
                         return Ty({ tag: "error" });
                     case "unit":
-                        return todo();
+                        return this.enumItemTy(item, kind);
                     case "tuple":
                         this.report(
                             "expected value, got struct type",

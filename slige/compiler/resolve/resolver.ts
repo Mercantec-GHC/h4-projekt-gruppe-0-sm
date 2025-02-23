@@ -178,6 +178,7 @@ export class Resolver implements ast.Visitor {
 
     visitStructItem(item: ast.Item, kind: ast.StructItem): ast.VisitRes {
         this.syms.defTy(item.ident, { tag: "struct", item, kind });
+        this.syms.defVal(item.ident, { tag: "struct", item, kind });
         const outerSyms = this.syms;
         this.syms = new ItemSyms(this.syms);
         ast.visitVariantData(this, kind.data);
@@ -239,23 +240,6 @@ export class Resolver implements ast.Visitor {
         const res = this.resolveValPath(kind.path);
         this.exprResols.set(expr.id, res);
         return "stop";
-    }
-
-    visitCallExpr(expr: ast.Expr, kind: ast.CallExpr): ast.VisitRes {
-        if (
-            kind.expr.kind.tag === "path" &&
-            kind.expr.kind.path.segments.length === 1
-        ) {
-            const res = this.resolveTyPath(kind.expr.kind.path);
-            if (res.kind.tag === "struct") {
-                this.exprResols.set(kind.expr.id, res);
-                for (const arg of kind.args) {
-                    ast.visitExpr(this, arg);
-                }
-                return "stop";
-            }
-        }
-        // otherwise, just continue as usual
     }
 
     visitStructExpr(expr: ast.Expr, kind: ast.StructExpr): ast.VisitRes {

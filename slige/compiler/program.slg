@@ -1,13 +1,11 @@
 
-enum Abc {
-    B(int),
-    C { v: int },
+enum S {
+    A,
+    B,
 }
 
 fn main() {
-    let b: Abc = Abc::B(123);
-
-    let c = Abc::C { v: 123 };
+    let v = S::A;
 }
 
 

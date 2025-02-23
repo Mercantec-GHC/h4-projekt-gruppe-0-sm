@@ -200,7 +200,9 @@ export class MirFnStringifyer {
                         case "error":
                             return "<error>";
                         case "unit":
-                            return todo();
+                            return `${tyk.item.ident.text}::${
+                                rval.variant!.ident.text
+                            }`;
                         case "tuple": {
                             const name = `${tyk.item.ident.text}::${
                                 rval.variant!.ident.text

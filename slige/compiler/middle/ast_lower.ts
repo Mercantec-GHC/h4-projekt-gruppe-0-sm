@@ -311,7 +311,27 @@ export class FnLowerer {
                 return { tag: "error" };
             case "enum":
             case "struct":
-            case "variant":
+                return todo();
+            case "variant": {
+                const ty = this.ch.enumItemTy(re.kind.item, re.kind.kind);
+                const data = re.kind.variant.data;
+                switch (data.kind.tag) {
+                    case "error":
+                        return { tag: "error" };
+                    case "struct":
+                        throw new Error("should not check");
+                    case "unit":
+                        return {
+                            tag: "adt",
+                            ty,
+                            fields: [],
+                            variant: re.kind.variant,
+                        };
+                    case "tuple":
+                        return todo();
+                }
+                return exhausted(data.kind);
+            }
             case "field":
                 return todo();
             case "fn":
