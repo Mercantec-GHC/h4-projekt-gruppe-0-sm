@@ -515,7 +515,69 @@ export class FnLowerer {
     }
 
     private lowerMatchExpr(expr: ast.Expr, kind: ast.MatchExpr): RVal {
-        return todo();
+        if (kind.arms.length === 0) {
+            return todo();
+        }
+        const ty = this.ch.exprTy(expr);
+        const dest = this.local(ty);
+
+        const discr = this.lowerExpr(kind.expr);
+        const exitBlock = this.createBlock();
+
+        for (const arm of kind.arms) {
+            const exprBlock = this.createBlock();
+            const nextArmBlock = this.createBlock();
+            this.lowerMatchArmPattern(
+                discr,
+                arm.pat,
+                exprBlock,
+                nextArmBlock,
+            );
+            this.pushCreatedBlock(exprBlock);
+            const rval = this.lowerExpr(arm.expr);
+            this.addStmt({
+                tag: "assign",
+                place: { local: dest, proj: [] },
+                rval,
+            });
+            this.setTer({ tag: "goto", target: exitBlock.id });
+            this.pushCreatedBlock(nextArmBlock);
+        }
+        this.setTer({ tag: "goto", target: exitBlock.id });
+        this.pushCreatedBlock(exitBlock);
+        return { tag: "use", operand: this.copyOrMoveLocal(dest, ty) };
+    }
+
+    private lowerMatchArmPattern(
+        discr: RVal,
+        pat: ast.Pat,
+        truthyBlock: Block,
+        falsyBlock: Block,
+    ) {
+        const k = pat.kind;
+        switch (k.tag) {
+            case "error":
+                return;
+            case "bind": {
+                const ty = this.ch.patTy(pat);
+                const local = this.local(ty);
+                this.addStmt({
+                    tag: "assign",
+                    place: { local, proj: [] },
+                    rval: discr,
+                });
+                this.setTer({ tag: "goto", target: truthyBlock.id });
+                return;
+            }
+            case "path":
+                return todo();
+            case "tuple": {
+                return todo();
+            }
+            case "struct":
+                return todo();
+        }
+        exhausted(k);
     }
 
     private lowerLoopExpr(expr: ast.Expr, kind: ast.LoopExpr): RVal {

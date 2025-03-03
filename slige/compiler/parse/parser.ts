@@ -1144,6 +1144,9 @@ export class Parser {
         if (this.test("if")) {
             return this.parseIf();
         }
+        if (this.test("match")) {
+            return this.parseMatch();
+        }
         if (this.test("loop")) {
             return this.parseLoop();
         }

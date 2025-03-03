@@ -72,26 +72,136 @@ export class Checker {
 
         const res = this.assignPatTy(kind.pat, ty.val);
         if (!res.ok) {
-            this.report(res.val, stmt.span);
+            this.report(res.val.msg, res.val.span);
             return Ty({ tag: "error" });
         }
     }
 
-    private assignPatTy(pat: ast.Pat, ty: Ty): Res<void, string> {
+    private assignPatTy(
+        pat: ast.Pat,
+        ty: Ty,
+    ): Res<void, { msg: string; span: Span }> {
+        this.patTys.set(pat.id, ty);
         const k = pat.kind;
         switch (k.tag) {
             case "error":
                 // don't report, already reported
                 return Res.Ok(undefined);
             case "bind":
-                this.patTys.set(pat.id, ty);
                 return Ok(undefined);
             case "path":
                 return todo();
-            case "tuple":
+            case "tuple": {
+                if (k.path) {
+                    const re = this.re.pathRes(k.path.id);
+                    if (re.kind.tag === "variant") {
+                        if (ty.kind.tag !== "enum") {
+                            return Res.Err({
+                                msg: "type/pattern mismatch",
+                                span: pat.span,
+                            });
+                        }
+                        const variantTy =
+                            ty.kind.variants[re.kind.variantIdx].data;
+                        if (variantTy.tag !== "tuple") {
+                            return Res.Err({
+                                msg: "type is not a tuple variant",
+                                span: pat.span,
+                            });
+                        }
+                        const datak = re.kind.variant.data.kind;
+                        if (datak.tag !== "tuple") {
+                            return Res.Err({
+                                msg: "variant is not a tuple",
+                                span: pat.span,
+                            });
+                        }
+                        if (k.elems.length !== datak.elems.length) {
+                            return Res.Err({
+                                msg: `incorrect amount of elements, expected ${datak.elems.length} got ${k.elems.length}`,
+                                span: pat.span,
+                            });
+                        }
+                        for (const [i, pat] of k.elems.entries()) {
+                            const res = this.assignPatTy(
+                                pat,
+                                variantTy.elems[i].ty,
+                            );
+                            if (!res.ok) {
+                                return res;
+                            }
+                        }
+                        return Res.Ok(undefined);
+                    }
+                }
                 return todo();
-            case "struct":
+            }
+            case "struct": {
+                if (k.path) {
+                    const re = this.re.pathRes(k.path.id);
+                    if (re.kind.tag === "variant") {
+                        if (ty.kind.tag !== "enum") {
+                            return Res.Err({
+                                msg: "type/pattern mismatch",
+                                span: pat.span,
+                            });
+                        }
+                        const variantTy =
+                            ty.kind.variants[re.kind.variantIdx].data;
+                        if (variantTy.tag !== "struct") {
+                            return Res.Err({
+                                msg: "type is not a struct variant",
+                                span: pat.span,
+                            });
+                        }
+                        const datak = re.kind.variant.data.kind;
+                        if (datak.tag !== "struct") {
+                            return Res.Err({
+                                msg: "variant is not a struct",
+                                span: pat.span,
+                            });
+                        }
+                        const fieldIdents = datak.fields
+                            .reduce(
+                                (
+                                    map,
+                                    field,
+                                ) => (map.set(field.ident!.id, field), map),
+                                new Map(),
+                            );
+                        for (const field of k.fields) {
+                            if (!fieldIdents.has(field.ident.id)) {
+                                return Res.Err({
+                                    msg: `no field '${field.ident.text}' on  type`,
+                                    span: pat.span,
+                                });
+                            }
+                            const res = this.assignPatTy(
+                                field.pat,
+                                fieldIdents.get(field.ident.id)!.ty,
+                            );
+                            if (!res.ok) {
+                                return res;
+                            }
+                            fieldIdents.delete(field.ident.id);
+                        }
+                        if (fieldIdents.size !== 0) {
+                            return Res.Err({
+                                msg: `fields ${
+                                    fieldIdents
+                                        .values()
+                                        .map((field) => `'${field.ident.text}'`)
+                                        .toArray()
+                                        .join(", ")
+                                } not covered`,
+                                span: pat.span,
+                            });
+                        }
+                        return Res.Ok(undefined);
+                    }
+                }
                 return todo();
+            }
         }
         exhausted(k);
     }
@@ -776,7 +886,7 @@ export class Checker {
         for (const arm of kind.arms) {
             const res = this.assignPatTy(arm.pat, ty);
             if (!res.ok) {
-                this.report(res.val, arm.pat.span);
+                this.report(res.val.msg, res.val.span);
                 continue;
             }
         }
@@ -785,16 +895,16 @@ export class Checker {
                 if (!earlier.ok) {
                     return earlier;
                 }
-                const exprTy = this.exprTy(arm.expr);
+                const exprTy = this.exprTy(arm.expr, earlier.val);
                 return this.resolveTys(exprTy, earlier.val);
-            }, Res.Ok(Ty({ tag: "null" })));
+            }, Res.Ok(Ty({ tag: "unknown" })));
         if (!tyRes.ok) {
             this.report(tyRes.val, expr.span);
             this.exprTys.set(expr.id, Ty({ tag: "error" }));
             return Ty({ tag: "error" });
         }
         this.exprTys.set(expr.id, tyRes.val);
-        return todo();
+        return tyRes.val;
     }
 
     private checkLoopExpr(

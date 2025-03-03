@@ -137,14 +137,14 @@ export class HirStringifyer {
                 }`;
             case "match":
                 return `match ${this.expr(k.expr, d)} ${
-                    k.arms.length === 0
-                        ? "{}"
-                        : `{${
-                            k.arms.map((arm) => this.matchArm(arm, d + 1)).map(
-                                (s) =>
-                                    `\n${s},`,
+                    k.arms.length === 0 ? "{}" : `{${
+                        k.arms
+                            .map((arm) => this.matchArm(arm, d + 1))
+                            .map((s) =>
+                                `\n${indent(d + 1)}${s},`
                             )
-                        }\n${indent(d)}}`
+                            .join("")
+                    }\n${indent(d)}}`
                 }`;
             case "loop":
                 return `loop ${this.expr(k.body, d)}`;
@@ -163,7 +163,7 @@ export class HirStringifyer {
     }
 
     public matchArm(arm: ast.MatchArm, d: number): string {
-        return `${this.pat(arm.pat, d)} => ${this.expr(arm.expr, d + 1)}`;
+        return `${this.pat(arm.pat, d)} => ${this.expr(arm.expr, d)}`;
     }
 
     public pat(pat: ast.Pat, d: number): string {

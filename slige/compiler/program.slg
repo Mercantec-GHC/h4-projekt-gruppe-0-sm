@@ -6,10 +6,10 @@ enum S {
 
 fn main() {
     let s = S::A(123);
-    match s {
-        S::A(v) => {},
-        S::B { v: v } => {},
-    }
+    let r = match s {
+        S::A(v) => { 3 + 2 },
+        S::B { v: v } => { 4 },
+    };
 }
 
 
