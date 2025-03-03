@@ -54,8 +54,10 @@ class ProductPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Image(
-                      image: AssetImage("assets/boykisser.png"),
+                    Image(
+                      image: AssetImage("assets/products/${product.name}.png"),
+                      errorBuilder: (_, __, ___) => const Image(
+                          image: AssetImage("assets/placeholder.png")),
                       height: 250,
                       fit: BoxFit.fitHeight,
                     ),

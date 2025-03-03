@@ -4,17 +4,59 @@ import 'package:mobile/widgets/sized_card.dart';
 import 'package:provider/provider.dart';
 import 'product_page.dart';
 
+class ProductImage extends StatefulWidget {
+  final String productName;
+
+  const ProductImage(this.productName, {super.key});
+
+  @override
+  State<StatefulWidget> createState() {
+    return _ProductImageState();
+  }
+}
+
+class _ProductImageState extends State<ProductImage> {
+  late ImageProvider<Object> image;
+
+  @override
+  void initState() {
+    image = Image.asset(
+      "assets/products/${widget.productName}.png",
+    ).image;
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Ink.image(
+      image: image,
+      onImageError: (_, __) {
+        setState(() {
+          image = Image.asset("assets/placeholder.png").image;
+        });
+      },
+      fit: BoxFit.contain,
+      width: 100,
+    );
+  }
+}
+
 class ProductListItem extends StatelessWidget {
+  final int productId;
   final String name;
   final int price;
-  final String imagePath;
   final ProductPage productPage;
-  const ProductListItem(
-      {super.key,
-      required this.name,
-      required this.price,
-      required this.imagePath,
-      required this.productPage});
+
+  final Product product;
+
+  const ProductListItem({
+    super.key,
+    required this.productId,
+    required this.name,
+    required this.price,
+    required this.productPage,
+    required this.product,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -43,11 +85,7 @@ class ProductListItem extends StatelessWidget {
                   borderRadius: const BorderRadius.only(
                       topRight: Radius.circular(10),
                       bottomRight: Radius.circular(10)),
-                  child: Ink.image(
-                    image: const AssetImage("assets/boykisser.png"),
-                    fit: BoxFit.contain,
-                    width: 100,
-                  ))
+                  child: ProductImage(name)),
             ],
           )),
     );
@@ -87,10 +125,11 @@ class AllProductsPage extends StatelessWidget {
                 return ListView.builder(
                   shrinkWrap: true,
                   itemBuilder: (_, idx) => ProductListItem(
+                    productId: products[idx].id,
                     name: products[idx].name,
                     price: products[idx].price,
-                    imagePath: "assets/${products[idx].name}.png",
                     productPage: ProductPage(product: products[idx]),
+                    product: products[idx],
                   ),
                   itemCount: products.length,
                 );

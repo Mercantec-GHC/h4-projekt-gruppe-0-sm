@@ -79,7 +79,6 @@ class ProductRepo extends ChangeNotifier {
           price: 20,
           description: ""),
       Product(id: _nextId++, name: "Spaghetti", price: 10, description: ""),
-      Product(id: _nextId++, name: "Æbler 1 kg", price: 20, description: ""),
       Product(id: _nextId++, name: "Rød Cecil", price: 60, description: ""),
       Product(
           id: _nextId++,
@@ -111,11 +110,12 @@ class Product {
   final Coordinate? location;
   final String? barcode;
 
-  Product(
-      {required this.id,
-      required this.name,
-      required this.price,
-      required this.description,
-      this.location,
-      this.barcode});
+  Product({
+    required this.id,
+    required this.name,
+    required this.price,
+    required this.description,
+    this.location,
+    this.barcode,
+  });
 }

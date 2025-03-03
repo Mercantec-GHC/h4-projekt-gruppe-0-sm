@@ -15,7 +15,6 @@ class CartItemView extends StatelessWidget {
   final int productId;
   final String name;
   final int price;
-  final String imagePath;
   final int amount;
 
   const CartItemView(
@@ -24,7 +23,6 @@ class CartItemView extends StatelessWidget {
       required this.productId,
       required this.name,
       required this.price,
-      required this.imagePath,
       required this.amount});
 
   @override
@@ -87,7 +85,14 @@ class CartItemView extends StatelessWidget {
           IconButton(
               onPressed: () => removeCartItemDialog(context),
               icon: const Icon(Icons.delete_outline)),
-          Image(width: 100, image: AssetImage(imagePath))
+          Image(
+            width: 100,
+            image: AssetImage("assets/products/$name.png"),
+            errorBuilder: (_, __, ___) => const Image(
+              image: AssetImage("assets/placeholder.png"),
+              width: 100,
+            ),
+          )
         ],
       ),
     );
@@ -154,7 +159,6 @@ class CartPage extends StatelessWidget {
                       productId: cart[idx].product.id,
                       name: cart[idx].product.name,
                       price: cart[idx].product.price,
-                      imagePath: "assets/boykisser.png",
                       amount: cart[idx].amount),
                   itemCount: cart.length,
                 );
