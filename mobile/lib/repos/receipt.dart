@@ -49,6 +49,15 @@ class ReceiptRepo extends ChangeNotifier {
     return receipts;
   }
 
+  List<Receipt> sortedReceiptsByDate() {
+    List<Receipt> clonedReceipts = [];
+    for (var i = 0; i < receipts.length; i++) {
+      clonedReceipts.add(receipts[i]);
+    }
+    clonedReceipts.sort((a, b) => b.date.compareTo(a.date));
+    return clonedReceipts;
+  }
+
   Receipt? receiptWithId(int id) {
     for (var i = 0; i < receipts.length; i++) {
       if (receipts[i].id == id) {

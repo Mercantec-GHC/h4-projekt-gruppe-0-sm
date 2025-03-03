@@ -22,7 +22,10 @@ class HomePage extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text("Velkommen ${user.name}"),
+                Text(
+                  "Velkommen ${user.name}",
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
               ],
             ),
           ),

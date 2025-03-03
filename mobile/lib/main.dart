@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile/pages/log_in_page.dart';
 import 'package:mobile/repos/add_to_cart_state.dart';
 import 'package:mobile/repos/cart.dart';
@@ -36,11 +37,8 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(
               seedColor: const Color.fromARGB(255, 149, 92, 255)),
           scaffoldBackgroundColor: const Color(0xFFFAFAFF),
-          textTheme: const TextTheme(
-            headlineLarge: TextStyle(color: Color(0xFF000000), fontSize: 64),
-            bodyLarge: TextStyle(color: Color(0xFF000000), fontSize: 20),
-            bodyMedium: TextStyle(color: Color(0xFF000000), fontSize: 16),
-          ),
+          textTheme:
+              GoogleFonts.merriweatherTextTheme(Theme.of(context).textTheme),
           useMaterial3: true,
         ),
         home: const LogInPage(),
