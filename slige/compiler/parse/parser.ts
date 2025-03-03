@@ -113,7 +113,6 @@ export class Parser {
             const ident = this.parseIdent();
             let args: Expr[] | undefined = undefined;
             if (this.test("(")) {
-                this.step();
                 args = this.parseDelimitedList(
                     this.parseAttrArg,
                     ")",

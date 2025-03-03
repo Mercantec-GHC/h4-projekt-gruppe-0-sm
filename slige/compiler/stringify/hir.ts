@@ -44,22 +44,25 @@ export class HirStringifyer {
     }
 
     public item(item: ast.Item, d = 0): string {
+        const attrs = item.attrs.map((attr) => `${this.attr(attr)}\n`);
         const ident = item.ident.text;
         const pub = item.pub ? "pub " : "";
         const k = item.kind;
         switch (k.tag) {
             case "error":
-                return "<error>;";
+                return `${attrs}<error>;`;
             case "mod_block":
-                return `${pub}mod ${ident} ${this.block(k.block, d)}`;
+                return `${attrs}${pub}mod ${ident} ${this.block(k.block, d)}`;
             case "mod_file":
-                return `${pub}mod ${ident} {\n${this.file(k.ast!, d + 1)}\n}`;
+                return `${attrs}${pub}mod ${ident} {\n${
+                    this.file(k.ast!, d + 1)
+                }\n}`;
             case "enum":
-                return `enum ${ident}: ${
+                return `${attrs}enum ${ident}: ${
                     this.ty(this.ch.enumItemTy(item, k))
                 };`;
             case "struct":
-                return `struct ${ident}: ${
+                return `${attrs}struct ${ident}: ${
                     this.ty(this.ch.structItemTy(item, k))
                 };`;
             case "fn": {
@@ -70,7 +73,7 @@ export class HirStringifyer {
                 const params = k.params
                     .map((param) => this.pat(param.pat, d))
                     .join(", ");
-                return `${pub}fn ${ident}(${params}) -> ${
+                return `${attrs}${pub}fn ${ident}(${params}) -> ${
                     this.ty(ty.kind.returnTy)
                 } ${this.block(k.body!, d)}`;
             }
@@ -216,6 +219,12 @@ export class HirStringifyer {
         return path.segments
             .map((seg) => seg.ident.text)
             .join("::");
+    }
+
+    public attr(attr: ast.Attr): string {
+        return `#[${attr.ident.text}${
+            attr.args && `(${attr.args.map((arg) => this.expr(arg, 1))})` || ""
+        }]`;
     }
 
     public ty(ty: Ty): string {

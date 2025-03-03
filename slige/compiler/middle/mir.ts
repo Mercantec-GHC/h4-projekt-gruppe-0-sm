@@ -86,7 +86,8 @@ export type RVal =
     | { tag: "binary"; binaryType: BinaryType; left: Operand; right: Operand }
     | { tag: "unary"; unaryType: UnaryType; operand: Operand }
     | { tag: "adt"; ty: Ty; fields: Operand[]; variant?: ast.Variant }
-    | { tag: "call"; func: Operand; args: Operand[] };
+    | { tag: "call"; func: Operand; args: Operand[] }
+    | { tag: "builtin"; builtinId: string; args: Operand[] };
 
 export type BinaryType =
     | "add"

@@ -233,6 +233,10 @@ export class MirFnStringifyer {
                 return `call ${this.operand(rval.func)}(${
                     rval.args.map((arg) => this.operand(arg)).join(", ")
                 })`;
+            case "builtin":
+                return `builtin ${rval.builtinId}(${
+                    rval.args.map((arg) => this.operand(arg)).join(", ")
+                })`;
         }
         exhausted(rval);
     }

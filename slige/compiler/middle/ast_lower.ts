@@ -122,8 +122,16 @@ export class FnLowerer {
                 return this.lowerAssignStmt(stmt, k);
             case "expr": {
                 const rval = this.lowerExpr(k.expr);
+
                 // ignore the fuck out of the value
-                void rval;
+                const ty = this.ch.exprTy(k.expr);
+                const local = this.local(ty);
+                this.addStmt({
+                    tag: "assign",
+                    place: { local, proj: [] },
+                    rval,
+                });
+
                 return;
             }
         }
@@ -374,6 +382,29 @@ export class FnLowerer {
             return this.lowerCallExprTupleVariantCtor(expr, kind);
         }
         const args = kind.args.map((arg) => this.lowerExprToOperand(arg));
+
+        const calleeTy = this.ch.exprTy(kind.expr);
+        if (calleeTy.kind.tag !== "fn") {
+            throw new Error();
+        }
+        const builtinAttr = calleeTy.kind.item.attrs
+            .find((attr) => attr.ident.text === "builtin");
+        if (builtinAttr) {
+            if (
+                builtinAttr.args?.length !== 1 ||
+                builtinAttr.args[0].kind.tag !== "path" ||
+                builtinAttr.args[0].kind.path.segments.length !== 1 ||
+                !["Hello"].includes(
+                    builtinAttr.args[0].kind.path.segments[0].ident.text,
+                )
+            ) {
+                return { tag: "error" };
+            }
+            const builtinId =
+                builtinAttr.args[0].kind.path.segments[0].ident.text;
+            return { tag: "builtin", builtinId, args };
+        }
+
         const func = this.lowerExprToOperand(kind.expr);
         return { tag: "call", func, args };
     }

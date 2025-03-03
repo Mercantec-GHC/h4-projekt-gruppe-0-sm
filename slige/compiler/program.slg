@@ -1,15 +1,9 @@
 
-enum S {
-    A(int),
-    B { v: int },
-}
+#[builtin(Hello)]
+fn c_hello() -> int {}
 
 fn main() {
-    let s = S::A(123);
-    let r = match s {
-        S::A(v) => { 3 + 2 },
-        S::B { v: v } => { 4 },
-    };
+    c_hello();
 }
 
 
