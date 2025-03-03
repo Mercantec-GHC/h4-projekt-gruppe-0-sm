@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/pages/log_in_page.dart';
 import 'package:mobile/repos/user.dart';
 
 class HomePage extends StatelessWidget {
@@ -52,7 +53,9 @@ class SettingsMenuState extends State<SettingsMenu> {
       menuChildren: <Widget>[
         MenuItemButton(
           onPressed: () {
-            Navigator.of(context).pop();
+            Navigator.popUntil(context, (_) => false);
+            Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const LogInPage()));
           },
           child: const Text('Log ud'),
         ),

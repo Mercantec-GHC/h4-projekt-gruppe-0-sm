@@ -68,6 +68,7 @@ class LogInFormState extends State<LogInForm> {
 
               if (loginResult is Ok) {
                 setState(() => loginError = false);
+                Navigator.of(context).popUntil((_) => false);
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) =>
                         Dashboard(user: (loginResult as Ok).value)));
