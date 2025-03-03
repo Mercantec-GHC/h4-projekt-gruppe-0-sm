@@ -1,9 +1,15 @@
 
-#[builtin(Hello)]
-fn c_hello() -> int {}
+// #[builtin(Hello)]
+// fn c_hello() -> int {}
 
 fn main() {
-    c_hello();
+    let mut a = 2;
+    if true {
+        a = 3;
+    } else {
+
+    }
+    let b = a;
 }
 
 

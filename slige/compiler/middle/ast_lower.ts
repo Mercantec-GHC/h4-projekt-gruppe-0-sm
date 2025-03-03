@@ -35,6 +35,10 @@ export class AstLowerer implements ast.Visitor {
             .toArray()
             .join("\n");
     }
+
+    public toArray(): Fn[] {
+        return this.fns.values().toArray();
+    }
 }
 
 export class FnLowerer {

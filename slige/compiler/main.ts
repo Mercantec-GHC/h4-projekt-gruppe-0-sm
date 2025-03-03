@@ -1,10 +1,10 @@
 import * as path from "jsr:@std/path";
 import { Parser } from "./parse/parser.ts";
-import * as ast from "./ast/mod.ts";
+import * as ast from "@slige/ast";
 import { Ctx, File } from "@slige/common";
 import { Resolver } from "./resolve/resolver.ts";
 import { Checker } from "./check/checker.ts";
-import { AstLowerer } from "./middle/ast_lower.ts";
+import { ast_lower, mir_lower } from "@slige/middle";
 import { HirStringifyer } from "@slige/stringify";
 
 async function main() {
@@ -53,7 +53,7 @@ export class PackCompiler {
             console.error("error(s) occurred.");
             Deno.exit(1);
         }
-        const astLowerer = new AstLowerer(
+        const astLowerer = new ast_lower.AstLowerer(
             this.ctx,
             resols,
             checker,
@@ -65,6 +65,16 @@ export class PackCompiler {
             Deno.exit(1);
         }
         console.log("=== MIR ===\n" + astLowerer.mirString());
+        if (this.ctx.errorOccured()) {
+            console.error("error(s) occurred. stopping...");
+            Deno.exit(1);
+        }
+        const mirLowerer = new mir_lower.MirLowerer(
+            this.ctx,
+            astLowerer.toArray(),
+        );
+        mirLowerer.lower();
+        console.log("=== LIR ===\n" + mirLowerer.lirString());
     }
 
     public enableDebug() {

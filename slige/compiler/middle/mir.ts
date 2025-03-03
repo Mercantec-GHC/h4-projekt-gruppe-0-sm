@@ -35,12 +35,14 @@ export type Stmt = {
 
 export type StmtKind =
     | { tag: "error" }
-    | { tag: "assign"; place: Place; rval: RVal }
+    | { tag: "assign" } & AssignStmt
     | { tag: "fake_read"; place: Place }
     | { tag: "deinit"; place: Place }
     | { tag: "live"; local: LocalId }
     | { tag: "dead"; local: LocalId }
     | { tag: "mention"; place: Place };
+
+export type AssignStmt = { place: Place; rval: RVal };
 
 export type Ter = {
     kind: TerKind;
