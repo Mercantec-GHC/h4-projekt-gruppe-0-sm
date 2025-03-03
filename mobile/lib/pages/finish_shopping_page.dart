@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:mobile/repos/cart.dart';
 import 'package:mobile/repos/paying_state.dart';
 import 'package:mobile/repos/receipt.dart';
+import 'package:mobile/repos/user.dart';
+import 'package:mobile/results.dart';
 import 'package:mobile/widgets/primary_button.dart';
 import 'package:mobile/widgets/receipt_item.dart';
 import 'package:provider/provider.dart';
 
 class FinishShoppingPage extends StatelessWidget {
-  const FinishShoppingPage({super.key});
+  final User user;
+
+  const FinishShoppingPage({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {
@@ -53,8 +57,28 @@ class FinishShoppingPage extends StatelessWidget {
                     child: PrimaryButton(
                         onPressed: () async {
                           payingStateRepo.next();
-                          receiptRepo.createReceipt(cart);
                           await Future.delayed(const Duration(seconds: 1));
+                          if (user.pay(cartRepo.totalPrice()) is Err) {
+                            if (context.mounted) {
+                              showDialog<String>(
+                                context: context,
+                                builder: (BuildContext context) => AlertDialog(
+                                  content: const Text(
+                                      'Du har desværre ikke råd til at købe dette'),
+                                  actions: <Widget>[
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, 'OK'),
+                                      child: const Text('OK'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+                            payingStateRepo.reset();
+                            return;
+                          }
+                          receiptRepo.createReceipt(cart);
                           payingStateRepo.next();
                           await Future.delayed(const Duration(seconds: 1));
                           cartRepo.clearCart();

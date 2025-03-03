@@ -83,7 +83,7 @@ class ProductRepo extends ChangeNotifier {
       Product(
           id: _nextId++,
           name: "Jägermeister 750 ml",
-          price: 60,
+          price: 120,
           description: ""),
       Product(
           id: _nextId++,

@@ -19,7 +19,7 @@ class Dashboard extends StatelessWidget {
         user: user,
       ),
       const AllProductsPage(),
-      const CartPage(),
+      CartPage(user: user),
       const AllReceiptsPage(),
     ]);
   }

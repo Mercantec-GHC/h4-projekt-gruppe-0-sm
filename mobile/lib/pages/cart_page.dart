@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile/pages/finish_shopping_page.dart';
 import 'package:mobile/repos/cart.dart';
 import 'package:mobile/repos/product.dart';
+import 'package:mobile/repos/user.dart';
 import 'package:mobile/results.dart';
 import 'package:mobile/widgets/primary_button.dart';
 import 'package:mobile/widgets/sized_card.dart';
@@ -141,7 +142,8 @@ class CartItemView extends StatelessWidget {
 }
 
 class CartPage extends StatelessWidget {
-  const CartPage({super.key});
+  final User user;
+  const CartPage({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {
@@ -318,7 +320,7 @@ class CartPage extends StatelessWidget {
                                   context,
                                   MaterialPageRoute(
                                       builder: (context) =>
-                                          const FinishShoppingPage()));
+                                          FinishShoppingPage(user: user)));
                             },
                             child: const Text("Afslut indkøb")),
                       ),

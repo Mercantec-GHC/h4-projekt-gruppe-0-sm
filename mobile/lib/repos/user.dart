@@ -32,7 +32,8 @@ class UsersRepo extends ChangeNotifier {
       return Err("User with mail $mail already exists");
     }
 
-    final user = User(id: nextId++, name: name, mail: mail, password: password);
+    final user = User(
+        id: nextId++, name: name, mail: mail, password: password, balance: 0);
     users.add(user);
 
     return Ok(user);
@@ -51,11 +52,24 @@ class UsersRepo extends ChangeNotifier {
     return Err("User with mail $mail doesn't exist");
   }
 
+  Result<int, String> pay(int userId, int amount) {
+    final user = getUserById(userId);
+    if (user is Ok) {
+      return (user as User).pay(amount);
+    }
+    return Err("User with id $userId doesn't exist");
+  }
+
   void addTestUsers() {
     users
       ..add(User(
-          id: nextId++, mail: "test@test.com", name: "test", password: "test"))
-      ..add(User(id: nextId++, mail: "", name: "", password: ""));
+          id: nextId++,
+          mail: "test@test.com",
+          name: "test",
+          password: "test",
+          balance: 1000))
+      ..add(
+          User(id: nextId++, mail: "", name: "", password: "", balance: 10000));
   }
 }
 
@@ -64,10 +78,20 @@ class User {
   final String mail;
   final String name;
   final String password;
+  int balance;
 
   User(
       {required this.id,
       required this.mail,
       required this.name,
-      required this.password});
+      required this.password,
+      required this.balance});
+
+  Result<int, String> pay(int amount) {
+    if (balance < amount) {
+      return Err("User can not afford paying amount $amount");
+    }
+    balance -= amount;
+    return Ok(balance);
+  }
 }
