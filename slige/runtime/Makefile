@@ -14,7 +14,7 @@ C_FLAGS = \
 	-Wall -Wextra -Wpedantic -Wconversion \
 	-pedantic -pedantic-errors \
 
-L_FLAGS = -lm
+L_FLAGS = -lm -pthread
 
 F_FLAGS =
 OPTIMIZATION =
