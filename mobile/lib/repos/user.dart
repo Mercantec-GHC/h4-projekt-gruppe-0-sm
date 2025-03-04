@@ -5,6 +5,8 @@ class UsersRepo extends ChangeNotifier {
   int nextId = 0;
   final List<User> users = [];
 
+  User? _loggedInUser;
+
   UsersRepo() {
     addTestUsers();
   }
@@ -44,16 +46,30 @@ class UsersRepo extends ChangeNotifier {
   }
 
   Result<User, String> login(String mail, String password) {
+    User? user;
     for (var i = 0; i < users.length; i++) {
-      if (users[i].mail != mail) {
-        continue;
+      if (users[i].mail == mail) {
+        user = users[i];
       }
-      if (users[i].password == password) {
-        return Ok(users[i]);
-      }
+    }
+    if (user == null) {
+      return Err("User with mail $mail doesn't exist");
+    }
+    if (user.password != password) {
       return Err("Wrong password for user with mail $mail");
     }
-    return Err("User with mail $mail doesn't exist");
+    _loggedInUser = user;
+    notifyListeners();
+    return Ok(user);
+  }
+
+  void logout() {
+    _loggedInUser = null;
+    notifyListeners();
+  }
+
+  User? loggedInUser() {
+    return _loggedInUser;
   }
 
   Result<int, String> pay(int userId, int amount) {
@@ -79,6 +95,14 @@ class UsersRepo extends ChangeNotifier {
           password: "",
           balanceInDkkCents: 100000));
   }
+
+  void veryBadNotifyAll() {
+    // ⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
+    // TODO: THIS SHOULD BE FIXED
+    // FIXME: DO SOMETHING ELSE PLEASE!!!!!
+    // ⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
+    notifyListeners();
+  }
 }
 
 class User {
@@ -90,12 +114,17 @@ class User {
   // balance is in øre
   int balanceInDkkCents;
 
-  User(
-      {required this.id,
-      required this.mail,
-      required this.name,
-      required this.password,
-      required this.balanceInDkkCents});
+  User({
+    required this.id,
+    required this.mail,
+    required this.name,
+    required this.password,
+    required this.balanceInDkkCents,
+  });
+
+  void addBalanceFounds(int amount) {
+    balanceInDkkCents += amount;
+  }
 
   Result<int, String> pay(int amount) {
     if (balanceInDkkCents < amount) {
