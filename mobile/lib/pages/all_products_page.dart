@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/repos/product.dart';
+import 'package:mobile/utils/price.dart';
 import 'package:mobile/widgets/sized_card.dart';
 import 'package:provider/provider.dart';
 import 'product_page.dart';
@@ -77,7 +78,7 @@ class ProductListItem extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(name, style: Theme.of(context).textTheme.bodyLarge),
-                      Text("${price.toString()} kr",
+                      Text(formatDkkCents(price),
                           style: Theme.of(context).textTheme.bodyMedium),
                     ],
                   )),
@@ -127,7 +128,7 @@ class AllProductsPage extends StatelessWidget {
                   itemBuilder: (_, idx) => ProductListItem(
                     productId: products[idx].id,
                     name: products[idx].name,
-                    price: products[idx].price,
+                    price: products[idx].priceInDkkCent,
                     productPage: ProductPage(product: products[idx]),
                     product: products[idx],
                   ),

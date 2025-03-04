@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/repos/receipt.dart';
+import 'package:mobile/utils/price.dart';
 import 'package:mobile/widgets/receipt_item.dart';
 
 class ReceiptView extends StatelessWidget {
@@ -27,7 +28,8 @@ class ReceiptView extends StatelessWidget {
                       ListView.builder(
                           shrinkWrap: true,
                           itemBuilder: (_, idx) => ReceiptItemView(
-                              pricePerAmount: receiptItems[idx].product.price,
+                              pricePerAmount:
+                                  receiptItems[idx].product.priceInDkkCent,
                               name: receiptItems[idx].product.name,
                               amount: receiptItems[idx].amount),
                           itemCount: receiptItems.length),
@@ -38,7 +40,7 @@ class ReceiptView extends StatelessWidget {
                             "Total:",
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          Text("${receipt.totalPrice()} kr"),
+                          Text(formatDkkCents(receipt.totalPrice())),
                         ],
                       ),
                     ],

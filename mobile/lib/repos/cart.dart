@@ -9,14 +9,14 @@ class CartRepo extends ChangeNotifier {
         product: Product(
             id: 1,
             name: "Letmælk",
-            price: 13,
+            priceInDkkCent: 1295,
             description: "Konventionel letmælk med fedtprocent på 1,5%"),
         amount: 1),
     CartItem(
         product: Product(
             id: 2,
             name: "Frilands Øko Supermælk",
-            price: 20,
+            priceInDkkCent: 1995,
             description:
                 "Økologisk mælk af frilandskøer med fedtprocent på 3,5%. Ikke homogeniseret eller pasteuriseret. Skaber store muskler og styrker knoglerne 💪"),
         amount: 6),
@@ -24,7 +24,7 @@ class CartRepo extends ChangeNotifier {
         product: Product(
             id: 3,
             name: "Minimælk",
-            price: 12,
+            priceInDkkCent: 1195,
             description: "Konventionel minimælk med fedtprocent på 0,4%"),
         amount: 1),
   ];
@@ -96,7 +96,9 @@ class CartRepo extends ChangeNotifier {
 
   int totalPrice() {
     return cart.fold<int>(
-        0, (prev, cartItem) => prev + cartItem.amount * cartItem.product.price);
+        0,
+        (prev, cartItem) =>
+            prev + cartItem.amount * cartItem.product.priceInDkkCent);
   }
 
   void clearCart() {

@@ -33,7 +33,11 @@ class UsersRepo extends ChangeNotifier {
     }
 
     final user = User(
-        id: nextId++, name: name, mail: mail, password: password, balance: 0);
+        id: nextId++,
+        name: name,
+        mail: mail,
+        password: password,
+        balanceInDkkCents: 0);
     users.add(user);
 
     return Ok(user);
@@ -67,9 +71,13 @@ class UsersRepo extends ChangeNotifier {
           mail: "test@test.com",
           name: "test",
           password: "test",
-          balance: 1000))
-      ..add(
-          User(id: nextId++, mail: "", name: "", password: "", balance: 10000));
+          balanceInDkkCents: 10000))
+      ..add(User(
+          id: nextId++,
+          mail: "",
+          name: "",
+          password: "",
+          balanceInDkkCents: 100000));
   }
 }
 
@@ -78,20 +86,22 @@ class User {
   final String mail;
   final String name;
   final String password;
-  int balance;
+
+  // balance is in øre
+  int balanceInDkkCents;
 
   User(
       {required this.id,
       required this.mail,
       required this.name,
       required this.password,
-      required this.balance});
+      required this.balanceInDkkCents});
 
   Result<int, String> pay(int amount) {
-    if (balance < amount) {
+    if (balanceInDkkCents < amount) {
       return Err("User can not afford paying amount $amount");
     }
-    balance -= amount;
-    return Ok(balance);
+    balanceInDkkCents -= amount;
+    return Ok(balanceInDkkCents);
   }
 }

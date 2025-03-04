@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/pages/receipt_page.dart';
 import 'package:mobile/repos/receipt.dart';
+import 'package:mobile/utils/price.dart';
 import 'package:provider/provider.dart';
 
 class ReceiptsListItem extends StatelessWidget {
@@ -27,7 +28,7 @@ class ReceiptsListItem extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [Text(dateFormatted), Text("$totalPrice kr")],
+            children: [Text(dateFormatted), Text(formatDkkCents(totalPrice))],
           ),
         ),
       ),

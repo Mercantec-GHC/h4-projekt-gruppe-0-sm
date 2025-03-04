@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/utils/price.dart';
 
 class ReceiptItemView extends StatelessWidget {
   final int pricePerAmount;
@@ -20,16 +21,16 @@ class ReceiptItemView extends StatelessWidget {
         Row(
           children: [
             SizedBox(
-                width: 60,
+                width: 80,
                 child: Text(
                   "$amount stk",
                   textAlign: TextAlign.end,
                   overflow: TextOverflow.ellipsis,
                 )),
             SizedBox(
-                width: 60,
+                width: 80,
                 child: Text(
-                  "${pricePerAmount * amount} kr",
+                  formatDkkCents(pricePerAmount * amount),
                   textAlign: TextAlign.end,
                   overflow: TextOverflow.ellipsis,
                 ))

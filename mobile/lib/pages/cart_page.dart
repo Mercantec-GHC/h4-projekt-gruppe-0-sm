@@ -7,6 +7,7 @@ import 'package:mobile/repos/cart.dart';
 import 'package:mobile/repos/product.dart';
 import 'package:mobile/repos/user.dart';
 import 'package:mobile/results.dart';
+import 'package:mobile/utils/price.dart';
 import 'package:mobile/widgets/primary_button.dart';
 import 'package:mobile/widgets/sized_card.dart';
 import 'package:provider/provider.dart';
@@ -44,7 +45,7 @@ class CartItemView extends StatelessWidget {
                             child: Text(name,
                                 style: Theme.of(context).textTheme.bodyLarge),
                           ),
-                          Text("$price kr",
+                          Text(formatDkkCents(price),
                               style: Theme.of(context).textTheme.bodyMedium),
                         ],
                       ),
@@ -160,7 +161,7 @@ class CartPage extends StatelessWidget {
                       cartRepo: cartRepo,
                       productId: cart[idx].product.id,
                       name: cart[idx].product.name,
-                      price: cart[idx].product.price,
+                      price: cart[idx].product.priceInDkkCent,
                       amount: cart[idx].amount),
                   itemCount: cart.length,
                 );

@@ -3,6 +3,7 @@ import 'package:mobile/pages/product_location_page.dart';
 import 'package:mobile/repos/add_to_cart_state.dart';
 import 'package:mobile/repos/cart.dart';
 import 'package:mobile/repos/product.dart';
+import 'package:mobile/utils/price.dart';
 import 'package:mobile/widgets/primary_button.dart';
 import 'package:provider/provider.dart';
 
@@ -38,7 +39,7 @@ class ProductPage extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            "${product.price} kr",
+                            formatDkkCents(product.priceInDkkCent),
                             style: const TextStyle(
                               fontSize: 16,
                             ),
@@ -66,7 +67,7 @@ class ProductPage extends StatelessWidget {
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
                     Text(
-                      "${product.price} kr",
+                      formatDkkCents(product.priceInDkkCent),
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
                     Padding(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/pages/log_in_page.dart';
 import 'package:mobile/repos/user.dart';
+import 'package:mobile/utils/price.dart';
 
 class HomePage extends StatelessWidget {
   final User user;
@@ -18,6 +19,17 @@ class HomePage extends StatelessWidget {
                   margin: const EdgeInsets.only(right: 10),
                   child: const SettingsMenu()),
             ],
+          ),
+          Card(
+            child: Container(
+              decoration: const BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+                color: Color(0xFFFFFFFF),
+              ),
+              padding: const EdgeInsets.all(10),
+              child: Text("Saldo: ${formatDkkCents(user.balanceInDkkCents)}",
+                  style: Theme.of(context).textTheme.headlineSmall),
+            ),
           ),
           Expanded(
             child: Column(
