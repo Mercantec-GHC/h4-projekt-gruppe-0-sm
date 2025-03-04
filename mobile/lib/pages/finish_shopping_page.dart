@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/repos/routing.dart';
 import 'package:mobile/repos/cart.dart';
 import 'package:mobile/repos/paying_state.dart';
 import 'package:mobile/repos/receipt.dart';
@@ -86,7 +87,11 @@ class FinishShoppingPage extends StatelessWidget {
                             await Future.delayed(const Duration(seconds: 1));
                             cartRepo.clearCart();
                             payingStateRepo.reset();
-                            if (context.mounted) Navigator.pop(context);
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                              final Routing routing = context.read<Routing>();
+                              routing.routeTo(PageSelector.homePage);
+                            }
                           },
                           child: const Text("Betal"))),
                 ),

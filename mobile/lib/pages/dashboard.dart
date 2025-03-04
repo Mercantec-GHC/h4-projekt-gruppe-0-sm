@@ -3,7 +3,7 @@ import 'package:mobile/pages/all_products_page.dart';
 import 'package:mobile/pages/cart_page.dart';
 import 'package:mobile/pages/all_receipts_page.dart';
 import 'package:mobile/pages/home_page.dart';
-import 'package:mobile/repos/bottom_navigation_bar.dart';
+import 'package:mobile/repos/routing.dart';
 import 'package:mobile/repos/cart.dart';
 import 'package:mobile/repos/user.dart';
 import 'package:provider/provider.dart';
@@ -26,14 +26,14 @@ class Dashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pageIndexProvider = Provider.of<BottomNavigationBarRepo>(context);
+    final pageIndexProvider = Provider.of<Routing>(context);
     int currentIndex = pageIndexProvider.currentIndex;
     final CartRepo cartRepo = context.watch<CartRepo>();
 
     return Scaffold(
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        onTap: (index) => pageIndexProvider.setIndex(index),
+        onTap: (index) => pageIndexProvider.routeToIndex(index),
         currentIndex: currentIndex,
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(

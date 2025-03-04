@@ -9,7 +9,7 @@ import 'package:mobile/repos/product.dart';
 import 'package:mobile/repos/receipt.dart';
 import 'package:mobile/repos/user.dart';
 import 'package:provider/provider.dart';
-import 'package:mobile/repos/bottom_navigation_bar.dart';
+import 'package:mobile/repos/routing.dart';
 
 void main() {
   runApp(const MyApp());
@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => BottomNavigationBarRepo()),
+        ChangeNotifierProvider(create: (_) => Routing()),
         ChangeNotifierProvider(create: (_) => ProductRepo()),
         ChangeNotifierProvider(create: (_) => CartRepo()),
         ChangeNotifierProvider(create: (_) => ReceiptRepo()),
