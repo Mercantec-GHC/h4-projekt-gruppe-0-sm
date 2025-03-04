@@ -217,12 +217,12 @@ void worker_handle_request(Worker* worker, Request* req)
 {
     (void)worker;
 
-    uint8_t buffer[MAX_HEADER_SIZE] = { 0 };
+    uint8_t buffer[MAX_HEADER_BUFFER_SIZE] = { 0 };
     ssize_t bytes_received = recv(req->client_file, &buffer, sizeof(buffer), 0);
 
     if (bytes_received == -1) {
         fprintf(stderr, "error: could not receive request\n");
-        return;
+        goto f_return;
     }
 
     size_t header_end = 0;
@@ -233,17 +233,136 @@ void worker_handle_request(Worker* worker, Request* req)
     }
     if (header_end == 0) {
         fprintf(stderr, "error: header too big, exceeded %d bytes\n",
-            MAX_HEADER_SIZE);
-        return;
+            MAX_HEADER_BUFFER_SIZE);
+        goto f_return;
     }
     puts((char*)buffer);
 
     HttpReq http_req;
-    http_parse_header(&http_req, (char*)buffer, header_end);
+    int res = http_parse_header(&http_req, (char*)buffer, header_end);
+    if (res != 0) {
+        fprintf(stderr, "error: failed to parse header\n");
+        goto f_return;
+    }
 
+    if (http_req_has_header(&http_req, "Content-Length")) { }
+
+    printf("headers:\n");
+    for (size_t i = 0; i < http_req.headers_size; ++i) {
+        HttpHeader* header = &http_req.headers[i];
+        printf("'%s': '%s'\n", header->key, header->value);
+    }
+
+f_return:
     close(req->client_file);
 }
 
-int http_parse_header(HttpReq* req, const char* header, size_t header_size)
+int http_parse_header(HttpReq* req, const char* buf, size_t buf_size)
 {
+#define CHECK_OVERRUN                                                          \
+    if (i >= buf_size) {                                                       \
+        return -1;                                                             \
+    }
+
+    size_t i = 0;
+
+    char method_buf[8] = { 0 };
+    size_t method_buf_i = 0;
+    for (; i < buf_size && method_buf_i < 8 && buf[i] != ' '; ++i) {
+        method_buf[method_buf_i] = buf[i];
+        method_buf_i += 1;
+    }
+    CHECK_OVERRUN;
+    i += 1;
+
+    HttpMethod method;
+    if (strncmp(method_buf, "GET", 3) == 0) {
+        method = HttpMethod_GET;
+    } else if (strncmp(method_buf, "POST", 4) == 0) {
+        method = HttpMethod_POST;
+    } else {
+        fprintf(stderr, "error: unrecognized http method '%.8s'\n", method_buf);
+        return -1;
+    }
+
+    char* path = calloc(MAX_PATH_SIZE, sizeof(char));
+    size_t path_i = 0;
+    for (; i < buf_size && path_i < MAX_PATH_SIZE - 1 && buf[i] != ' '; ++i) {
+        char ch = buf[i];
+        path[path_i] = ch;
+        path_i += 1;
+    }
+    CHECK_OVERRUN;
+
+    for (; i < buf_size && buf[i] != '\r'; ++i) { }
+    i += 2;
+    CHECK_OVERRUN;
+
+    HttpHeader* headers = malloc(sizeof(HttpHeader) * MAX_HEADERS_SIZE);
+    size_t headers_size = 0;
+    for (; i < buf_size && headers_size < MAX_HEADERS_SIZE && buf[i] != '\r';
+        ++i) {
+
+        i += 1;
+        CHECK_OVERRUN;
+        char* key = calloc(MAX_HEADER_KEY_SIZE, sizeof(char));
+        size_t key_i = 0;
+        for (; i < buf_size && key_i < MAX_HEADER_KEY_SIZE - 1 && buf[i] != ':';
+            ++i) {
+            key[key_i] = buf[i];
+            key_i += 1;
+        }
+        i += 1;
+        CHECK_OVERRUN;
+        char* value = calloc(MAX_HEADER_VALUE_SIZE, sizeof(char));
+        size_t value_i = 0;
+        for (; i < buf_size && value_i < MAX_HEADER_VALUE_SIZE - 1
+            && buf[i] != '\r';
+            ++i) {
+            value[value_i] = buf[i];
+            value_i += 1;
+        }
+        i += 2;
+        CHECK_OVERRUN;
+        headers[headers_size] = (HttpHeader) { key, value };
+        headers_size += 1;
+    }
+
+    *req = (HttpReq) {
+        method,
+        path,
+        headers,
+        headers_size,
+    };
+    return 0;
+}
+
+void http_req_destroy(HttpReq* req)
+{
+    free(req->path);
+    for (size_t i = 0; i < req->headers_size; ++i) {
+        free(req->headers[i].key);
+        free(req->headers[i].value);
+    }
+    free(req->headers);
+}
+
+bool http_req_has_header(HttpReq* req, const char* key)
+{
+    for (size_t i = 0; i < req->headers_size; ++i) {
+        if (strcmp(key, req->headers[i].key) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+const char* http_req_get_header(HttpReq* req, const char* key)
+{
+    for (size_t i = 0; i < req->headers_size; ++i) {
+        if (strcmp(key, req->headers[i].key) == 0) {
+            return req->headers[i].value;
+        }
+    }
+    return NULL;
 }

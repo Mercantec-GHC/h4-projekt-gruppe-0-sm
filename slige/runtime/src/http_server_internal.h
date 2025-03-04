@@ -71,7 +71,12 @@ struct HttpServer {
     size_t workers_size;
 };
 
-#define MAX_HEADER_SIZE 8192
+#define MAX_HEADER_BUFFER_SIZE 8192
+
+#define MAX_PATH_SIZE 128
+#define MAX_HEADERS_SIZE 32
+#define MAX_HEADER_KEY_SIZE 32
+#define MAX_HEADER_VALUE_SIZE 64
 
 typedef enum {
     HttpMethod_GET,
@@ -91,4 +96,7 @@ typedef struct {
 } HttpReq;
 
 /// On error, returns -1.
-int http_parse_header(HttpReq* req, const char* header, size_t header_size);
+int http_parse_header(HttpReq* req, const char* buf, size_t buf_size);
+void http_req_destroy(HttpReq* req);
+bool http_req_has_header(HttpReq* req, const char* key);
+const char* http_req_get_header(HttpReq* req, const char* key);
