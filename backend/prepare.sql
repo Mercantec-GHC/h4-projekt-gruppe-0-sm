@@ -1,49 +1,54 @@
 
 CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY,
+    id INT PRIMARY KEY,
     email TEXT NOT NULL,
     password_hash TEXT NOT NULL,
-    balance_dkk_cent INTEGER NOT NULL
+    balance_dkk_cent INT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS coords (
-    id INTEGER PRIMARY KEY,
-    x INTEGER NOT NULL,
-    y INTEGER NOT NULL
+    id INT PRIMARY KEY,
+    x INT NOT NULL,
+    y INT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS products (
-    id INTEGER PRIMARY KEY,
+    id INT PRIMARY KEY,
     name TEXT NOT NULL,
-    price_dkk_cent INTEGER NOT NULL,
+    price_dkk_cent INT NOT NULL,
     description TEXT NOT NULL,
-    coord INTEGER,
+    coord INT,
     barcode TEXT,
 
     FOREIGN KEY(coord) REFERENCES coords(id)
 );
 
 CREATE TABLE IF NOT EXISTS product_prices (
-    id INTEGER PRIMARY KEY,
-    product INTEGER NOT NULL,
-    price_dkk_cent INTEGER NOT NULL,
+    id INT PRIMARY KEY,
+    product INT NOT NULL,
+    price_dkk_cent INT NOT NULL,
 
     FOREIGN KEY(product) REFERENCES products(id)
 );
 
 CREATE TABLE IF NOT EXISTS carts (
-    id INTEGER PRIMARY KEY,
-    user INTEGER NOT NULL,
+    id INT PRIMARY KEY,
+    user INT NOT NULL,
 
     FOREIGN KEY(user) REFERENCES users(id)
 );
 
 CREATE TABLE IF NOT EXISTS cart_items (
-    id INTEGER PRIMARY KEY,
-    cart INTEGER NOT NULL,
-    amount INTEGER NOT NULL,
+    id INT PRIMARY KEY,
+    cart INT NOT NULL,
+    amount INT NOT NULL,
 
     FOREIGN KEY(cart) REFERENCES carts(id)
 );
 
 
+
+INSERT OR REPLACE INTO users VALUES(1,'test@email.com','d980840fcb82970ab86656feebdccdd288be0e9b05f14e712b59529a2868fee3d980840fcb82970ab86656feebdccdd288be0e9b05f14e712b59529a2868fee3',10000);
+
+INSERT OR REPLACE INTO products VALUES(1,'Letmælk',1195,'Mælk fra ko',NULL,NULL);
+INSERT OR REPLACE INTO products VALUES(2,'Smør',2000,'Smør fra mejeri',NULL,NULL);

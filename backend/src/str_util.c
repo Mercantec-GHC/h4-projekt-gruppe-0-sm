@@ -46,6 +46,7 @@ void string_push_str(String* string, const char* str)
     for (size_t i = 0; i < strlen(str); ++i) {
         string_push(string, str[i]);
     }
+    string->data[string->size] = '\0';
 }
 
 void string_push_fmt_va(String* string, const char* fmt, ...)
