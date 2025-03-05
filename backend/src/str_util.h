@@ -5,6 +5,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+char* str_dup(const char* str);
+
 typedef struct {
     const char* ptr;
     size_t len;
@@ -24,7 +26,10 @@ StrSlice strsplit_next(StrSplitter* splitter);
 DEFINE_VEC(char, String, string, 8)
 
 void string_push_str(String* string, const char* str);
+void string_push_fmt_va(String* string, const char* fmt, ...);
 char* string_copy(const String* string);
+
+#define string_pushf(STRING, ...) string_push_fmt_va(STRING, __VA_ARGS__)
 
 DEFINE_VEC(char*, RawStrVec, rawstr_vec, 8)
 

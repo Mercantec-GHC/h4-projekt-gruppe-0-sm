@@ -1,5 +1,7 @@
 #include "http_server.h"
 #include "json.h"
+#include "models.h"
+#include "models_json.h"
 #include "str_util.h"
 #include <sqlite3.h>
 #include <stdio.h>
@@ -61,7 +63,7 @@ void route_post_set_number(HttpCtx* ctx)
     RESPOND_JSON(ctx, 200, "{\"ok\": true}\r\n");
 
 l0_return:
-    json_value_free(body);
+    json_free(body);
 }
 
 static inline void insert_test_user(sqlite3* db)
@@ -79,7 +81,7 @@ static inline void insert_test_user(sqlite3* db)
 
     sqlite3_bind_text(stmt, 1, email, -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 2, password_hash_str, -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 3, 123);
+    sqlite3_bind_int64(stmt, 3, 123);
 
     int res = sqlite3_step(stmt);
     if (res != SQLITE_DONE) {
@@ -94,6 +96,35 @@ HttpServer* server;
 
 int main(void)
 {
+
+    User user = {
+        .id = 12,
+        .email = str_dup("test@mail.dk"),
+        .password_hash = str_dup("hawd"),
+        .balance_dkk_cent = 321,
+    };
+
+    char* str = user_to_json_string(&user);
+    printf("user = '%s'\n", str);
+
+    User user2;
+
+    JsonValue* json = json_parse(str, strlen(str));
+
+    user_from_json(&user2, json);
+
+    char* str2 = user_to_json_string(&user2);
+    printf("user2 = '%s'\n", str2);
+
+    user_free(&user);
+    user_free(&user2);
+
+    json_free(json);
+    free(str);
+    free(str2);
+
+    return 0;
+
     sqlite3* db;
     int res = sqlite3_open("database.db", &db);
     if (res != SQLITE_OK) {

@@ -6,6 +6,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+char* str_dup(const char* str)
+{
+    char* clone = calloc(strlen(str) + 1, sizeof(char));
+    strcpy(clone, str);
+    return clone;
+}
+
 StrSplitter str_split(const char* text, size_t text_len, const char* split)
 {
     return (StrSplitter) {
@@ -39,6 +46,19 @@ void string_push_str(String* string, const char* str)
     for (size_t i = 0; i < strlen(str); ++i) {
         string_push(string, str[i]);
     }
+}
+
+void string_push_fmt_va(String* string, const char* fmt, ...)
+{
+    va_list args1;
+    va_start(args1, fmt);
+    va_list args2;
+    va_copy(args2, args1);
+    char buf[1 + vsnprintf(NULL, 0, fmt, args1)];
+    va_end(args1);
+    vsnprintf(buf, sizeof buf, fmt, args2);
+    va_end(args2);
+    string_push_str(string, buf);
 }
 
 char* string_copy(const String* string)

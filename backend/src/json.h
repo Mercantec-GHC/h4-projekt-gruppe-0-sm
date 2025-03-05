@@ -26,7 +26,8 @@ const JsonValue* json_array_get(const JsonValue* value, size_t idx);
 bool json_object_has(const JsonValue* value, const char* key);
 const JsonValue* json_object_get(const JsonValue* value, const char* key);
 
-void json_value_free(JsonValue* value);
+void json_free(JsonValue* value);
+JsonValue* json_parse(const char* text, size_t text_len);
 
 typedef struct {
     const char* text;

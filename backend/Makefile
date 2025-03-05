@@ -38,16 +38,18 @@ O_FILES = $(patsubst src/%.c,build/%.o,$(C_FILES))
 
 CC = gcc
 
-all: build_dir server
+all: server
 
 server: $(O_FILES)
 	$(CC) -o build/$@ $^ $(F_FLAGS) $(OPTIMIZATION) $(L_FLAGS)
 
 build/%.o: src/%.c $(HEADERS)
+	mkdir -p $(@D)
 	$(CC) $< -c -o $@ $(C_FLAGS) $(OPTIMIZATION) $(F_FLAGS)
-
-build_dir:
-	mkdir -p build/
 
 clean:
 	rm -rf build/
+
+drop_database:
+	rm -rf database.db && sqlite3 database.db < prepare.sql
+

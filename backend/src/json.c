@@ -81,7 +81,7 @@ const JsonValue* json_object_get(const JsonValue* value, const char* key)
     return NULL;
 }
 
-void json_value_free(JsonValue* value)
+void json_free(JsonValue* value)
 {
     switch (value->type) {
         case JsonType_Error:
@@ -94,18 +94,28 @@ void json_value_free(JsonValue* value)
             break;
         case JsonType_Array:
             for (size_t i = 0; i < value->arr_val.size; ++i) {
-                json_value_free(value->arr_val.data[i]);
+                json_free(value->arr_val.data[i]);
             }
             arr_destroy(&value->arr_val);
             break;
         case JsonType_Object:
             for (size_t i = 0; i < value->obj_val.size; ++i) {
                 free(value->obj_val.data[i].key);
-                json_value_free(value->obj_val.data[i].val);
+                json_free(value->obj_val.data[i].val);
             }
             obj_destroy(&value->obj_val);
             break;
     }
+    free(value);
+}
+
+JsonValue* json_parse(const char* text, size_t text_len)
+{
+    JsonParser p;
+    json_parser_construct(&p, text, text_len);
+    JsonValue* json = json_parser_parse(&p);
+    json_parser_destroy(&p);
+    return json;
 }
 
 #define TOK_EOF '\0'
