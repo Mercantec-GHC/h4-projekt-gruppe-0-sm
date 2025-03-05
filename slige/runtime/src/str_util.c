@@ -48,6 +48,7 @@ char* string_copy(const String* string)
     copy[string->size] = '\0';
     return copy;
 }
+
 static inline StrHash str_hash_with_salt(const char* str, const uint8_t* salt)
 {
     if (strlen(str) >= MAX_HASH_INPUT_LEN - 1) {

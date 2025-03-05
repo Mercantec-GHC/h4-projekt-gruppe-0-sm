@@ -3,19 +3,19 @@ CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY,
     email TEXT NOT NULL,
     password_hash TEXT NOT NULL,
-    balanceInDkkCent INTEGER NOT NULL
+    balance_dkk_cent INTEGER NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS products (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
-    priceInDkkCent INTEGER NOT NULL
+    price_dkk_cent INTEGER NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS product_prices (
     id INTEGER PRIMARY KEY,
     product INTEGER NOT NULL,
-    priceInDkkCent INTEGER NOT NULL,
+    price_dkk_cent INTEGER NOT NULL,
     FOREIGN KEY(product) REFERENCES products(id)
 );
 

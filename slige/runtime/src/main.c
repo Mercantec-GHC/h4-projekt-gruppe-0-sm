@@ -64,45 +64,44 @@ l0_return:
     json_value_free(body);
 }
 
+static inline void insert_test_user(sqlite3* db)
+{
+    sqlite3_stmt* stmt;
+    sqlite3_prepare_v2(db,
+        "INSERT INTO users (email, password_hash, balance_dkk_cent) "
+        "VALUES (?, ?, ?)",
+        -1, &stmt, NULL);
+
+    char email[] = "testuser@email.com";
+    char password[] = "1234";
+    StrHash password_hash = str_hash(password);
+    char* password_hash_str = str_hash_to_string(password_hash);
+
+    sqlite3_bind_text(stmt, 1, email, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 2, password_hash_str, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 3, 123);
+
+    int res = sqlite3_step(stmt);
+    if (res != SQLITE_DONE) {
+        fprintf(stderr, "error: could not insert test user: %s\n",
+            sqlite3_errmsg(db));
+    }
+
+    sqlite3_finalize(stmt);
+}
+
 HttpServer* server;
 
 int main(void)
 {
-
-    char password[] = "Merc1234";
-
-    const char* other_password = "Merc1234";
-
-    {
-        StrHash password_hash = str_hash(password);
-        char* password_hash_str = str_hash_to_string(password_hash);
-        printf("'%s'\n", password_hash_str);
-
-        bool other_is_equal = str_hash_is_equal(password_hash, other_password);
-        printf("is_equal = %s\n", other_is_equal ? "true" : "false");
-
-        free(password_hash_str);
-    }
-
-    {
-        StrHash password_hash = str_hash(password);
-        char* password_hash_str = str_hash_to_string(password_hash);
-        printf("'%s'\n", password_hash_str);
-
-        bool other_is_equal = str_hash_is_equal(password_hash, other_password);
-        printf("is_equal = %s\n", other_is_equal ? "true" : "false");
-
-        free(password_hash_str);
-    }
-
-    return 0;
-
     sqlite3* db;
     int res = sqlite3_open("database.db", &db);
     if (res != SQLITE_OK) {
         fprintf(stderr, "error: could not open sqlite 'database.db'\n");
         return -1;
     }
+
+    insert_test_user(db);
 
     Cx cx = { .number = 1 };
 
