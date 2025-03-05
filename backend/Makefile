@@ -38,9 +38,9 @@ O_FILES = $(patsubst src/%.c,build/%.o,$(C_FILES))
 
 CC = gcc
 
-all: build_dir runtime
+all: build_dir server
 
-runtime: $(O_FILES)
+server: $(O_FILES)
 	$(CC) -o build/$@ $^ $(F_FLAGS) $(OPTIMIZATION) $(L_FLAGS)
 
 build/%.o: src/%.c $(HEADERS)
