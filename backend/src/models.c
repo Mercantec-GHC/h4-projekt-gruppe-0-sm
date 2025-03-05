@@ -162,6 +162,9 @@ static inline bool obj_conforms(
     return true;
 }
 
+#define GET_INT(K) json_int(json_object_get(json, K))
+#define GET_STR(K) str_dup(json_string(json_object_get(json, K)))
+
 int user_from_json(User* m, const JsonValue* json)
 {
     ObjField fields[] = {
@@ -173,11 +176,97 @@ int user_from_json(User* m, const JsonValue* json)
     if (!obj_conforms(json, fields, sizeof(fields) / sizeof(fields[0])))
         return -1;
     *m = (User) {
-        .id = json_int(json_object_get(json, "id")),
-        .email = str_dup(json_string(json_object_get(json, "email"))),
-        .password_hash
-        = str_dup(json_string(json_object_get(json, "password_hash"))),
-        .balance_dkk_cent = json_int(json_object_get(json, "balance_dkk_cent")),
+        .id = GET_INT("id"),
+        .email = GET_STR("email"),
+        .password_hash = GET_STR("password_hash"),
+        .balance_dkk_cent = GET_INT("balance_dkk_cent"),
+    };
+    return 0;
+}
+
+int coord_from_json(Coord* m, const JsonValue* json)
+{
+    ObjField fields[] = {
+        { "id", JsonType_Number },
+        { "x", JsonType_Number },
+        { "y", JsonType_Number },
+    };
+    if (!obj_conforms(json, fields, sizeof(fields) / sizeof(fields[0])))
+        return -1;
+    *m = (Coord) {
+        .id = GET_INT("id"),
+        .x = GET_INT("x"),
+        .y = GET_INT("y"),
+    };
+    return 0;
+}
+
+int product_from_json(Product* m, const JsonValue* json)
+{
+    ObjField fields[] = {
+        { "id", JsonType_Number },
+        { "name", JsonType_String },
+        { "price_dkk_cent", JsonType_Number },
+        { "coord_id", JsonType_Number },
+        { "barcode", JsonType_String },
+    };
+    if (!obj_conforms(json, fields, sizeof(fields) / sizeof(fields[0])))
+        return -1;
+    *m = (Product) {
+        .id = GET_INT("id"),
+        .name = GET_STR("name"),
+        .price_dkk_cent = GET_INT("price_dkk_cent"),
+        .coord_id = GET_INT("coord_id"),
+        .barcode = GET_STR("y"),
+    };
+    return 0;
+}
+
+int product_price_from_json(ProductPrice* m, const JsonValue* json)
+{
+    ObjField fields[] = {
+        { "id", JsonType_Number },
+        { "product_id", JsonType_Number },
+        { "price_dkk_cent", JsonType_Number },
+    };
+    if (!obj_conforms(json, fields, sizeof(fields) / sizeof(fields[0])))
+        return -1;
+    *m = (ProductPrice) {
+        .id = GET_INT("id"),
+        .product_id = GET_INT("product_id"),
+        .price_dkk_cent = GET_INT("price_dkk_cent"),
+    };
+    return 0;
+}
+
+int cart_from_json(Cart* m, const JsonValue* json)
+{
+    ObjField fields[] = {
+        { "id", JsonType_Number },
+        { "user_id", JsonType_Number },
+    };
+    if (!obj_conforms(json, fields, sizeof(fields) / sizeof(fields[0])))
+        return -1;
+    *m = (Cart) {
+        .id = GET_INT("id"),
+        .user_id = GET_INT("user_id"),
+    };
+    return 0;
+}
+
+int cart_item_from_json(CartItem* m, const JsonValue* json)
+{
+    ObjField fields[] = {
+        { "id", JsonType_Number },
+        { "cart_id", JsonType_Number },
+        { "amount", JsonType_Number },
+    };
+    if (!obj_conforms(json, fields, sizeof(fields) / sizeof(fields[0])))
+        return -1;
+    *m = (CartItem) {
+        .id = GET_INT("id"),
+        .cart_id = GET_INT("cart_id"),
+        .amount = GET_INT("amount"),
     };
     return 0;
 }
