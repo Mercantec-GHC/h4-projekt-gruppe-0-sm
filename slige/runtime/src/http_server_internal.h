@@ -103,25 +103,4 @@ struct HttpCtx {
     void* user_ctx;
 };
 
-typedef struct {
-    const char* ptr;
-    size_t len;
-} StrSlice;
-
-typedef struct {
-    const char* text;
-    size_t text_len;
-    size_t i;
-    const char* split;
-    size_t split_len;
-} Strlitter;
-
-static inline Strlitter string_split(
-    const char* text, size_t text_len, const char* split);
-static inline StrSlice split_next(Strlitter* splitter);
-
-DEFINE_VEC(char, String, string, 8)
-
-static inline void string_push_str(String* string, const char* str);
-
 const char* http_response_code_string(int code);

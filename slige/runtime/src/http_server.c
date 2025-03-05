@@ -1,5 +1,6 @@
 #include "http_server.h"
 #include "http_server_internal.h"
+#include "str_util.h"
 #include <netinet/in.h>
 #include <pthread.h>
 #include <stdbool.h>
@@ -294,6 +295,8 @@ static inline void worker_handle_request(Worker* worker, Client* client)
         const char* length_val = req_get_header(&req, "Content-Length");
         size_t length = strtoul(length_val, NULL, 10);
         body = calloc(length + 1, sizeof(char));
+        strncpy(body, (char*)&buffer[body_idx], length);
+        body[length] = '\0';
     }
 
     HttpCtx handler_ctx = {
@@ -327,13 +330,13 @@ l0_return:
 static inline int parse_header(
     Req* req, size_t* body_idx, const char* const buf, size_t buf_size)
 {
-    Strlitter splitter = string_split(buf, buf_size, "\r\n");
+    StrSplitter splitter = str_split(buf, buf_size, "\r\n");
 
-    StrSlice first = split_next(&splitter);
-    Strlitter first_splitter = string_split(first.ptr, first.len, " ");
-    StrSlice method_str = split_next(&first_splitter);
-    StrSlice path_str = split_next(&first_splitter);
-    StrSlice version_str = split_next(&first_splitter);
+    StrSlice first = strsplit_next(&splitter);
+    StrSplitter first_splitter = str_split(first.ptr, first.len, " ");
+    StrSlice method_str = strsplit_next(&first_splitter);
+    StrSlice path_str = strsplit_next(&first_splitter);
+    StrSlice version_str = strsplit_next(&first_splitter);
 
     if (strncmp(version_str.ptr, "HTTP/1.1", 8) != 0) {
         fprintf(stderr, "error: unrecognized http version '%.*s'\n",
@@ -363,7 +366,7 @@ static inline int parse_header(
     header_vec_construct(&headers);
 
     while (headers.size < MAX_HEADERS_LEN) {
-        StrSlice line = split_next(&splitter);
+        StrSlice line = strsplit_next(&splitter);
         if (line.len == 0) {
             *body_idx = (size_t)&line.ptr[2] - (size_t)buf;
             break;
@@ -426,40 +429,4 @@ static inline const char* req_get_header(const Req* req, const char* key)
         }
     }
     return NULL;
-}
-
-static inline Strlitter string_split(
-    const char* text, size_t text_len, const char* split)
-{
-    return (Strlitter) {
-        .text = text,
-        .text_len = text_len,
-        .i = 0,
-        .split = split,
-        .split_len = strlen(split),
-    };
-}
-
-static inline StrSlice split_next(Strlitter* splitter)
-{
-    for (size_t i = splitter->i; i < splitter->text_len; ++i) {
-        if (strncmp(&splitter->text[i], splitter->split, splitter->split_len)
-            == 0) {
-            const char* ptr = &splitter->text[splitter->i];
-            size_t len = i - splitter->i;
-            splitter->i = i + splitter->split_len;
-            return (StrSlice) { ptr, len };
-        }
-    }
-    return (StrSlice) {
-        .ptr = &splitter->text[splitter->i],
-        .len = splitter->text_len - splitter->i,
-    };
-}
-
-static inline void string_push_str(String* string, const char* str)
-{
-    for (size_t i = 0; i < strlen(str); ++i) {
-        string_push(string, str[i]);
-    }
 }

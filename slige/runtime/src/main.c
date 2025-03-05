@@ -1,4 +1,5 @@
 #include "http_server.h"
+#include "json.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -6,28 +7,52 @@ typedef struct {
     int number;
 } Cx;
 
+#define RESPOND(HTTP_CTX, STATUS, MIME_TYPE, ...)                              \
+    {                                                                          \
+        HttpCtx* _ctx = (HTTP_CTX);                                            \
+        char _body[512];                                                       \
+        snprintf(_body, 512 - 1, __VA_ARGS__);                                 \
+                                                                               \
+        char content_length[24] = { 0 };                                       \
+        snprintf(content_length, 24 - 1, "%ld", strlen(_body));                \
+                                                                               \
+        http_ctx_res_headers_set(_ctx, "Content-Type", MIME_TYPE);             \
+        http_ctx_res_headers_set(_ctx, "Content-Length", content_length);      \
+                                                                               \
+        http_ctx_respond(_ctx, (STATUS), _body);                               \
+    }
+
+#define RESPOND_HTML(HTTP_CTX, STATUS, ...)                                    \
+    RESPOND(HTTP_CTX, STATUS, "text/html", __VA_ARGS__)
+#define RESPOND_JSON(HTTP_CTX, STATUS, ...)                                    \
+    RESPOND(HTTP_CTX, STATUS, "application/json", __VA_ARGS__)
+
 void route_get_index(HttpCtx* ctx)
 {
     Cx* cx = http_ctx_user_ctx(ctx);
 
-    char body[512];
-    snprintf(body, 512 - 1,
+    RESPOND_HTML(ctx, 200,
         "<!DOCTYPE html><html><head><meta "
         "charset=\"utf-8\"></head><body><h1>Number = %d</h1></body></html>",
         cx->number);
-
-    char content_length[24] = { 0 };
-    snprintf(content_length, 24 - 1, "%ld", strlen(body));
-
-    http_ctx_res_headers_set(ctx, "Content-Type", "text/html");
-    http_ctx_res_headers_set(ctx, "Content-Length", content_length);
-
-    http_ctx_respond(ctx, 200, body);
 }
 
 void route_post_set_number(HttpCtx* ctx)
 {
-    printf("set number\n");
+    Cx* cx = http_ctx_user_ctx(ctx);
+
+    const char* body_text = http_ctx_req_body(ctx);
+    JsonParser parser;
+    json_parser_construct(&parser, body_text, strlen(body_text));
+    JsonValue* body = json_parser_parse(&parser);
+    json_parser_destroy(&parser);
+
+    int64_t value = json_int(json_object_get(body, "value"));
+    cx->number = (int)value;
+
+    json_value_free(body);
+
+    RESPOND_JSON(ctx, 200, "{\"ok\": true}\r\n");
 }
 
 HttpServer* server;
