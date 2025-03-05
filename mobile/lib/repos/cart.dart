@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/repos/product.dart';
+import 'package:mobile/models/product.dart';
 
 class ProductIdException implements Exception {}
 

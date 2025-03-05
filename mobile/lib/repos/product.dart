@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/models/coordinate.dart';
+import 'package:mobile/models/product.dart';
 import 'package:mobile/results.dart';
 
-class ProductRepo extends ChangeNotifier {
+class ProductRepoByMemory extends ChangeNotifier {
   int _nextId = 0;
   List<Product> products = [];
   late List<Product> filteredProducts;
-  ProductRepo() {
+  ProductRepoByMemory() {
     _addAllProducts();
     filteredProducts = products;
   }
@@ -122,29 +124,4 @@ class ProductRepo extends ChangeNotifier {
           description: "Arla's protein chokolade drik der giver store muskler"),
     ];
   }
-}
-
-class Coordinate {
-  final double x;
-  final double y;
-
-  Coordinate({required this.x, required this.y});
-}
-
-class Product {
-  final int id;
-  final String name;
-  final String description;
-  final int priceInDkkCent;
-  final Coordinate? location;
-  final String? barcode;
-
-  Product({
-    required this.id,
-    required this.name,
-    required this.priceInDkkCent,
-    required this.description,
-    this.location,
-    this.barcode,
-  });
 }

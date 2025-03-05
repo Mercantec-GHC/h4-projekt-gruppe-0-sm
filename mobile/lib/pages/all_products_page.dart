@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/models/product.dart';
 import 'package:mobile/repos/product.dart';
 import 'package:mobile/utils/price.dart';
 import 'package:mobile/widgets/sized_card.dart';
@@ -98,7 +99,7 @@ class AllProductsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final productRepo = Provider.of<ProductRepo>(context);
+    final productRepo = Provider.of<ProductRepoByMemory>(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -121,7 +122,8 @@ class AllProductsPage extends StatelessWidget {
               ],
             ),
             Expanded(
-              child: Consumer<ProductRepo>(builder: (_, productRepo, __) {
+              child:
+                  Consumer<ProductRepoByMemory>(builder: (_, productRepo, __) {
                 final products = productRepo.filteredProducts;
                 return ListView.builder(
                   shrinkWrap: true,

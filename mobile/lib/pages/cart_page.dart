@@ -2,6 +2,7 @@ import 'package:barcode_scan2/model/android_options.dart';
 import 'package:barcode_scan2/model/scan_options.dart';
 import 'package:barcode_scan2/platform_wrapper.dart';
 import 'package:flutter/material.dart';
+import 'package:mobile/models/product.dart';
 import 'package:mobile/pages/finish_shopping_page.dart';
 import 'package:mobile/repos/cart.dart';
 import 'package:mobile/repos/product.dart';
@@ -204,8 +205,9 @@ class CartPage extends StatelessWidget {
                                               child: const Text("Cancel")),
                                           TextButton(
                                               onPressed: () {
-                                                final ProductRepo productRepo =
-                                                    context.read<ProductRepo>();
+                                                final ProductRepoByMemory
+                                                    productRepo = context.read<
+                                                        ProductRepoByMemory>();
                                                 final CartRepo cartRepo =
                                                     context.read<CartRepo>();
                                                 final productResult =
@@ -269,8 +271,8 @@ class CartPage extends StatelessWidget {
                                   }
                                   final CartRepo cartRepo =
                                       context.read<CartRepo>();
-                                  final ProductRepo productRepo =
-                                      context.read<ProductRepo>();
+                                  final ProductRepoByMemory productRepo =
+                                      context.read<ProductRepoByMemory>();
                                   final productResult = productRepo
                                       .productWithBarcode(result.rawContent);
                                   switch (productResult) {

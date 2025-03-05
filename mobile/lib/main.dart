@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => Routing()),
-        ChangeNotifierProvider(create: (_) => ProductRepo()),
+        ChangeNotifierProvider(create: (_) => ProductRepoByMemory()),
         ChangeNotifierProvider(create: (_) => CartRepo()),
         ChangeNotifierProvider(create: (_) => ReceiptRepo()),
         ChangeNotifierProvider(create: (_) => PayingStateRepo()),
