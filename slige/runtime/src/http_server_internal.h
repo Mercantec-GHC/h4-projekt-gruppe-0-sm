@@ -1,5 +1,6 @@
 #pragma once
 
+#include "collection.h"
 #include "http_server.h"
 #include <bits/pthreadtypes.h>
 #include <netinet/in.h>
@@ -14,89 +15,113 @@ typedef struct sockaddr SockAddr;
 typedef struct sockaddr_in SockAddrIn;
 
 typedef struct {
-    int client_file;
-    SockAddrIn client_addr;
-} Request;
+    int file;
+    SockAddrIn addr;
+} Client;
 
-/// This shit is implemented as a static size fifo buffer.
-typedef struct {
-    Request* data;
-    size_t capacity;
-    size_t back;
-    size_t front;
-} RequestQueue;
-
-/// On ok, returns 0.
-/// On error, returns -1.
-int request_queue_construct(RequestQueue* queue, size_t capacity);
-void request_queue_destroy(RequestQueue* queue);
-
-/// On ok, returns 0.
-/// On error, returns -1 if queue is full.
-int request_queue_push(RequestQueue* queue, Request req);
-size_t request_queue_size(const RequestQueue* queue);
-
-/// On ok, returns 0.
-/// On error, returns -1 if queue is empty.
-int request_queue_pop(RequestQueue* queue, Request* req);
+DEFINE_STATIC_QUEUE(Client, ReqQueue, request_queue)
 
 typedef struct {
+    const HttpServer* server;
     pthread_mutex_t mutex;
     pthread_cond_t cond;
-    RequestQueue req_queue;
-} ServerCtx;
+    ReqQueue req_queue;
+} Cx;
 
-void server_ctx_construct(ServerCtx* ctx);
-void server_ctx_destroy(ServerCtx* ctx);
+static inline void ctx_construct(Cx* ctx, const HttpServer* server);
+static inline void ctx_destroy(Cx* ctx);
 
 typedef struct {
     pthread_t thread;
-    ServerCtx* ctx;
+    Cx* ctx;
 } Worker;
 
 /// On ok, returns 0.
 /// On error, returns -1;
-int worker_construct(Worker* worker, ServerCtx* ctx);
-void worker_destroy(Worker* worker);
-void* worker_thread_fn(void* data);
-void worker_thread_cleanup(void* data);
-void worker_listen(Worker* worker);
-void worker_handle_request(Worker* worker, Request* req);
-
-struct HttpServer {
-    int file;
-    SockAddrIn addr;
-    ServerCtx ctx;
-    Worker* workers;
-    size_t workers_size;
-};
+static inline int worker_construct(Worker* worker, Cx* ctx);
+static inline void worker_destroy(Worker* worker);
+static inline void* worker_thread_fn(void* data);
+static inline void worker_listen(Worker* worker);
+static inline void worker_handle_request(Worker* worker, Client* req);
 
 #define MAX_HEADER_BUFFER_SIZE 8192
 
-#define MAX_PATH_SIZE 128
-#define MAX_HEADERS_SIZE 32
-#define MAX_HEADER_KEY_SIZE 32
-#define MAX_HEADER_VALUE_SIZE 64
+#define MAX_PATH_LEN 128 - 1
+#define MAX_HEADERS_LEN 32
+#define MAX_HEADER_KEY_LEN 32 - 1
+#define MAX_HEADER_VALUE_LEN 128 - 1
 
 typedef enum {
-    HttpMethod_GET,
-    HttpMethod_POST,
-} HttpMethod;
+    Method_GET,
+    Method_POST,
+} Method;
 
 typedef struct {
     char* key;
     char* value;
-} HttpHeader;
+} Header;
+
+DEFINE_VEC(Header, HeaderVec, header_vec, 8)
 
 typedef struct {
-    HttpMethod method;
+    Method method;
     char* path;
-    HttpHeader* headers;
-    size_t headers_size;
-} HttpReq;
+    HeaderVec headers;
+} Req;
 
 /// On error, returns -1.
-int http_parse_header(HttpReq* req, const char* buf, size_t buf_size);
-void http_req_destroy(HttpReq* req);
-bool http_req_has_header(HttpReq* req, const char* key);
-const char* http_req_get_header(HttpReq* req, const char* key);
+static inline int parse_header(
+    Req* req, size_t* body_idx, const char* const buf, size_t buf_size);
+static inline void req_destroy(Req* req);
+static inline bool req_has_header(const Req* req, const char* key);
+static inline const char* req_get_header(const Req* req, const char* key);
+
+typedef struct {
+    const char* path;
+    Method method;
+    HttpHandlerFn handler;
+} Handler;
+
+DEFINE_VEC(Handler, HandlerVec, handler_vec, 8)
+
+struct HttpServer {
+    int file;
+    SockAddrIn addr;
+    Cx ctx;
+    Worker* workers;
+    size_t workers_size;
+    HandlerVec handlers;
+    HttpHandlerFn not_found_handler;
+    void* user_ctx;
+};
+
+struct HttpCtx {
+    Client* client;
+    const Req* req;
+    const char* req_body;
+    HeaderVec res_headers;
+    void* user_ctx;
+};
+
+typedef struct {
+    const char* ptr;
+    size_t len;
+} StrSlice;
+
+typedef struct {
+    const char* text;
+    size_t text_len;
+    size_t i;
+    const char* split;
+    size_t split_len;
+} Strlitter;
+
+static inline Strlitter string_split(
+    const char* text, size_t text_len, const char* split);
+static inline StrSlice split_next(Strlitter* splitter);
+
+DEFINE_VEC(char, String, string, 8)
+
+static inline void string_push_str(String* string, const char* str);
+
+const char* http_response_code_string(int code);
