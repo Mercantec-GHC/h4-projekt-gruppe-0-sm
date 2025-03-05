@@ -14,7 +14,8 @@ C_FLAGS = \
 	-Wall -Wextra -Wpedantic -Wconversion \
 	-pedantic -pedantic-errors \
 
-L_FLAGS = -lm -pthread
+L_FLAGS = -lm -pthread $(shell pkg-config sqlite3 openssl --libs)
+C_FLAGS = $(shell pkg-config sqlite3 openssl --cflags)
 
 F_FLAGS =
 OPTIMIZATION =

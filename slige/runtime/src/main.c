@@ -1,5 +1,7 @@
 #include "http_server.h"
 #include "json.h"
+#include "str_util.h"
+#include <sqlite3.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -47,18 +49,61 @@ void route_post_set_number(HttpCtx* ctx)
     JsonValue* body = json_parser_parse(&parser);
     json_parser_destroy(&parser);
 
+    if (!json_object_has(body, "value")) {
+        RESPOND_JSON(
+            ctx, 200, "{\"ok\": false, \"msg\": \"no 'value' key\"}\r\n");
+        goto l0_return;
+    }
+
     int64_t value = json_int(json_object_get(body, "value"));
     cx->number = (int)value;
 
-    json_value_free(body);
-
     RESPOND_JSON(ctx, 200, "{\"ok\": true}\r\n");
+
+l0_return:
+    json_value_free(body);
 }
 
 HttpServer* server;
 
 int main(void)
 {
+
+    char password[] = "Merc1234";
+
+    const char* other_password = "Merc1234";
+
+    {
+        StrHash password_hash = str_hash(password);
+        char* password_hash_str = str_hash_to_string(password_hash);
+        printf("'%s'\n", password_hash_str);
+
+        bool other_is_equal = str_hash_is_equal(password_hash, other_password);
+        printf("is_equal = %s\n", other_is_equal ? "true" : "false");
+
+        free(password_hash_str);
+    }
+
+    {
+        StrHash password_hash = str_hash(password);
+        char* password_hash_str = str_hash_to_string(password_hash);
+        printf("'%s'\n", password_hash_str);
+
+        bool other_is_equal = str_hash_is_equal(password_hash, other_password);
+        printf("is_equal = %s\n", other_is_equal ? "true" : "false");
+
+        free(password_hash_str);
+    }
+
+    return 0;
+
+    sqlite3* db;
+    int res = sqlite3_open("database.db", &db);
+    if (res != SQLITE_OK) {
+        fprintf(stderr, "error: could not open sqlite 'database.db'\n");
+        return -1;
+    }
+
     Cx cx = { .number = 1 };
 
     server = http_server_new((HttpServerOpts) {
@@ -77,4 +122,5 @@ int main(void)
     http_server_listen(server);
 
     http_server_free(server);
+    sqlite3_close(db);
 }

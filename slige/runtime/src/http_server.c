@@ -322,7 +322,8 @@ static inline void worker_handle_request(Worker* worker, Client* client)
 l1_return:
     header_vec_destroy(&handler_ctx.res_headers);
     req_destroy(&req);
-    free(body);
+    if (body)
+        free(body);
 l0_return:
     close(client->file);
 }
