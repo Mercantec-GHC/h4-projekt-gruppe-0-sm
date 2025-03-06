@@ -32,19 +32,17 @@ class FinishShoppingPage extends StatelessWidget {
                 const BackButton(),
                 Container(
                   margin: const EdgeInsets.all(20),
-                  child: Expanded(
-                      child: ListView.builder(
-                          shrinkWrap: true,
-                          itemBuilder: (_, idx) => ReceiptItemView(
-                              pricePerAmount: cart[idx].product.priceInDkkCents,
-                              name: cart[idx].product.name,
-                              amount: cart[idx].amount),
-                          itemCount: cart.length)),
+                  child: ListView.builder(
+                      shrinkWrap: true,
+                      itemBuilder: (_, idx) => ReceiptItemView(
+                          pricePerAmount: cart[idx].product.priceInDkkCents,
+                          name: cart[idx].product.name,
+                          amount: cart[idx].amount),
+                      itemCount: cart.length),
                 ),
                 Container(
                   margin: const EdgeInsets.all(20),
-                  child: Expanded(
-                      child: Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
@@ -53,7 +51,7 @@ class FinishShoppingPage extends StatelessWidget {
                       ),
                       Text(formatDkkCents(cartRepo.totalPrice())),
                     ],
-                  )),
+                  ),
                 ),
                 Expanded(
                   child: Center(

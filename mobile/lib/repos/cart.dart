@@ -4,30 +4,7 @@ import 'package:mobile/models/product.dart';
 class ProductIdException implements Exception {}
 
 class CartRepo extends ChangeNotifier {
-  final List<CartItem> cart = [
-    CartItem(
-        product: Product(
-            id: 1,
-            name: "Letmælk",
-            priceInDkkCents: 1295,
-            description: "Konventionel letmælk med fedtprocent på 1,5%"),
-        amount: 1),
-    CartItem(
-        product: Product(
-            id: 2,
-            name: "Frilands Øko Supermælk",
-            priceInDkkCents: 1995,
-            description:
-                "Økologisk mælk af frilandskøer med fedtprocent på 3,5%. Ikke homogeniseret eller pasteuriseret. Skaber store muskler og styrker knoglerne 💪"),
-        amount: 6),
-    CartItem(
-        product: Product(
-            id: 3,
-            name: "Minimælk",
-            priceInDkkCents: 1195,
-            description: "Konventionel minimælk med fedtprocent på 0,4%"),
-        amount: 1),
-  ];
+  final List<CartItem> cart = [];
 
   List<CartItem> allCartItems() {
     return cart;

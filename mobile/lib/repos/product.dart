@@ -99,9 +99,22 @@ class ProductRepo extends ChangeNotifier {
           description: ""),
       Product(
           id: _nextId++,
+          barcode: "5060337502900",
           name: "Monster Energi Drik",
-          priceInDkkCents: 2000,
+          priceInDkkCents: 1500,
           description: ""),
+      Product(
+          id: _nextId++,
+          barcode: "5712870659220",
+          name: "Amper Energi Drik",
+          priceInDkkCents: 750,
+          description: ""),
+      Product(
+          id: _nextId++,
+          barcode: "5710326001937",
+          name: "Danskvand Med Brus",
+          priceInDkkCents: 500,
+          description: "Med smag a blåbær"),
       Product(
           id: _nextId++,
           name: "Spaghetti",

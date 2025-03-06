@@ -12,43 +12,45 @@ class ProductLocationPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Column(
-      children: [
-        Row(
-          children: [
-            const BackButton(),
-            Text(product.name),
-          ],
-        ),
-        Consumer<LocationImageRepo>(builder: (context, locationImage, child) {
-          if (locationImage.image == null) {
-            return const CircularProgressIndicator(
-              color: Colors.blue,
-            );
-          }
-          if (product.location == null) {
-            return Text("Lokation af ${product.name} kunne ikke findes");
-          }
-          return LayoutBuilder(
-            builder: (context, constraints) {
-              double parentWidth = constraints.maxWidth;
-
-              final image = locationImage.image!;
-              double imageWidth = image.width.toDouble();
-              double imageHeight = image.height.toDouble();
-              double scale = (parentWidth / imageWidth).clamp(0.0, 1.0);
-
-              return CustomPaint(
-                size: Size(imageWidth * scale, imageHeight * scale),
-                painter: LocationImagePainter(
-                    image: locationImage.image!,
-                    location: product.location!,
-                    scale: scale),
+        body: SafeArea(
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const BackButton(),
+              Text(product.name),
+            ],
+          ),
+          Consumer<LocationImageRepo>(builder: (context, locationImage, child) {
+            if (locationImage.image == null) {
+              return const CircularProgressIndicator(
+                color: Colors.blue,
               );
-            },
-          );
-        })
-      ],
+            }
+            if (product.location == null) {
+              return Text("Lokation af ${product.name} kunne ikke findes");
+            }
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                double parentWidth = constraints.maxWidth;
+
+                final image = locationImage.image!;
+                double imageWidth = image.width.toDouble();
+                double imageHeight = image.height.toDouble();
+                double scale = (parentWidth / imageWidth).clamp(0.0, 1.0);
+
+                return CustomPaint(
+                  size: Size(imageWidth * scale, imageHeight * scale),
+                  painter: LocationImagePainter(
+                      image: locationImage.image!,
+                      location: product.location!,
+                      scale: scale),
+                );
+              },
+            );
+          })
+        ],
+      ),
     ));
   }
 }

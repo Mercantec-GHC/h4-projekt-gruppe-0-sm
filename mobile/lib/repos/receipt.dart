@@ -4,46 +4,7 @@ import 'package:mobile/repos/cart.dart';
 
 class ReceiptRepo extends ChangeNotifier {
   int nextId = 0;
-  final List<Receipt> receipts = [
-    Receipt(
-        id: 0,
-        date: DateTime.fromMillisecondsSinceEpoch(1730031200000),
-        receiptItems: [
-          ReceiptItem(
-              product: Product(
-                  id: 1243,
-                  name: "Letmælk",
-                  priceInDkkCents: 13,
-                  description: "Konventionel minimælk med fedtprocent på 0,4%"),
-              amount: 1),
-          ReceiptItem(
-              product: Product(
-                  id: 340,
-                  name: "Minimælk",
-                  priceInDkkCents: 12,
-                  description: "Konventionel minimælk med fedtprocent på 0,4%"),
-              amount: 3),
-        ]),
-    Receipt(
-        id: 1,
-        date: DateTime.fromMillisecondsSinceEpoch(1735031200000),
-        receiptItems: [
-          ReceiptItem(
-              product: Product(
-                  id: 12341,
-                  name: "Letmælk",
-                  priceInDkkCents: 13,
-                  description: "Konventionel minimælk med fedtprocent på 0,4%"),
-              amount: 3),
-          ReceiptItem(
-              product: Product(
-                  id: 1234443,
-                  name: "Minimælk",
-                  priceInDkkCents: 12,
-                  description: "Konventionel minimælk med fedtprocent på 0,4%"),
-              amount: 1),
-        ])
-  ];
+  final List<Receipt> receipts = [];
 
   List<Receipt> allReceipts() {
     return receipts;

@@ -38,11 +38,11 @@ class Dashboard extends StatelessWidget {
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
               icon: Icon(currentIndex == 0 ? Icons.home : Icons.home_outlined),
-              label: "Home"),
+              label: "Hjem"),
           BottomNavigationBarItem(
               icon: Icon(
                   currentIndex == 1 ? Icons.search : Icons.search_outlined),
-              label: "Products"),
+              label: "Varer"),
           BottomNavigationBarItem(
               icon: cartRepo.totalItemsInCart() == 0
                   ? Icon(currentIndex == 2
@@ -55,12 +55,12 @@ class Dashboard extends StatelessWidget {
                           ? Icons.shopping_cart
                           : Icons.shopping_cart_outlined),
                     ),
-              label: "Cart"),
+              label: "Kurv"),
           BottomNavigationBarItem(
               icon: Icon(currentIndex == 3
                   ? Icons.receipt_long
                   : Icons.receipt_long_outlined),
-              label: "Receipts")
+              label: "Kvitteringer")
         ],
       ),
       body: pages[currentIndex],
