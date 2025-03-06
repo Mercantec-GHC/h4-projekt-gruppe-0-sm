@@ -38,5 +38,7 @@ void route_post_user_register(HttpCtx* ctx);
 #define RESPOND_JSON(HTTP_CTX, STATUS, ...)                                    \
     RESPOND(HTTP_CTX, STATUS, "application/json", __VA_ARGS__)
 
-#define RESPOND_BAD_REQUEST(HTTP_CTX)                                          \
-    RESPOND_JSON(HTTP_CTX, 400, "{\"ok\":false}")
+#define RESPOND_BAD_REQUEST(HTTP_CTX, MSG)                                     \
+    RESPOND_JSON(HTTP_CTX, 400, "{\"ok\":false,\"msg\":\"%s\"}", (MSG))
+#define RESPOND_SERVER_ERROR(HTTP_CTX)                                         \
+    RESPOND_JSON(HTTP_CTX, 500, "{\"ok\":false,\"msg\":\"server error\"}")

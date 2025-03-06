@@ -72,17 +72,27 @@ char* string_copy(const String* string)
     return copy;
 }
 
-static inline StrHash str_hash_with_salt(const char* str, const uint8_t* salt)
+#define STR_HASH_SALT_SIZE 32
+#define STR_HASH_HASH_SIZE 32
+#define STR_HASH_STR_LEN 128
+
+typedef struct {
+    uint8_t salt[STR_HASH_SALT_SIZE];
+    uint8_t hash[STR_HASH_HASH_SIZE];
+} HashData;
+
+static inline HashData hashdata_from_str_and_salt(
+    const char* str, const uint8_t* salt)
 {
-    if (strlen(str) >= MAX_HASH_INPUT_LEN - 1) {
+    if (strlen(str) >= MAX_HASH_INPUT_LEN) {
         fprintf(stderr, "error: tried to hash too long input\n");
         exit(1);
     }
 
-    StrHash hash;
+    HashData hash;
     memcpy(hash.salt, salt, STR_HASH_SALT_SIZE);
 
-    uint8_t input[MAX_HASH_INPUT_LEN + STR_HASH_SALT_SIZE] = { 0 };
+    uint8_t input[MAX_HASH_INPUT_LEN + 1 + STR_HASH_SALT_SIZE] = { 0 };
     memcpy(input, hash.salt, STR_HASH_SALT_SIZE);
     memcpy(&input[STR_HASH_SALT_SIZE], str, strlen(str));
 
@@ -90,20 +100,20 @@ static inline StrHash str_hash_with_salt(const char* str, const uint8_t* salt)
     return hash;
 }
 
-StrHash str_hash(const char* str)
+static inline HashData hashdata_from_str(const char* str)
 {
     uint8_t salt[STR_HASH_SALT_SIZE];
     RAND_bytes(salt, STR_HASH_SALT_SIZE);
-    return str_hash_with_salt(str, salt);
+    return hashdata_from_str_and_salt(str, salt);
 }
 
-bool str_hash_is_equal(StrHash hash, const char* str)
+static inline bool hashdata_is_equal(HashData hash, const char* str)
 {
-    StrHash other = str_hash_with_salt(str, hash.salt);
+    HashData other = hashdata_from_str_and_salt(str, hash.salt);
     return memcmp(hash.hash, other.hash, STR_HASH_HASH_SIZE) == 0;
 }
 
-char* str_hash_to_string(StrHash hash)
+static inline char* hashdata_to_string(HashData hash)
 {
     char* result = calloc(STR_HASH_STR_LEN + 1, sizeof(char));
     for (size_t i = 0; i < STR_HASH_SALT_SIZE; ++i) {
@@ -121,7 +131,7 @@ char* str_hash_to_string(StrHash hash)
     return result;
 }
 
-StrHash str_hash_from_string(const char* str)
+static inline HashData hashdata_from_hash_string(const char* str)
 {
     uint8_t result[64] = { 0 };
     size_t result_i = 0;
@@ -133,11 +143,23 @@ StrHash str_hash_from_string(const char* str)
         result_i += 1;
     }
 
-    StrHash hash;
+    HashData hash;
     // memcpy((uint8_t*)&hash, result, sizeof(result));
     for (size_t i = 0; i < 32; ++i) {
         hash.salt[i] = result[i];
         hash.hash[i] = result[32 + i];
     }
     return hash;
+}
+
+char* str_hash(const char* input)
+{
+    HashData data = hashdata_from_str(input);
+    return hashdata_to_string(data);
+}
+
+bool str_hash_equal(const char* hash, const char* input)
+{
+    HashData data = hashdata_from_hash_string(hash);
+    return hashdata_is_equal(data, input);
 }

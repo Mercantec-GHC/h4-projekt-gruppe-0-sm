@@ -65,7 +65,7 @@ static inline void disconnect(sqlite3* connection)
         disconnect(connection);                                                \
     }
 
-DbRes db_user_insert(Db* db, User* user)
+DbRes db_user_insert(Db* db, const User* user)
 {
     static_assert(sizeof(User) == 40, "model has changed");
 
@@ -76,7 +76,7 @@ DbRes db_user_insert(Db* db, User* user)
     sqlite3_stmt* stmt;
     sqlite3_prepare_v2(connection,
         "INSERT INTO users (name, email, password_hash, balance_dkk_cent) "
-        "VALUES (?, ?, ?)",
+        "VALUES (?, ?, ?, ?)",
         -1, &stmt, NULL);
 
     sqlite3_bind_text(stmt, 1, user->name, -1, SQLITE_STATIC);
