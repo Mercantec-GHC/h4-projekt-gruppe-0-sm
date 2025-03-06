@@ -139,7 +139,39 @@ l0_return:
     return res;
 }
 
-DbRes db_product_all_fill(Db* db, ProductVec* vec)
+DbRes db_users_with_email(Db* db, Ids* ids, const char* email)
+{
+    static_assert(sizeof(User) == 40, "model has changed");
+
+    sqlite3* connection;
+    CONNECT;
+    DbRes res;
+    int sqlite_res;
+
+    sqlite3_stmt* stmt;
+    sqlite_res = sqlite3_prepare_v2(
+        connection, "SELECT id FROM users WHERE email = ?", -1, &stmt, NULL);
+    sqlite3_bind_text(stmt, 1, email, -1, NULL);
+
+    while ((sqlite_res = sqlite3_step(stmt)) == SQLITE_ROW) {
+        int64_t id = GET_INT(0);
+        ids_push(ids, id);
+    }
+    if (sqlite_res != SQLITE_DONE) {
+        fprintf(stderr, "error: %s\n", sqlite3_errmsg(connection));
+        res = DbRes_Error;
+        goto l0_return;
+    }
+
+    res = DbRes_Ok;
+l0_return:
+    if (stmt)
+        sqlite3_finalize(stmt);
+    DISCONNECT;
+    return res;
+}
+
+DbRes db_product_all(Db* db, ProductVec* vec)
 {
     sqlite3* connection;
     CONNECT;

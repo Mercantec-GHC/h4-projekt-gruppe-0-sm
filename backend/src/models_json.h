@@ -11,3 +11,6 @@ DEFINE_MODEL_JSON(Product, product)
 DEFINE_MODEL_JSON(ProductPrice, product_price)
 DEFINE_MODEL_JSON(Cart, cart)
 DEFINE_MODEL_JSON(CartItem, cart_item)
+
+DEFINE_MODEL_JSON(UsersRegisterReq, users_register_req)
+DEFINE_MODEL_JSON(AuthLoginReq, auth_login_req)

@@ -29,6 +29,7 @@ void http_server_post(
 void http_server_set_not_found(HttpServer* server, HttpHandlerFn handler);
 
 void* http_ctx_user_ctx(HttpCtx* ctx);
+const char* http_ctx_req_path(HttpCtx* ctx);
 bool http_ctx_req_headers_has(HttpCtx* ctx, const char* key);
 const char* http_ctx_req_headers_get(HttpCtx* ctx, const char* key);
 const char* http_ctx_req_body(HttpCtx* ctx);

@@ -3,6 +3,7 @@
 #include "collection.h"
 #include "models.h"
 
+DEFINE_VEC(int64_t, Ids, ids, 8)
 DEFINE_VEC(Product, ProductVec, product_vec, 32)
 
 typedef enum {
@@ -16,5 +17,8 @@ typedef struct Db Db;
 /// `user.id` field is ignored.
 DbRes db_user_insert(Db* db, User* user);
 DbRes db_user_from_id(Db* db, User* user, int64_t id);
+/// Expects `ids` to be constructed.
+DbRes db_users_with_email(Db* db, Ids* ids, const char* email);
 
-DbRes db_product_all_fill(Db* db, ProductVec* vec);
+/// Expects `vec` to be constructed.
+DbRes db_product_all(Db* db, ProductVec* vec);

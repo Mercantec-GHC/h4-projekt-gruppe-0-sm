@@ -47,3 +47,19 @@ void product_free(Product* model);
 void product_price_free(ProductPrice* model);
 void cart_free(Cart* model);
 void cart_item_free(CartItem* model);
+
+//
+
+typedef struct {
+    char* name;
+    char* email;
+    char* password;
+} UsersRegisterReq;
+
+typedef struct {
+    char* email;
+    char* password;
+} AuthLoginReq;
+
+void users_register_req_free(UsersRegisterReq* model);
+void auth_login_req_free(AuthLoginReq* model);

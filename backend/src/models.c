@@ -1,5 +1,6 @@
 #include "models.h"
 #include "json.h"
+#include "models_json.h"
 #include "str_util.h"
 #include <assert.h>
 #include <stdlib.h>
@@ -7,6 +8,8 @@
 
 void user_free(User* m)
 {
+    static_assert(sizeof(User) == 40, "model has changed");
+
     free(m->name);
     free(m->email);
     free(m->password_hash);
@@ -14,28 +17,55 @@ void user_free(User* m)
 
 void coord_free(Coord* m)
 {
+    static_assert(sizeof(Coord) == 24, "model has changed");
+
     (void)m;
 }
 
 void product_free(Product* m)
 {
+    static_assert(sizeof(Product) == 40, "model has changed");
+
     free(m->name);
     free(m->barcode);
 }
 
 void product_price_free(ProductPrice* m)
 {
+    static_assert(sizeof(ProductPrice) == 24, "model has changed");
+
     (void)m;
 }
 
 void cart_free(Cart* m)
 {
+    static_assert(sizeof(Cart) == 16, "model has changed");
+
     (void)m;
 }
 
 void cart_item_free(CartItem* m)
 {
+    static_assert(sizeof(CartItem) == 24, "model has changed");
+
     (void)m;
+}
+
+void users_register_req_free(UsersRegisterReq* model)
+{
+    static_assert(sizeof(UsersRegisterReq) == 24, "model has changed");
+
+    free(model->name);
+    free(model->email);
+    free(model->password);
+}
+
+void auth_login_req_free(AuthLoginReq* model)
+{
+    static_assert(sizeof(AuthLoginReq) == 16, "model has changed");
+
+    free(model->email);
+    free(model->password);
 }
 
 char* user_to_json_string(const User* m)
@@ -149,6 +179,43 @@ char* cart_item_to_json_string(const CartItem* m)
         "\"amount\":%ld"
         "}",
         m->id, m->cart_id, m->amount);
+
+    char* result = string_copy(&string);
+    string_destroy(&string);
+    return result;
+}
+
+char* users_register_req_to_json(const UsersRegisterReq* m)
+{
+    static_assert(sizeof(UsersRegisterReq) == 24, "model has changed");
+
+    String string;
+    string_construct(&string);
+    string_pushf(&string,
+        "{"
+        "\"name\":\"%s\","
+        "\"email\":\"%s\","
+        "\"password\":\"%s\""
+        "}",
+        m->name, m->email, m->password);
+
+    char* result = string_copy(&string);
+    string_destroy(&string);
+    return result;
+}
+
+char* auth_login_req_to_json(const AuthLoginReq* m)
+{
+    static_assert(sizeof(AuthLoginReq) == 16, "model has changed");
+
+    String string;
+    string_construct(&string);
+    string_pushf(&string,
+        "{"
+        "\"email\":\"%s\","
+        "\"password\":\"%s\""
+        "}",
+        m->email, m->password);
 
     char* result = string_copy(&string);
     string_destroy(&string);
@@ -296,6 +363,42 @@ int cart_item_from_json(CartItem* m, const JsonValue* json)
         .id = GET_INT("id"),
         .cart_id = GET_INT("cart_id"),
         .amount = GET_INT("amount"),
+    };
+    return 0;
+}
+
+int users_register_req_from_json(UsersRegisterReq* m, const JsonValue* json)
+{
+    static_assert(sizeof(UsersRegisterReq) == 24, "model has changed");
+
+    ObjField fields[] = {
+        { "name", JsonType_String },
+        { "email", JsonType_String },
+        { "password", JsonType_String },
+    };
+    if (!obj_conforms(json, fields, sizeof(fields) / sizeof(fields[0])))
+        return -1;
+    *m = (UsersRegisterReq) {
+        .name = GET_STR("name"),
+        .email = GET_STR("email"),
+        .password = GET_STR("password"),
+    };
+    return 0;
+}
+
+int auth_login_req_from_json(AuthLoginReq* m, const JsonValue* json)
+{
+    static_assert(sizeof(AuthLoginReq) == 16, "model has changed");
+
+    ObjField fields[] = {
+        { "email", JsonType_String },
+        { "password", JsonType_String },
+    };
+    if (!obj_conforms(json, fields, sizeof(fields) / sizeof(fields[0])))
+        return -1;
+    *m = (AuthLoginReq) {
+        .email = GET_STR("email"),
+        .password = GET_STR("password"),
     };
     return 0;
 }

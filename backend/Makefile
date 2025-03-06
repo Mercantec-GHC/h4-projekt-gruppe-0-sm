@@ -9,10 +9,13 @@
 # NOTICE that `RELEASE=1` is __after__ `make`
 #
 
+MAKEFLAGS += -j $(shell nproc)
+
 C_FLAGS = \
 	-std=c17 \
 	-Wall -Wextra -Wpedantic -Wconversion \
 	-pedantic -pedantic-errors \
+	-Wno-unused-parameter \
 
 L_FLAGS = -lm -pthread $(shell pkg-config sqlite3 openssl --libs)
 C_FLAGS = $(shell pkg-config sqlite3 openssl --cflags)
@@ -38,13 +41,15 @@ O_FILES = $(patsubst src/%.c,build/%.o,$(C_FILES))
 
 CC = gcc
 
-all: server
+TARGET=server
 
-server: $(O_FILES)
-	$(CC) -o build/$@ $^ $(F_FLAGS) $(OPTIMIZATION) $(L_FLAGS)
+all: build/$(TARGET)
+
+build/$(TARGET): $(O_FILES)
+	$(CC) -o $@ $^ $(F_FLAGS) $(OPTIMIZATION) $(L_FLAGS)
 
 build/%.o: src/%.c $(HEADERS)
-	mkdir -p $(@D)
+	@mkdir -p $(dir $@)
 	$(CC) $< -c -o $@ $(C_FLAGS) $(OPTIMIZATION) $(F_FLAGS)
 
 clean:

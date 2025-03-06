@@ -130,6 +130,11 @@ void* http_ctx_user_ctx(HttpCtx* ctx)
     return ctx->user_ctx;
 }
 
+const char* http_ctx_req_path(HttpCtx* ctx)
+{
+    return ctx->req->path;
+}
+
 bool http_ctx_req_headers_has(HttpCtx* ctx, const char* key)
 {
     return req_has_header(ctx->req, key);
@@ -274,7 +279,7 @@ static inline void worker_handle_request(Worker* worker, Client* client)
             MAX_HEADER_BUFFER_SIZE);
         goto l0_return;
     }
-    puts((char*)buffer);
+    // puts((char*)buffer);
 
     Req req;
     size_t body_idx;
@@ -309,6 +314,8 @@ static inline void worker_handle_request(Worker* worker, Client* client)
 
     header_vec_construct(&handler_ctx.res_headers);
 
+    bool been_handled = false;
+
     for (size_t i = 0; i < worker->ctx->server->handlers.size; ++i) {
         Handler* handler = &worker->ctx->server->handlers.data[i];
         if (handler->method != req.method)
@@ -316,7 +323,12 @@ static inline void worker_handle_request(Worker* worker, Client* client)
         if (strcmp(handler->path, req.path) != 0)
             continue;
         handler->handler(&handler_ctx);
+        been_handled = true;
         break;
+    }
+
+    if (!been_handled && worker->ctx->server->not_found_handler != NULL) {
+        worker->ctx->server->not_found_handler(&handler_ctx);
     }
 
 l1_return:
@@ -333,11 +345,11 @@ static inline int parse_header(
 {
     StrSplitter splitter = str_split(buf, buf_size, "\r\n");
 
-    StrSlice first = strsplit_next(&splitter);
-    StrSplitter first_splitter = str_split(first.ptr, first.len, " ");
-    StrSlice method_str = strsplit_next(&first_splitter);
-    StrSlice path_str = strsplit_next(&first_splitter);
-    StrSlice version_str = strsplit_next(&first_splitter);
+    StrSlice req_line = strsplit_next(&splitter);
+    StrSplitter req_line_splitter = str_split(req_line.ptr, req_line.len, " ");
+    StrSlice method_str = strsplit_next(&req_line_splitter);
+    StrSlice uri_str = strsplit_next(&req_line_splitter);
+    StrSlice version_str = strsplit_next(&req_line_splitter);
 
     if (strncmp(version_str.ptr, "HTTP/1.1", 8) != 0) {
         fprintf(stderr, "error: unrecognized http version '%.*s'\n",
@@ -356,14 +368,32 @@ static inline int parse_header(
         return -1;
     }
 
-    if (path_str.len >= MAX_PATH_LEN + 1) {
+    if (uri_str.len >= MAX_PATH_LEN + 1) {
         fprintf(stderr, "error: path too long\n");
         return -1;
     }
 
-    char* path = calloc(MAX_PATH_LEN + 1, sizeof(char));
-    strncpy(path, path_str.ptr, path_str.len);
-    path[path_str.len] = '\0';
+    size_t path_len = 0;
+    while (path_len < uri_str.len && uri_str.ptr[path_len] != '?'
+        && uri_str.ptr[path_len] != '#') {
+        path_len += 1;
+    }
+
+    char* path = calloc(path_len + 1, sizeof(char));
+    strncpy(path, uri_str.ptr, path_len);
+    path[path_len] = '\0';
+
+    char* query = NULL;
+    if (path_len < uri_str.len) {
+        size_t query_len = 0;
+        while (path_len + query_len < uri_str.len
+            && uri_str.ptr[path_len + query_len] != '#') {
+            query_len += 1;
+        }
+        query = calloc(query_len + 1, sizeof(char));
+        strncpy(query, &uri_str.ptr[path_len], query_len);
+        query[query_len] = '\0';
+    }
 
     HeaderVec headers;
     header_vec_construct(&headers);
@@ -402,7 +432,7 @@ static inline int parse_header(
         header_vec_push(&headers, (Header) { key, value });
     }
 
-    *req = (Req) { method, path, headers };
+    *req = (Req) { method, path, query, headers };
     return 0;
 }
 

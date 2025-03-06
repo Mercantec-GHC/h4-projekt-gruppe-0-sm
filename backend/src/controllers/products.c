@@ -10,7 +10,7 @@ void route_get_products_all(HttpCtx* ctx)
     ProductVec products;
     product_vec_construct(&products);
 
-    DbRes db_res = db_product_all_fill(cx->db, &products);
+    DbRes db_res = db_product_all(cx->db, &products);
     if (db_res != DbRes_Ok) {
         RESPOND_JSON(ctx, 500, "{\"ok\":false,\"msg\":\"db error\"}");
         return;

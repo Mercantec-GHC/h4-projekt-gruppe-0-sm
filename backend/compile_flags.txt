@@ -6,4 +6,5 @@ xc
 -Wconversion
 -pedantic
 -pedantic-errors
+-Wno-unused-parameter
 

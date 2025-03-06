@@ -10,6 +10,14 @@ typedef struct {
     Db* db;
 } Cx;
 
+void route_get_index(HttpCtx* ctx);
+void route_post_set_number(HttpCtx* ctx);
+void route_get_not_found(HttpCtx* ctx);
+
+void route_get_products_all(HttpCtx* ctx);
+
+void route_post_user_register(HttpCtx* ctx);
+
 #define RESPOND(HTTP_CTX, STATUS, MIME_TYPE, ...)                              \
     {                                                                          \
         HttpCtx* _ctx = (HTTP_CTX);                                            \
@@ -30,4 +38,5 @@ typedef struct {
 #define RESPOND_JSON(HTTP_CTX, STATUS, ...)                                    \
     RESPOND(HTTP_CTX, STATUS, "application/json", __VA_ARGS__)
 
-void route_get_products_all(HttpCtx* ctx);
+#define RESPOND_BAD_REQUEST(HTTP_CTX)                                          \
+    RESPOND_JSON(HTTP_CTX, 400, "{\"ok\":false}")
