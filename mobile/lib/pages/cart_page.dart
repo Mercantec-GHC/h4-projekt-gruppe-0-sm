@@ -149,191 +149,182 @@ class CartPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Column(
-        children: [
-          Expanded(
-            child: Consumer<CartRepo>(
-              builder: (_, cartRepo, __) {
-                final cart = cartRepo.allCartItems();
-                return ListView.builder(
-                  shrinkWrap: true,
-                  itemBuilder: (_, idx) => CartItemView(
-                      cartRepo: cartRepo,
-                      productId: cart[idx].product.id,
-                      name: cart[idx].product.name,
-                      price: cart[idx].product.priceInDkkCents,
-                      amount: cart[idx].amount),
-                  itemCount: cart.length,
-                );
-              },
-            ),
+    return Column(
+      children: [
+        Expanded(
+          child: Consumer<CartRepo>(
+            builder: (_, cartRepo, __) {
+              final cart = cartRepo.allCartItems();
+              return ListView.builder(
+                shrinkWrap: true,
+                itemBuilder: (_, idx) => CartItemView(
+                    cartRepo: cartRepo,
+                    productId: cart[idx].product.id,
+                    name: cart[idx].product.name,
+                    price: cart[idx].product.priceInDkkCents,
+                    amount: cart[idx].amount),
+                itemCount: cart.length,
+              );
+            },
           ),
-          Container(
-            decoration:
-                const BoxDecoration(color: Color(0xFFFFFFFF), boxShadow: [
-              BoxShadow(
-                blurRadius: 10,
-                spreadRadius: -4,
-              )
-            ]),
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        margin: const EdgeInsets.only(right: 10),
-                        child: PrimaryButton(
-                            onPressed: () {
-                              final inputController = TextEditingController();
-                              showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) =>
-                                      AlertDialog(
-                                        title: const Text(
-                                            "Indtast stregkode nummer"),
-                                        content: TextField(
-                                          keyboardType: TextInputType.number,
-                                          controller: inputController,
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                              onPressed: () =>
-                                                  Navigator.of(context).pop(),
-                                              child: const Text("Cancel")),
-                                          TextButton(
-                                              onPressed: () {
-                                                final productRepo =
-                                                    context.read<ProductRepo>();
-                                                final CartRepo cartRepo =
-                                                    context.read<CartRepo>();
-                                                final productResult =
-                                                    productRepo
-                                                        .productWithBarcode(
-                                                            inputController
-                                                                .text);
-                                                switch (productResult) {
-                                                  case Ok<Product, String>():
-                                                    cartRepo.addToCart(
-                                                        productResult.value);
-                                                    final snackBar = SnackBar(
-                                                        content: Text(
-                                                            "Tilføjet ${productResult.value.name} til indkøbskurven"));
-                                                    ScaffoldMessenger.of(
-                                                            context)
-                                                        .showSnackBar(snackBar);
-                                                  case Err<Product, String>():
-                                                    final snackBar = const SnackBar(
-                                                        content: Text(
-                                                            "Den indtastede stregkode eksistere ikke"));
-                                                    ScaffoldMessenger.of(
-                                                            context)
-                                                        .showSnackBar(snackBar);
-                                                }
-                                                Navigator.of(context).pop();
-                                              },
-                                              child: const Text("Ok"))
-                                        ],
-                                      ));
-                            },
-                            child: const Text("Indtast vare")),
-                      ),
+        ),
+        Container(
+          decoration: const BoxDecoration(color: Color(0xFFFFFFFF), boxShadow: [
+            BoxShadow(
+              blurRadius: 10,
+              spreadRadius: -4,
+            )
+          ]),
+          padding: const EdgeInsets.all(10),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 10),
+                      child: PrimaryButton(
+                          onPressed: () {
+                            final inputController = TextEditingController();
+                            showDialog(
+                                context: context,
+                                builder: (BuildContext context) => AlertDialog(
+                                      title: const Text(
+                                          "Indtast stregkode nummer"),
+                                      content: TextField(
+                                        keyboardType: TextInputType.number,
+                                        controller: inputController,
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                            onPressed: () =>
+                                                Navigator.of(context).pop(),
+                                            child: const Text("Cancel")),
+                                        TextButton(
+                                            onPressed: () {
+                                              final productRepo =
+                                                  context.read<ProductRepo>();
+                                              final CartRepo cartRepo =
+                                                  context.read<CartRepo>();
+                                              final productResult = productRepo
+                                                  .productWithBarcode(
+                                                      inputController.text);
+                                              switch (productResult) {
+                                                case Ok<Product, String>():
+                                                  cartRepo.addToCart(
+                                                      productResult.value);
+                                                  final snackBar = SnackBar(
+                                                      content: Text(
+                                                          "Tilføjet ${productResult.value.name} til indkøbskurven"));
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(snackBar);
+                                                case Err<Product, String>():
+                                                  final snackBar = const SnackBar(
+                                                      content: Text(
+                                                          "Den indtastede stregkode eksistere ikke"));
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(snackBar);
+                                              }
+                                              Navigator.of(context).pop();
+                                            },
+                                            child: const Text("Ok"))
+                                      ],
+                                    ));
+                          },
+                          child: const Text("Indtast vare")),
                     ),
-                    Expanded(
-                      child: Container(
-                        margin: const EdgeInsets.only(left: 10),
-                        child: PrimaryButton(
-                            onPressed: () async {
-                              final result = await BarcodeScanner.scan(
-                                  options: const ScanOptions(
-                                      android: AndroidOptions(
-                                          appBarTitle: "Skan varer"),
-                                      strings: {
-                                    "cancel": "Annullér",
-                                    "flash_on": "Lommelygte til",
-                                    "flash_off": "Lommelygte fra"
-                                  }));
-                              switch (result.type.name) {
-                                case "Cancelled":
-                                  final snackBar = const SnackBar(
-                                      content:
-                                          Text("Skanning af varer annulleret"));
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(snackBar);
-                                  }
-                                case "Barcode":
-                                  if (!context.mounted) {
-                                    return;
-                                  }
-                                  final CartRepo cartRepo =
-                                      context.read<CartRepo>();
-                                  final productRepo =
-                                      context.read<ProductRepo>();
-                                  final productResult = productRepo
-                                      .productWithBarcode(result.rawContent);
-                                  switch (productResult) {
-                                    case Ok<Product, String>():
-                                      {
-                                        cartRepo.addToCart(productResult.value);
-                                        final snackBar = SnackBar(
-                                            content: Text(
-                                                "Tilføjet ${productResult.value.name} til indkøbskurven"));
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(snackBar);
-                                      }
-                                    case Err<Product, String>():
-                                      final snackBar = const SnackBar(
-                                          content: Text(
-                                              "Varen du prøver at tilføje eksistere ikke"));
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(snackBar);
-                                  }
-
-                                case "Error":
-                                  if (!context.mounted) {
-                                    return;
-                                  }
-                                  final snackBar = const SnackBar(
-                                      content:
-                                          Text("Der skete en fejl, prøv igen"));
+                  ),
+                  Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.only(left: 10),
+                      child: PrimaryButton(
+                          onPressed: () async {
+                            final result = await BarcodeScanner.scan(
+                                options: const ScanOptions(
+                                    android: AndroidOptions(
+                                        appBarTitle: "Skan varer"),
+                                    strings: {
+                                  "cancel": "Annullér",
+                                  "flash_on": "Lommelygte til",
+                                  "flash_off": "Lommelygte fra"
+                                }));
+                            switch (result.type.name) {
+                              case "Cancelled":
+                                final snackBar = const SnackBar(
+                                    content:
+                                        Text("Skanning af varer annulleret"));
+                                if (context.mounted) {
                                   ScaffoldMessenger.of(context)
                                       .showSnackBar(snackBar);
+                                }
+                              case "Barcode":
+                                if (!context.mounted) {
+                                  return;
+                                }
+                                final CartRepo cartRepo =
+                                    context.read<CartRepo>();
+                                final productRepo = context.read<ProductRepo>();
+                                final productResult = productRepo
+                                    .productWithBarcode(result.rawContent);
+                                switch (productResult) {
+                                  case Ok<Product, String>():
+                                    {
+                                      cartRepo.addToCart(productResult.value);
+                                      final snackBar = SnackBar(
+                                          content: Text(
+                                              "Tilføjet ${productResult.value.name} til indkøbskurven"));
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(snackBar);
+                                    }
+                                  case Err<Product, String>():
+                                    final snackBar = const SnackBar(
+                                        content: Text(
+                                            "Varen du prøver at tilføje eksistere ikke"));
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(snackBar);
+                                }
 
-                                default:
-                                  throw Exception("Unreachable");
-                              }
-                            },
-                            child: const Text("Skan vare")),
-                      ),
+                              case "Error":
+                                if (!context.mounted) {
+                                  return;
+                                }
+                                final snackBar = const SnackBar(
+                                    content:
+                                        Text("Der skete en fejl, prøv igen"));
+                                ScaffoldMessenger.of(context)
+                                    .showSnackBar(snackBar);
+
+                              default:
+                                throw Exception("Unreachable");
+                            }
+                          },
+                          child: const Text("Skan vare")),
                     ),
-                  ],
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        margin: const EdgeInsets.only(top: 10),
-                        child: PrimaryButton(
-                            onPressed: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          FinishShoppingPage(user: user)));
-                            },
-                            child: const Text("Afslut indkøb")),
-                      ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 10),
+                      child: PrimaryButton(
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        FinishShoppingPage(user: user)));
+                          },
+                          child: const Text("Afslut indkøb")),
                     ),
-                  ],
-                ),
-              ],
-            ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

@@ -63,7 +63,7 @@ class Dashboard extends StatelessWidget {
               label: "Kvitteringer")
         ],
       ),
-      body: pages[currentIndex],
+      body: SafeArea(child: pages[currentIndex]),
     );
   }
 }
