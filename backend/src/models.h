@@ -4,6 +4,7 @@
 
 typedef struct {
     int64_t id;
+    char* name;
     char* email;
     char* password_hash;
     int64_t balance_dkk_cent;

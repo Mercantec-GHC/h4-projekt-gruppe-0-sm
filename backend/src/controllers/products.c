@@ -1,4 +1,3 @@
-#include "products.h"
 #include "../controllers.h"
 #include "../http_server.h"
 #include "../models_json.h"

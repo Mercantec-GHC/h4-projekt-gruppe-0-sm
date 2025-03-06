@@ -1,11 +1,13 @@
 #include "models.h"
 #include "json.h"
 #include "str_util.h"
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
 void user_free(User* m)
 {
+    free(m->name);
     free(m->email);
     free(m->password_hash);
 }
@@ -38,16 +40,19 @@ void cart_item_free(CartItem* m)
 
 char* user_to_json_string(const User* m)
 {
+    static_assert(sizeof(User) == 40, "model has changed");
+
     String string;
     string_construct(&string);
     string_pushf(&string,
         "{"
         "\"id\":%ld,"
+        "\"name\":\"%s\","
         "\"email\":\"%s\","
         "\"password_hash\":\"%s\","
         "\"balance_dkk_cent\":%ld"
         "}",
-        m->id, m->email, m->password_hash, m->balance_dkk_cent);
+        m->id, m->name, m->email, m->password_hash, m->balance_dkk_cent);
 
     char* result = string_copy(&string);
     string_destroy(&string);
@@ -56,6 +61,8 @@ char* user_to_json_string(const User* m)
 
 char* coord_to_json_string(const Coord* m)
 {
+    static_assert(sizeof(Coord) == 24, "model has changed");
+
     String string;
     string_construct(&string);
     string_pushf(&string,
@@ -73,6 +80,8 @@ char* coord_to_json_string(const Coord* m)
 
 char* product_to_json_string(const Product* m)
 {
+    static_assert(sizeof(Product) == 40, "model has changed");
+
     String string;
     string_construct(&string);
     string_pushf(&string,
@@ -92,6 +101,8 @@ char* product_to_json_string(const Product* m)
 
 char* product_price_to_json_string(const ProductPrice* m)
 {
+    static_assert(sizeof(ProductPrice) == 24, "model has changed");
+
     String string;
     string_construct(&string);
     string_pushf(&string,
@@ -109,6 +120,8 @@ char* product_price_to_json_string(const ProductPrice* m)
 
 char* cart_to_json_string(const Cart* m)
 {
+    static_assert(sizeof(Cart) == 16, "model has changed");
+
     String string;
     string_construct(&string);
     string_pushf(&string,
@@ -125,6 +138,8 @@ char* cart_to_json_string(const Cart* m)
 
 char* cart_item_to_json_string(const CartItem* m)
 {
+    static_assert(sizeof(CartItem) == 24, "model has changed");
+
     String string;
     string_construct(&string);
     string_pushf(&string,
@@ -167,8 +182,11 @@ static inline bool obj_conforms(
 
 int user_from_json(User* m, const JsonValue* json)
 {
+    static_assert(sizeof(User) == 40, "model has changed");
+
     ObjField fields[] = {
         { "id", JsonType_Number },
+        { "name", JsonType_String },
         { "email", JsonType_String },
         { "password_hash", JsonType_String },
         { "balance_dkk_cent", JsonType_Number },
@@ -177,6 +195,7 @@ int user_from_json(User* m, const JsonValue* json)
         return -1;
     *m = (User) {
         .id = GET_INT("id"),
+        .name = GET_STR("name"),
         .email = GET_STR("email"),
         .password_hash = GET_STR("password_hash"),
         .balance_dkk_cent = GET_INT("balance_dkk_cent"),
@@ -186,6 +205,8 @@ int user_from_json(User* m, const JsonValue* json)
 
 int coord_from_json(Coord* m, const JsonValue* json)
 {
+    static_assert(sizeof(Coord) == 24, "model has changed");
+
     ObjField fields[] = {
         { "id", JsonType_Number },
         { "x", JsonType_Number },
@@ -203,6 +224,8 @@ int coord_from_json(Coord* m, const JsonValue* json)
 
 int product_from_json(Product* m, const JsonValue* json)
 {
+    static_assert(sizeof(Product) == 40, "model has changed");
+
     ObjField fields[] = {
         { "id", JsonType_Number },
         { "name", JsonType_String },
@@ -224,6 +247,8 @@ int product_from_json(Product* m, const JsonValue* json)
 
 int product_price_from_json(ProductPrice* m, const JsonValue* json)
 {
+    static_assert(sizeof(ProductPrice) == 24, "model has changed");
+
     ObjField fields[] = {
         { "id", JsonType_Number },
         { "product_id", JsonType_Number },
@@ -241,6 +266,8 @@ int product_price_from_json(ProductPrice* m, const JsonValue* json)
 
 int cart_from_json(Cart* m, const JsonValue* json)
 {
+    static_assert(sizeof(Cart) == 16, "model has changed");
+
     ObjField fields[] = {
         { "id", JsonType_Number },
         { "user_id", JsonType_Number },
@@ -256,6 +283,8 @@ int cart_from_json(Cart* m, const JsonValue* json)
 
 int cart_item_from_json(CartItem* m, const JsonValue* json)
 {
+    static_assert(sizeof(CartItem) == 24, "model has changed");
+
     ObjField fields[] = {
         { "id", JsonType_Number },
         { "cart_id", JsonType_Number },

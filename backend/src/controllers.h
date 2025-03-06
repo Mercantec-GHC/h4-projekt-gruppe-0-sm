@@ -1,6 +1,7 @@
 #pragma once
 
 #include "db.h"
+#include "http_server.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -28,3 +29,5 @@ typedef struct {
     RESPOND(HTTP_CTX, STATUS, "text/html", __VA_ARGS__)
 #define RESPOND_JSON(HTTP_CTX, STATUS, ...)                                    \
     RESPOND(HTTP_CTX, STATUS, "application/json", __VA_ARGS__)
+
+void route_get_products_all(HttpCtx* ctx);

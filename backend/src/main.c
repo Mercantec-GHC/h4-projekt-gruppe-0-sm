@@ -1,5 +1,4 @@
 #include "controllers.h"
-#include "controllers/products.h"
 #include "db_sqlite.h"
 #include "http_server.h"
 #include "json.h"

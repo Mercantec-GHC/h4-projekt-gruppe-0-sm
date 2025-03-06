@@ -49,7 +49,7 @@ static inline void worker_handle_request(Worker* worker, Client* req);
 #define MAX_PATH_LEN 128 - 1
 #define MAX_HEADERS_LEN 32
 #define MAX_HEADER_KEY_LEN 32 - 1
-#define MAX_HEADER_VALUE_LEN 128 - 1
+#define MAX_HEADER_VALUE_LEN 512 - 1
 
 typedef enum {
     Method_GET,

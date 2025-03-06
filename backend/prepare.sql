@@ -1,6 +1,7 @@
 
 CREATE TABLE IF NOT EXISTS users (
     id INT PRIMARY KEY,
+    name TEXT NOT NULL,
     email TEXT NOT NULL,
     password_hash TEXT NOT NULL,
     balance_dkk_cent INT NOT NULL
@@ -48,7 +49,7 @@ CREATE TABLE IF NOT EXISTS cart_items (
 
 
 
-INSERT OR REPLACE INTO users VALUES(1,'test@email.com','d980840fcb82970ab86656feebdccdd288be0e9b05f14e712b59529a2868fee3d980840fcb82970ab86656feebdccdd288be0e9b05f14e712b59529a2868fee3',10000);
+INSERT OR REPLACE INTO users VALUES(1,'User','test@email.com','d980840fcb82970ab86656feebdccdd288be0e9b05f14e712b59529a2868fee3d980840fcb82970ab86656feebdccdd288be0e9b05f14e712b59529a2868fee3',10000);
 
 INSERT OR REPLACE INTO products VALUES(1,'Letmælk',1195,'Mælk fra ko',NULL,NULL);
 INSERT OR REPLACE INTO products VALUES(2,'Smør',2000,'Smør fra mejeri',NULL,NULL);

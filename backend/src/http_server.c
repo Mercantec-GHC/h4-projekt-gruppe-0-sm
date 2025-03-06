@@ -274,7 +274,7 @@ static inline void worker_handle_request(Worker* worker, Client* client)
             MAX_HEADER_BUFFER_SIZE);
         goto l0_return;
     }
-    // puts((char*)buffer);
+    puts((char*)buffer);
 
     Req req;
     size_t body_idx;
@@ -356,8 +356,10 @@ static inline int parse_header(
         return -1;
     }
 
-    if (path_str.len >= MAX_PATH_LEN + 1)
+    if (path_str.len >= MAX_PATH_LEN + 1) {
+        fprintf(stderr, "error: path too long\n");
         return -1;
+    }
 
     char* path = calloc(MAX_PATH_LEN + 1, sizeof(char));
     strncpy(path, path_str.ptr, path_str.len);
@@ -378,6 +380,7 @@ static inline int parse_header(
             key_len += 1;
         }
         if (key_len == 0 || key_len > MAX_HEADER_KEY_LEN) {
+            fprintf(stderr, "error: header key too long\n");
             return -1;
         }
         size_t value_begin = key_len + 1;
@@ -386,6 +389,7 @@ static inline int parse_header(
         }
         size_t value_len = line.len - value_begin;
         if (value_len == 0 || value_len > MAX_HEADER_VALUE_LEN) {
+            fprintf(stderr, "error: header value too long, %ld\n", value_len);
             return -1;
         }
 
