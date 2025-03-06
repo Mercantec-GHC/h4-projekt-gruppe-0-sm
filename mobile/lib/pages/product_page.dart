@@ -39,7 +39,7 @@ class ProductPage extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            formatDkkCents(product.priceInDkkCent),
+                            formatDkkCents(product.priceInDkkCents),
                             style: const TextStyle(
                               fontSize: 16,
                             ),
@@ -67,7 +67,7 @@ class ProductPage extends StatelessWidget {
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
                     Text(
-                      formatDkkCents(product.priceInDkkCent),
+                      formatDkkCents(product.priceInDkkCents),
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
                     Padding(

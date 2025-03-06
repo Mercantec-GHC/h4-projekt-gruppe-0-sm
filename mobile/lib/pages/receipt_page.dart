@@ -29,7 +29,7 @@ class ReceiptView extends StatelessWidget {
                           shrinkWrap: true,
                           itemBuilder: (_, idx) => ReceiptItemView(
                               pricePerAmount:
-                                  receiptItems[idx].product.priceInDkkCent,
+                                  receiptItems[idx].product.priceInDkkCents,
                               name: receiptItems[idx].product.name,
                               amount: receiptItems[idx].amount),
                           itemCount: receiptItems.length),

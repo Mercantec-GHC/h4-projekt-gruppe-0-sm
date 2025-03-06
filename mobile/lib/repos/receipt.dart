@@ -13,14 +13,14 @@ class ReceiptRepo extends ChangeNotifier {
               product: Product(
                   id: 1243,
                   name: "Letmælk",
-                  priceInDkkCent: 13,
+                  priceInDkkCents: 13,
                   description: "Konventionel minimælk med fedtprocent på 0,4%"),
               amount: 1),
           ReceiptItem(
               product: Product(
                   id: 340,
                   name: "Minimælk",
-                  priceInDkkCent: 12,
+                  priceInDkkCents: 12,
                   description: "Konventionel minimælk med fedtprocent på 0,4%"),
               amount: 3),
         ]),
@@ -32,14 +32,14 @@ class ReceiptRepo extends ChangeNotifier {
               product: Product(
                   id: 12341,
                   name: "Letmælk",
-                  priceInDkkCent: 13,
+                  priceInDkkCents: 13,
                   description: "Konventionel minimælk med fedtprocent på 0,4%"),
               amount: 3),
           ReceiptItem(
               product: Product(
                   id: 1234443,
                   name: "Minimælk",
-                  priceInDkkCent: 12,
+                  priceInDkkCents: 12,
                   description: "Konventionel minimælk med fedtprocent på 0,4%"),
               amount: 1),
         ])
@@ -119,6 +119,6 @@ class ReceiptItem {
   ReceiptItem({required this.product, required this.amount});
 
   int totalPrice() {
-    return product.priceInDkkCent * amount;
+    return product.priceInDkkCents * amount;
   }
 }

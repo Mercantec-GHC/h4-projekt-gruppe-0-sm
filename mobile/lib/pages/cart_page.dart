@@ -162,7 +162,7 @@ class CartPage extends StatelessWidget {
                       cartRepo: cartRepo,
                       productId: cart[idx].product.id,
                       name: cart[idx].product.name,
-                      price: cart[idx].product.priceInDkkCent,
+                      price: cart[idx].product.priceInDkkCents,
                       amount: cart[idx].amount),
                   itemCount: cart.length,
                 );
@@ -205,9 +205,8 @@ class CartPage extends StatelessWidget {
                                               child: const Text("Cancel")),
                                           TextButton(
                                               onPressed: () {
-                                                final ProductRepoByMemory
-                                                    productRepo = context.read<
-                                                        ProductRepoByMemory>();
+                                                final productRepo =
+                                                    context.read<ProductRepo>();
                                                 final CartRepo cartRepo =
                                                     context.read<CartRepo>();
                                                 final productResult =
@@ -271,8 +270,8 @@ class CartPage extends StatelessWidget {
                                   }
                                   final CartRepo cartRepo =
                                       context.read<CartRepo>();
-                                  final ProductRepoByMemory productRepo =
-                                      context.read<ProductRepoByMemory>();
+                                  final productRepo =
+                                      context.read<ProductRepo>();
                                   final productResult = productRepo
                                       .productWithBarcode(result.rawContent);
                                   switch (productResult) {
