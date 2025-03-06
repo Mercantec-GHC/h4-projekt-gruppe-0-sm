@@ -17,95 +17,89 @@ class ProductPage extends StatelessWidget {
     final AddToCartStateRepo addToCartStateRepo =
         context.watch<AddToCartStateRepo>();
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: Card(
-          color: Colors.white,
-          margin: const EdgeInsets.all(10),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            child: Column(children: [
-              Row(
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const BackButton(),
-                      Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              product.name,
-                              style: const TextStyle(
-                                fontSize: 20,
-                              ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Column(children: [
+            Row(
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const BackButton(),
+                    Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            product.name,
+                            style: const TextStyle(
+                              fontSize: 20,
                             ),
-                            Text(
-                              formatDkkCents(product.priceInDkkCents),
-                              style: const TextStyle(
-                                fontSize: 16,
-                              ),
-                            )
-                          ])
-                    ],
-                  ),
-                ],
-              ),
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Image(
-                        image:
-                            AssetImage("assets/products/${product.name}.png"),
-                        errorBuilder: (_, __, ___) => const Image(
-                            image: AssetImage("assets/placeholder.png")),
-                        height: 250,
-                        fit: BoxFit.fitHeight,
-                      ),
-                      Text(
-                        product.name,
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                      Text(
-                        formatDkkCents(product.priceInDkkCents),
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 20, bottom: 20),
-                        child: Text(product.description),
-                      ),
-                      PrimaryButton(
-                          onPressed: () {
-                            Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) =>
-                                    ProductLocationPage(product: product)));
-                          },
-                          child: const Text("Find i butik")),
-                      PrimaryButton(
-                          onPressed: () {
-                            final snackBarDuration = const Duration(seconds: 2);
-                            addToCartStateRepo.notify(snackBarDuration);
-                            final snackBar = SnackBar(
-                              content: Text(
-                                  'Tilføjet ${addToCartStateRepo.currentAmount} ${product.name} til kurven'),
-                              duration: const Duration(seconds: 2),
-                            );
-                            ScaffoldMessenger.of(context)
-                                .removeCurrentSnackBar();
-                            final cartRepo = context.read<CartRepo>();
-                            cartRepo.addToCart(product);
-                            ScaffoldMessenger.of(context)
-                                .showSnackBar(snackBar);
-                          },
-                          child: const Text("Tilføj til indkøbskurv")),
-                    ],
-                  ),
+                          ),
+                          Text(
+                            formatDkkCents(product.priceInDkkCents),
+                            style: const TextStyle(
+                              fontSize: 16,
+                            ),
+                          )
+                        ])
+                  ],
+                ),
+              ],
+            ),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Image(
+                      image: AssetImage("assets/products/${product.name}.png"),
+                      errorBuilder: (_, __, ___) => const Image(
+                          image: AssetImage("assets/placeholder.png")),
+                      height: 250,
+                      fit: BoxFit.fitHeight,
+                    ),
+                    Text(
+                      product.name,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    Text(
+                      formatDkkCents(product.priceInDkkCents),
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 20, bottom: 20),
+                      child: Text(product.description),
+                    ),
+                    PrimaryButton(
+                        onPressed: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) =>
+                                  ProductLocationPage(product: product)));
+                        },
+                        child: const Text("Find i butik")),
+                    PrimaryButton(
+                        onPressed: () {
+                          final snackBarDuration = const Duration(seconds: 2);
+                          addToCartStateRepo.notify(snackBarDuration);
+                          final snackBar = SnackBar(
+                            content: Text(
+                                'Tilføjet ${addToCartStateRepo.currentAmount} ${product.name} til kurven'),
+                            duration: const Duration(seconds: 2),
+                          );
+                          ScaffoldMessenger.of(context).removeCurrentSnackBar();
+                          final cartRepo = context.read<CartRepo>();
+                          cartRepo.addToCart(product);
+                          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                        },
+                        child: const Text("Tilføj til indkøbskurv")),
+                  ],
                 ),
               ),
-            ]),
-          ),
+            ),
+          ]),
         ),
       ),
     );
