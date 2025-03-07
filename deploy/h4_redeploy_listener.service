@@ -1,0 +1,13 @@
+[Unit]
+Description=H4 Redeploy listener
+
+[Service]
+Type=simple
+User=host
+ExecStart=/home/host/h4-projekt-gruppe-0-sm/deploy/redeploy_listener.py
+Restart=on-failure
+RestartSec=10
+WorkingDirectory=/home/host/h4-projekt-gruppe-0-sm
+
+[Install]
+WantedBy=default.target
