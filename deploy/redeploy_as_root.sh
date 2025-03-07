@@ -9,12 +9,7 @@ set +e
 fuser -k 8080/tcp
 set -e
 
-git pull --rebase
-
-cd backend
-make clean
-make RELEASE=1
-cd ..
+su host -c 'sh deploy/pull_and_build.sh'
 
 sh deploy/install_service.sh
 
