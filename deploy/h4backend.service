@@ -3,8 +3,7 @@ Description=H4 Backend
 
 [Service]
 Type=simple
-#User=
-#Group=
+User=host
 ExecStart=/home/host/h4-projekt-gruppe-0-sm/backend/build/server
 Restart=on-failure
 RestartSec=10

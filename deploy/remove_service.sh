@@ -4,10 +4,10 @@ SERVICE=h4backend.service
 
 set -xe
 
-systemctl --user stop $SERVICE
-systemctl --user disable $SERVICE
+systemctl stop $SERVICE
+systemctl disable $SERVICE
 
-sudo rm /etc/systemd/user/$SERVICE
+sudo rm /etc/systemd/$SERVICE
 
 
 
