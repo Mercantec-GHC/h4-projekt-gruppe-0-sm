@@ -11,5 +11,7 @@ make clean
 make RELEASE=1
 cd ..
 
-systemctl --user restart $SERVICE
+systemctl --user stop $SERVICE
+fuser -k 8080/tcp
+systemctl --user start $SERVICE
 
