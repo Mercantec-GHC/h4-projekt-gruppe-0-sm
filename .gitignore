@@ -1,6 +1,5 @@
-Mobile/build/
-API/.vs/
-API/obj/
-API/bin/
 .vscode/
+Session.vim
+
+database.db
 
