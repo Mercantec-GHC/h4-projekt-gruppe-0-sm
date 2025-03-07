@@ -28,7 +28,7 @@ def main():
             print("new commit found. redeploying...")
 
             if not dry_run:
-                rcode = subprocess.call(["sh", "./deploy/redeploy.sh"])
+                rcode = subprocess.call(["sh", "./deploy/redeploy_as_root.sh"])
                 if rcode == 0:
                     print("redeployed successfully")
                 else:
