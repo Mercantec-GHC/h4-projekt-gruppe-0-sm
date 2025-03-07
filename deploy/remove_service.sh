@@ -1,6 +1,6 @@
 #!/bin/sh
 
-SERVICE=h4backend.service
+SERVICE=h4_backend.service
 
 set -xe
 
