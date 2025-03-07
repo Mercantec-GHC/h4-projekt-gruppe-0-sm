@@ -17,7 +17,7 @@ def main():
 
         newest_commit_hash = os.popen("curl -s https://api.github.com/repos/Mercantec-GHC/h4-projekt-gruppe-0-sm/commits/main | jq -r .sha").read()
 
-        if not newest_commit_hash:
+        if not newest_commit_hash or newest_commit_hash == "null":
             print("error: could not fetch commit hash", file=sys.stderr)
             print(f"trying again in {ERROR_DELAY} seconds...", file=sys.stderr)
             time.sleep(ERROR_DELAY)
