@@ -7,7 +7,7 @@ set -xe
 systemctl stop $SERVICE
 systemctl disable $SERVICE
 
-sudo rm /etc/systemd/$SERVICE
+sudo rm /etc/systemd/system/$SERVICE
 
 
 

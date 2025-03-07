@@ -1,8 +1,11 @@
 #!/bin/sh
 
-SERVICE=h4backend.service
-
 set -xe
+
+sh deploy/remove_service.sh
+
+# avoid 'could not bind to socket' error
+fuser -k 8080/tcp
 
 git pull --rebase
 
@@ -11,7 +14,5 @@ make clean
 make RELEASE=1
 cd ..
 
-systemctl --user stop $SERVICE
-fuser -k 8080/tcp
-systemctl --user start $SERVICE
+sh deploy/install_service.sh
 

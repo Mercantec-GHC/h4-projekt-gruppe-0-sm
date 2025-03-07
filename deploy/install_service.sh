@@ -4,7 +4,7 @@ SERVICE=h4backend.service
 
 set -xe
 
-sudo cp deploy/$SERVICE /etc/systemd/$SERVICE
+sudo cp deploy/$SERVICE /etc/systemd/system/$SERVICE
 systemctl daemon-reload
 
 systemctl enable $SERVICE
