@@ -5,7 +5,7 @@ import os
 import subprocess
 import sys
 
-INTERVAL_DELAY = 60
+INTERVAL_DELAY = 300
 ERROR_DELAY = 60
 
 def main():
