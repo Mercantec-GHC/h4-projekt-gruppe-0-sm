@@ -1,4 +1,5 @@
 #include "str_util.h"
+#include "panic.h"
 #include <openssl/rand.h>
 #include <openssl/sha.h>
 #include <stddef.h>
@@ -124,7 +125,7 @@ static inline char* hashdata_to_string(HashData hash)
     }
     for (size_t i = 0; i < STR_HASH_HASH_SIZE; ++i) {
         char bytestr[3] = { 0 };
-        snprintf(bytestr, 3, "%02x", hash.salt[i]);
+        snprintf(bytestr, 3, "%02x", hash.hash[i]);
         result[(STR_HASH_SALT_SIZE + i) * 2] = bytestr[0];
         result[(STR_HASH_SALT_SIZE + i) * 2 + 1] = bytestr[1];
     }
@@ -144,7 +145,6 @@ static inline HashData hashdata_from_hash_string(const char* str)
     }
 
     HashData hash;
-    // memcpy((uint8_t*)&hash, result, sizeof(result));
     for (size_t i = 0; i < 32; ++i) {
         hash.salt[i] = result[i];
         hash.hash[i] = result[32 + i];
@@ -162,4 +162,15 @@ bool str_hash_equal(const char* hash, const char* input)
 {
     HashData data = hashdata_from_hash_string(hash);
     return hashdata_is_equal(data, input);
+}
+
+void str_util_test(void) {
+    char* hash = str_hash("1234");
+    if (!str_hash_equal(hash, "1234")) {
+        PANIC("hash should be equal");
+    }
+    if (str_hash_equal(hash, "4321")) {
+        PANIC("hash should not be equal");
+    }
+    free(hash);
 }

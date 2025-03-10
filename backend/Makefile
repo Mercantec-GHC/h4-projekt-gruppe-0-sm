@@ -35,6 +35,12 @@ else
 	OPTIMIZATION += -Og
 endif
 
+
+ifeq ($(RUN_TESTS),1)
+	C_FLAGS += -DRUN_TESTS
+endif
+
+
 HEADERS = $(shell find src/ -name *.h)
 C_FILES = $(shell find src/ -name *.c)
 O_FILES = $(patsubst src/%.c,build/%.o,$(C_FILES))

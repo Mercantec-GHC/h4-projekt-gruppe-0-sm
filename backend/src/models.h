@@ -41,12 +41,12 @@ typedef struct {
     int64_t amount;
 } CartItem;
 
-void user_free(User* model);
-void coord_free(Coord* model);
-void product_free(Product* model);
-void product_price_free(ProductPrice* model);
-void cart_free(Cart* model);
-void cart_item_free(CartItem* model);
+void user_destroy(User* model);
+void coord_destroy(Coord* model);
+void product_destroy(Product* model);
+void product_price_destroy(ProductPrice* model);
+void cart_destroy(Cart* model);
+void cart_item_destroy(CartItem* model);
 
 //
 
@@ -61,5 +61,5 @@ typedef struct {
     char* password;
 } AuthLoginReq;
 
-void users_register_req_free(UsersRegisterReq* model);
-void auth_login_req_free(AuthLoginReq* model);
+void users_register_req_destroy(UsersRegisterReq* model);
+void auth_login_req_destroy(AuthLoginReq* model);

@@ -110,7 +110,7 @@ DbRes db_user_from_id(Db* db, User* user, int64_t id)
     sqlite3_stmt* stmt;
     sqlite3_prepare_v2(connection,
         "SELECT id, name, email, password_hash, balance_dkk_cent"
-        "FROM users WHERE id = ?",
+        " FROM users WHERE id = ?",
         -1, &stmt, NULL);
     sqlite3_bind_int64(stmt, 1, id);
 
@@ -170,6 +170,53 @@ l0_return:
     DISCONNECT;
     return res;
 }
+
+DbRes db_user_from_email(Db* db, User* user, const char* email)
+{
+    static_assert(sizeof(User) == 40, "model has changed");
+
+    sqlite3* connection;
+    CONNECT;
+    DbRes res;
+
+    sqlite3_stmt* stmt;
+    int prepare_res = sqlite3_prepare_v2(connection,
+        "SELECT id, name, email, password_hash, balance_dkk_cent"
+        " FROM users WHERE email = ?",
+        -1, &stmt, NULL);
+    if (prepare_res != SQLITE_OK) {
+        fprintf(stderr, "error: %s\n  at %s:%d\n", sqlite3_errmsg(connection), __func__, __LINE__);
+        res = DbRes_Error;
+        goto l0_return;
+    }
+    sqlite3_bind_text(stmt, 1, email, -1, NULL);
+
+    int step_res = sqlite3_step(stmt);
+    if (step_res == SQLITE_DONE) {
+        res = DbRes_NotFound;
+        goto l0_return;
+    } else if (step_res != SQLITE_ROW) {
+        printf("step_res = %d, email = '%s'\n", step_res, email);
+        fprintf(stderr, "error: %s\n  at %s:%d\n", sqlite3_errmsg(connection), __func__, __LINE__);
+        res = DbRes_Error;
+        goto l0_return;
+    }
+    *user = (User) {
+        .id = GET_INT(0),
+        .name = GET_STR(1),
+        .email = GET_STR(2),
+        .password_hash = GET_STR(3),
+        .balance_dkk_cent = GET_INT(4),
+    };
+
+    res = DbRes_Ok;
+l0_return:
+    if (stmt)
+        sqlite3_finalize(stmt);
+    DISCONNECT;
+    return res;
+}
+
 
 DbRes db_product_all(Db* db, ProductVec* vec)
 {

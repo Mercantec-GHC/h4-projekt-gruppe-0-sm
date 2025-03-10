@@ -37,3 +37,5 @@ DEFINE_VEC(char*, RawStrVec, rawstr_vec, 8)
 
 char* str_hash(const char* input);
 bool str_hash_equal(const char* hash, const char* input);
+
+void str_util_test(void);

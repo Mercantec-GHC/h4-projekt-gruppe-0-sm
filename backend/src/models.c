@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void user_free(User* m)
+void user_destroy(User* m)
 {
     static_assert(sizeof(User) == 40, "model has changed");
 
@@ -15,14 +15,14 @@ void user_free(User* m)
     free(m->password_hash);
 }
 
-void coord_free(Coord* m)
+void coord_destroy(Coord* m)
 {
     static_assert(sizeof(Coord) == 24, "model has changed");
 
     (void)m;
 }
 
-void product_free(Product* m)
+void product_destroy(Product* m)
 {
     static_assert(sizeof(Product) == 40, "model has changed");
 
@@ -30,28 +30,28 @@ void product_free(Product* m)
     free(m->barcode);
 }
 
-void product_price_free(ProductPrice* m)
+void product_price_destroy(ProductPrice* m)
 {
     static_assert(sizeof(ProductPrice) == 24, "model has changed");
 
     (void)m;
 }
 
-void cart_free(Cart* m)
+void cart_destroy(Cart* m)
 {
     static_assert(sizeof(Cart) == 16, "model has changed");
 
     (void)m;
 }
 
-void cart_item_free(CartItem* m)
+void cart_item_destroy(CartItem* m)
 {
     static_assert(sizeof(CartItem) == 24, "model has changed");
 
     (void)m;
 }
 
-void users_register_req_free(UsersRegisterReq* model)
+void users_register_req_destroy(UsersRegisterReq* model)
 {
     static_assert(sizeof(UsersRegisterReq) == 24, "model has changed");
 
@@ -60,7 +60,7 @@ void users_register_req_free(UsersRegisterReq* model)
     free(model->password);
 }
 
-void auth_login_req_free(AuthLoginReq* model)
+void auth_login_req_destroy(AuthLoginReq* model)
 {
     static_assert(sizeof(AuthLoginReq) == 16, "model has changed");
 
