@@ -7,7 +7,7 @@ Jeg vil her forsøge at beskrive definerende problemer og væsentlige designdeta
 
 ### Application server
 
-Vi tog udgangspunkt i NodeJS' ExpressJS i designet af HTTP-serverens API. (Mere specifikt Deno's Oak, som basically er et rewrite af ExpressJS).
+Vi tog udgangspunkt i NodeJS' ExpressJS i designet af HTTP-serverens API.
 
 Eksempel på ExpressJS:
 ```ts
@@ -154,7 +154,8 @@ void post_login(HttpCtx* ctx)
 
 - HTTP-serverens offentlige API er defineret i [src/http_server.h](../backend/src/http_server.h).
 - JSON-parserens offentlige API er defineret i [src/json.h](../backend/src/json.h).
-- Eksempler på `*_from_json`-funktioner kan findes i [src/models.c](../backend/src/models.c). 
+- Eksempler på `*_from_json`-funktioner kan findes i [src/models.c](../backend/src/models.c).
+- NodeJS NPM-pakken 'express', kan findes på [npmjs.com](https://www.npmjs.com/package/express).
 
 ## HTTP-server med Linux
 
@@ -248,7 +249,7 @@ En HTTP-server har én enkelt instans af dette struct. En pointer til denne inst
 
 Måden workers'ne venter på nye requests/klienter, er ved at lytte på condition-variablen `cond`.
 
-`ReqQueue`-typen er en dynamisk array/vector, som er defineret med `DEFINE_VEC`-makro'en. Se [src/http_server_internal.h](../backend/src/http_server_internal.h:24) og [src/collection.h](../backend/src/collection.h)
+`ReqQueue`-typen er en dynamisk array/vector, som er defineret med `DEFINE_VEC`-makro'en. Se [src/http_server_internal.h](../backend/src/http_server_internal.h) og [src/collection.h](../backend/src/collection.h)
 
 ### Server listen
 
@@ -328,4 +329,23 @@ Her bruges condition-variablen til at vente på requests, hvis der ikke allerede
 - HTTP-serverens offentlige API er defineret i [src/http_server.h](../backend/src/http_server.h).
 - HTTP-serverens implementation er defineret i [src/http_server_internal.h](../backend/src/http_server_internal.h) og [src/http_server.c](../backend/src/http_server.c).
 - Vector-implementationen, dvs. `DEFINE_VEC`-makroen er defineret I [src/collection.h](../backend/src/collection.h).
+
+## HTTP-parsing
+
+For at kunne håndtere HTTP-request, skal serveren kunne parse requestene, der kommer ind. HTTP-requests sendes som strings og består hovedsagligt af 2 dele: header og body. Body'en er en string, som håndteres forskelligt afhængigt af headeren. Headeren er en liste af entries, hvor den første entry siger noget om request-type, -sti og HTTP-version. Efterfølgende entries i header-listen er key/value-par af 'header entries'.
+
+### Header parsing
+
+Når en worker får en klient-forbindelse, læser den en fast mængde bytes fra klienten. Denne mængde er nok til at læse hele headeren. Dette bliver gjort i [`worker_handle_request`-funktionen](../backend/src/http_server.c#L264-L282).
+
+Når headeren er læst, bliver den parsed i [`parse_header`-funktionen](../backend/src/http_server.c#L344C19-L438). Denne funktion splitter requesten med newlines (`\r\n` defineret i HTTP-standarden) og pakker requesten ud i et [`Req`-struct](../backend/src/http_server_internal.h#L67-L79).
+
+### JSON body-parsing
+
+Hvis en klient sender en POST-request med en JSON-body, skal serveren kunne parse body'en. Dette gøres manuelt af HTTP-serverens brugerdefinerede request-handlers. Vi har implementeret en bespoke JSON-parser til dette formål.
+
+### Referencer
+
+- Implementeringen af header parsing er defineret i [src/http_server_internal.h](../backend/src/http_server_internal.h) og [src/http_server.c](../backend/src/http_server.c).
+- JSON-parserens offentlige API er defineret i [src/json.h](../backend/src/json.h) og implementeringen er defineret i [src/json.c](../backend/src/json.c).
 
