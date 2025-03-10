@@ -241,18 +241,19 @@ static inline void worker_listen(Worker* worker)
         pthread_testcancel();
 
         pthread_mutex_lock(&ctx->mutex);
-        pthread_cond_wait(&ctx->cond, &ctx->mutex);
 
-        if (request_queue_size(&ctx->req_queue) == 0) {
+        if (request_queue_size(&ctx->req_queue) > 0) {
+            Client req;
+            request_queue_pop(&ctx->req_queue, &req);
             pthread_mutex_unlock(&ctx->mutex);
+
+            worker_handle_request(worker, &req);
             continue;
         }
 
-        Client req;
-        request_queue_pop(&ctx->req_queue, &req);
-        pthread_mutex_unlock(&ctx->mutex);
+        pthread_cond_wait(&ctx->cond, &ctx->mutex);
 
-        worker_handle_request(worker, &req);
+        pthread_mutex_unlock(&ctx->mutex);
     }
 }
 
