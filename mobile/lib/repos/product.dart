@@ -1,10 +1,9 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:mobile/models/coordinate.dart';
 import 'package:mobile/models/product.dart';
 import 'package:mobile/results.dart';
+import 'package:mobile/server/client.dart';
+import 'package:mobile/server/server.dart';
 
 class ProductRepo extends ChangeNotifier {
   int _nextId = 0;
@@ -141,7 +140,7 @@ class ProductRepo extends ChangeNotifier {
 }
 
 class ProductRepoByServer extends ChangeNotifier {
-  String apiUrl = "http://127.0.0.1:8080/products.json";
+  final client = BackendServer();
   List<Product> products = [];
   String query = "";
   ProductRepoByServer() {
@@ -149,12 +148,11 @@ class ProductRepoByServer extends ChangeNotifier {
   }
 
   Future<void> fetchProductsFromServer() async {
-    final res = await http.get(
-      Uri.parse(apiUrl),
-    );
-    final productsJson = List<Map<String, dynamic>>.from(jsonDecode(res.body));
-    products =
-        productsJson.map(((product) => Product.fromJson(product))).toList();
+    final res = client.allProducts();
+    if (res is Error) {
+      return;
+    }
+    products = (res as Success<List<Product>>).data;
     notifyListeners();
   }
 

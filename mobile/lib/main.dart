@@ -16,6 +16,7 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  final apiUrl = "10.135.51.114:8080/api";
   const MyApp({super.key});
 
   @override
