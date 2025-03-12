@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/models/product.dart';
-import 'package:mobile/repos/cart.dart';
+import 'package:mobile/controllers/cart.dart';
 
 class ReceiptController extends ChangeNotifier {
   int nextId = 0;

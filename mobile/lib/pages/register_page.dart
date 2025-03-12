@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/repos/user.dart';
+import 'package:mobile/controllers/user.dart';
 import 'package:mobile/results.dart';
 import 'package:mobile/widgets/error_box.dart';
 import 'package:mobile/widgets/primary_button.dart';

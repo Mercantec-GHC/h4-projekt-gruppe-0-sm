@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/repos/routing.dart';
-import 'package:mobile/repos/cart.dart';
-import 'package:mobile/repos/paying_state.dart';
-import 'package:mobile/repos/receipt.dart';
-import 'package:mobile/repos/user.dart';
+import 'package:mobile/controllers/routing.dart';
+import 'package:mobile/controllers/cart.dart';
+import 'package:mobile/controllers/paying_state.dart';
+import 'package:mobile/controllers/receipt.dart';
+import 'package:mobile/controllers/user.dart';
 import 'package:mobile/results.dart';
 import 'package:mobile/utils/price.dart';
 import 'package:mobile/widgets/primary_button.dart';

@@ -2,7 +2,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:mobile/models/coordinate.dart';
 import 'package:mobile/models/product.dart';
-import 'package:mobile/repos/location_image.dart';
+import 'package:mobile/controllers/location_image.dart';
 import 'package:provider/provider.dart';
 
 class ProductLocationPage extends StatelessWidget {

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/models/product.dart';
 import 'package:mobile/pages/product_location_page.dart';
-import 'package:mobile/repos/add_to_cart_state.dart';
-import 'package:mobile/repos/cart.dart';
+import 'package:mobile/controllers/add_to_cart_state.dart';
+import 'package:mobile/controllers/cart.dart';
 import 'package:mobile/utils/price.dart';
 import 'package:mobile/widgets/primary_button.dart';
 import 'package:provider/provider.dart';

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/repos/receipt.dart';
+import 'package:mobile/controllers/receipt.dart';
 import 'package:mobile/utils/price.dart';
 import 'package:mobile/widgets/receipt_item.dart';
 

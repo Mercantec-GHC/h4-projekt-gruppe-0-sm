@@ -1,22 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile/pages/log_in_page.dart';
-import 'package:mobile/repos/add_to_cart_state.dart';
-import 'package:mobile/repos/cart.dart';
-import 'package:mobile/repos/location_image.dart';
-import 'package:mobile/repos/paying_state.dart';
-import 'package:mobile/repos/product.dart';
-import 'package:mobile/repos/receipt.dart';
-import 'package:mobile/repos/user.dart';
+import 'package:mobile/controllers/add_to_cart_state.dart';
+import 'package:mobile/controllers/cart.dart';
+import 'package:mobile/controllers/location_image.dart';
+import 'package:mobile/controllers/paying_state.dart';
+import 'package:mobile/controllers/product.dart';
+import 'package:mobile/controllers/receipt.dart';
+import 'package:mobile/controllers/user.dart';
 import 'package:provider/provider.dart';
-import 'package:mobile/repos/routing.dart';
+import 'package:mobile/controllers/routing.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final apiUrl = "10.135.51.114:8080/api";
   const MyApp({super.key});
 
   @override

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/models/product.dart';
-import 'package:mobile/repos/product.dart';
+import 'package:mobile/controllers/product.dart';
 import 'package:mobile/utils/price.dart';
 import 'package:mobile/widgets/sized_card.dart';
 import 'package:provider/provider.dart';

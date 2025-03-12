@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/pages/log_in_page.dart';
 import 'package:mobile/pages/settings_pages/saldo.dart';
-import 'package:mobile/repos/user.dart';
+import 'package:mobile/controllers/user.dart';
 import 'package:provider/provider.dart';
 
 class _Page {

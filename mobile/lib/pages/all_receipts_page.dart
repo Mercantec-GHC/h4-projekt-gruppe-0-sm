@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/pages/receipt_page.dart';
-import 'package:mobile/repos/receipt.dart';
+import 'package:mobile/controllers/receipt.dart';
 import 'package:mobile/utils/price.dart';
 import 'package:provider/provider.dart';
 

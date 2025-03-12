@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/repos/user.dart';
+import 'package:mobile/controllers/user.dart';
 import 'package:mobile/utils/price.dart';
 import 'package:provider/provider.dart';
 
