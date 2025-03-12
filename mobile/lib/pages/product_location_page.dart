@@ -21,7 +21,8 @@ class ProductLocationPage extends StatelessWidget {
               Text(product.name),
             ],
           ),
-          Consumer<LocationImageRepo>(builder: (context, locationImage, child) {
+          Consumer<LocationImageController>(
+              builder: (context, locationImage, child) {
             if (locationImage.image == null) {
               return const CircularProgressIndicator(
                 color: Colors.blue,

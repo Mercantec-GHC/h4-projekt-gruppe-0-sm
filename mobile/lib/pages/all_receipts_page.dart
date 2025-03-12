@@ -43,7 +43,7 @@ class AllReceiptsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Expanded(child: Consumer<ReceiptRepo>(
+        Expanded(child: Consumer<ReceiptController>(
           builder: (_, receiptRepo, __) {
             final allReceipts = receiptRepo.sortedReceiptsByDate();
             return ListView.builder(

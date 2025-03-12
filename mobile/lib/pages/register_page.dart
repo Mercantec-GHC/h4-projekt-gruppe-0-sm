@@ -71,7 +71,7 @@ class RegisterFormState extends State<RegisterForm> {
             obscure: true),
         PrimaryButton(
             onPressed: () {
-              final usersRepo = context.read<UsersRepo>();
+              final usersRepo = context.read<UsersControllerOld>();
               if (usersRepo.addUser(nameController.text, mailController.text,
                   passwordController.text) is Ok) {
                 setState(() => registerError = false);

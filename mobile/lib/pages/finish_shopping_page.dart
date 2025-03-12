@@ -17,9 +17,10 @@ class FinishShoppingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final CartRepo cartRepo = context.read<CartRepo>();
-    final ReceiptRepo receiptRepo = context.read<ReceiptRepo>();
-    final PayingStateRepo payingStateRepo = context.watch<PayingStateRepo>();
+    final CartController cartRepo = context.read<CartController>();
+    final ReceiptController receiptRepo = context.read<ReceiptController>();
+    final PayingStateController payingStateRepo =
+        context.watch<PayingStateController>();
     final cart = cartRepo.allCartItems();
 
     return Scaffold(
@@ -87,7 +88,8 @@ class FinishShoppingPage extends StatelessWidget {
                             payingStateRepo.reset();
                             if (context.mounted) {
                               Navigator.pop(context);
-                              final Routing routing = context.read<Routing>();
+                              final RoutingController routing =
+                                  context.read<RoutingController>();
                               routing.routeTo(PageSelector.homePage);
                             }
                           },

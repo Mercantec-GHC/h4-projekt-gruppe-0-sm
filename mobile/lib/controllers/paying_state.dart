@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class PayingStateRepo extends ChangeNotifier {
+class PayingStateController extends ChangeNotifier {
   PayingState state = PayingState.unset;
 
   void next() {

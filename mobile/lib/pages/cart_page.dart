@@ -14,7 +14,7 @@ import 'package:mobile/widgets/sized_card.dart';
 import 'package:provider/provider.dart';
 
 class CartItemView extends StatelessWidget {
-  final CartRepo cartRepo;
+  final CartController cartRepo;
   final int productId;
   final String name;
   final int price;
@@ -152,7 +152,7 @@ class CartPage extends StatelessWidget {
     return Column(
       children: [
         Expanded(
-          child: Consumer<CartRepo>(
+          child: Consumer<CartController>(
             builder: (_, cartRepo, __) {
               final cart = cartRepo.allCartItems();
               return ListView.builder(
@@ -202,10 +202,11 @@ class CartPage extends StatelessWidget {
                                             child: const Text("Cancel")),
                                         TextButton(
                                             onPressed: () {
-                                              final productRepo =
-                                                  context.read<ProductRepo>();
-                                              final CartRepo cartRepo =
-                                                  context.read<CartRepo>();
+                                              final productRepo = context
+                                                  .read<ProductController>();
+                                              final CartController cartRepo =
+                                                  context
+                                                      .read<CartController>();
                                               final productResult = productRepo
                                                   .productWithBarcode(
                                                       inputController.text);
@@ -261,9 +262,10 @@ class CartPage extends StatelessWidget {
                                 if (!context.mounted) {
                                   return;
                                 }
-                                final CartRepo cartRepo =
-                                    context.read<CartRepo>();
-                                final productRepo = context.read<ProductRepo>();
+                                final CartController cartRepo =
+                                    context.read<CartController>();
+                                final productRepo =
+                                    context.read<ProductController>();
                                 final productResult = productRepo
                                     .productWithBarcode(result.rawContent);
                                 switch (productResult) {

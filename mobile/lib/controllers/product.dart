@@ -5,11 +5,11 @@ import 'package:mobile/results.dart';
 import 'package:mobile/server/client.dart';
 import 'package:mobile/server/server.dart';
 
-class ProductRepo extends ChangeNotifier {
+class ProductController extends ChangeNotifier {
   int _nextId = 0;
   List<Product> products = [];
   String query = "";
-  ProductRepo() {
+  ProductController() {
     _addAllProducts();
   }
 
@@ -139,11 +139,11 @@ class ProductRepo extends ChangeNotifier {
   }
 }
 
-class ProductRepoByServer extends ChangeNotifier {
+class ProductControllerByServer extends ChangeNotifier {
   final client = BackendServer();
   List<Product> products = [];
   String query = "";
-  ProductRepoByServer() {
+  ProductControllerByServer() {
     fetchProductsFromServer();
   }
 

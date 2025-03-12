@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 enum PageSelector { homePage, productsPage, cartPage, receiptsPage }
 
-class Routing extends ChangeNotifier {
+class RoutingController extends ChangeNotifier {
   int currentIndex = 0;
 
   void routeTo(PageSelector page) {

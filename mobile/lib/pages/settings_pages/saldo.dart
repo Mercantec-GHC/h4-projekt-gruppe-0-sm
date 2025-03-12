@@ -8,7 +8,7 @@ class SaldoSettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final usersRepo = context.watch<UsersRepo>();
+    final usersRepo = context.watch<UsersControllerOld>();
     final user = usersRepo.loggedInUser()!;
     return Scaffold(
       backgroundColor: Colors.white,

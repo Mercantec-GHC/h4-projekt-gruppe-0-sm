@@ -33,7 +33,7 @@ class HomePage extends StatelessWidget {
               color: Color(0xFFFFFFFF),
             ),
             padding: const EdgeInsets.all(10),
-            child: Consumer<UsersRepo>(
+            child: Consumer<UsersControllerOld>(
                 builder: (context, usersRepo, _) => Text(
                     "Saldo: ${formatDkkCents(user.balanceInDkkCents)}",
                     style: Theme.of(context).textTheme.headlineSmall)),

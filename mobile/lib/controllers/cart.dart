@@ -3,7 +3,7 @@ import 'package:mobile/models/product.dart';
 
 class ProductIdException implements Exception {}
 
-class CartRepo extends ChangeNotifier {
+class CartController extends ChangeNotifier {
   final List<CartItem> cart = [];
 
   List<CartItem> allCartItems() {

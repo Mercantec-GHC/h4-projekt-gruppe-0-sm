@@ -62,7 +62,7 @@ class LogInFormState extends State<LogInForm> {
         ),
         PrimaryButton(
             onPressed: () {
-              final usersRepo = context.read<UsersRepo>();
+              final usersRepo = context.read<UsersControllerOld>();
               final loginResult =
                   usersRepo.login(mailController.text, passwordController.text);
 

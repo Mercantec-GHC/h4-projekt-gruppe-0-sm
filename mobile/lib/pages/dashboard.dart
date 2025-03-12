@@ -26,9 +26,9 @@ class Dashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pageIndexProvider = Provider.of<Routing>(context);
+    final pageIndexProvider = Provider.of<RoutingController>(context);
     int currentIndex = pageIndexProvider.currentIndex;
-    final CartRepo cartRepo = context.watch<CartRepo>();
+    final CartController cartRepo = context.watch<CartController>();
 
     return Scaffold(
       bottomNavigationBar: BottomNavigationBar(

@@ -99,7 +99,7 @@ class AllProductsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final productRepo = Provider.of<ProductRepo>(context);
+    final productRepo = Provider.of<ProductController>(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -122,7 +122,7 @@ class AllProductsPage extends StatelessWidget {
               ],
             ),
             Expanded(
-              child: Consumer<ProductRepo>(builder: (_, productRepo, __) {
+              child: Consumer<ProductController>(builder: (_, productRepo, __) {
                 final products = productRepo.filteredProducts;
                 return ListView.builder(
                   shrinkWrap: true,

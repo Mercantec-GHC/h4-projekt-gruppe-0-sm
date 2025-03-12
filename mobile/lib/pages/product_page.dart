@@ -14,8 +14,8 @@ class ProductPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final AddToCartStateRepo addToCartStateRepo =
-        context.watch<AddToCartStateRepo>();
+    final AddToCartStateController addToCartStateRepo =
+        context.watch<AddToCartStateController>();
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -90,7 +90,7 @@ class ProductPage extends StatelessWidget {
                             duration: const Duration(seconds: 2),
                           );
                           ScaffoldMessenger.of(context).removeCurrentSnackBar();
-                          final cartRepo = context.read<CartRepo>();
+                          final cartRepo = context.read<CartController>();
                           cartRepo.addToCart(product);
                           ScaffoldMessenger.of(context).showSnackBar(snackBar);
                         },

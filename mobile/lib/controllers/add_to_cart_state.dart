@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-class AddToCartStateRepo extends ChangeNotifier {
+class AddToCartStateController extends ChangeNotifier {
   int currentAmount = 0;
   Timer resetTimer = Timer(const Duration(), () {});
 

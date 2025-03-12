@@ -23,14 +23,14 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => Routing()),
-        ChangeNotifierProvider(create: (_) => ProductRepo()),
-        ChangeNotifierProvider(create: (_) => CartRepo()),
-        ChangeNotifierProvider(create: (_) => ReceiptRepo()),
-        ChangeNotifierProvider(create: (_) => PayingStateRepo()),
-        ChangeNotifierProvider(create: (_) => AddToCartStateRepo()),
-        ChangeNotifierProvider(create: (_) => LocationImageRepo()),
-        ChangeNotifierProvider(create: (_) => UsersRepo()),
+        ChangeNotifierProvider(create: (_) => RoutingController()),
+        ChangeNotifierProvider(create: (_) => ProductController()),
+        ChangeNotifierProvider(create: (_) => CartController()),
+        ChangeNotifierProvider(create: (_) => ReceiptController()),
+        ChangeNotifierProvider(create: (_) => PayingStateController()),
+        ChangeNotifierProvider(create: (_) => AddToCartStateController()),
+        ChangeNotifierProvider(create: (_) => LocationImageController()),
+        ChangeNotifierProvider(create: (_) => UsersControllerOld()),
       ],
       child: MaterialApp(
         title: 'Fresh Plaza',

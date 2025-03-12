@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/results.dart';
 
-class UsersRepo extends ChangeNotifier {
+class UsersControllerOld extends ChangeNotifier {
   int nextId = 0;
   final List<User> users = [];
 
   User? _loggedInUser;
 
-  UsersRepo() {
+  UsersControllerOld() {
     addTestUsers();
   }
 

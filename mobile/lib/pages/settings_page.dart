@@ -31,7 +31,7 @@ class SettingsPage extends StatelessWidget {
         icon: Icons.door_back_door,
         title: "Log ud",
         action: (context) {
-          final users = context.read<UsersRepo>();
+          final users = context.read<UsersControllerOld>();
           users.logout();
           Navigator.popUntil(context, (_) => false);
           Navigator.of(context)

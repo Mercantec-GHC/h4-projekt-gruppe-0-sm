@@ -3,10 +3,10 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class LocationImageRepo extends ChangeNotifier {
+class LocationImageController extends ChangeNotifier {
   ui.Image? image;
 
-  LocationImageRepo() {
+  LocationImageController() {
     load();
   }
 
