@@ -63,6 +63,28 @@ void route_post_sessions_logout(HttpCtx* ctx)
     RESPOND_JSON(ctx, 200, "{\"ok\":true}");
 }
 
+void route_get_sessions_user(HttpCtx* ctx)
+{
+    printf("1\n");
+    Cx* cx = http_ctx_user_ctx(ctx);
+    const Session* session = middleware_session(ctx);
+    if (!session)
+        return;
+
+    User user;
+    DbRes db_res = db_user_from_id(cx->db, &user, session->user_id);
+    if (db_res != DbRes_Ok) {
+        RESPOND_BAD_REQUEST(ctx, "user not found");
+        return;
+    }
+
+    char* user_json = user_to_json_string(&user);
+    user_destroy(&user);
+
+    RESPOND_JSON(ctx, 200, "{\"ok\":true,\"user\":%s}", user_json);
+    free(user_json);
+}
+
 const Session* header_session(HttpCtx* ctx)
 {
     Cx* cx = http_ctx_user_ctx(ctx);

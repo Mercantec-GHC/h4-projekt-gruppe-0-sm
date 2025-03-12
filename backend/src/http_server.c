@@ -89,6 +89,8 @@ int http_server_listen(HttpServer* server)
             return -1;
         }
 
+        printf("accepted\n");
+
         Client req = { .file = res, client_addr };
         pthread_mutex_lock(&ctx->mutex);
 
@@ -181,7 +183,9 @@ void http_ctx_respond(HttpCtx* ctx, int status, const char* body)
 
     string_push_str(&res, body);
 
-    send(ctx->client->file, res.data, res.size, 0);
+    write(ctx->client->file, res.data, res.size);
+    puts("\nResponse:");
+    puts(res.data);
 
     string_destroy(&res);
 }
@@ -281,7 +285,8 @@ static inline void worker_handle_request(Worker* worker, Client* client)
             MAX_HEADER_BUFFER_SIZE);
         goto l0_return;
     }
-    // puts((char*)buffer);
+    puts("\nRequest:");
+    puts((char*)buffer);
 
     Req req;
     size_t body_idx;
@@ -457,10 +462,24 @@ static inline void req_destroy(Req* req)
     header_vec_destroy(&req->headers);
 }
 
+static inline int strcmp_lower(const char* a, const char* b)
+{
+    size_t i = 0;
+    for (; a[i] != '\0' && b[i] != '\0'; ++i) {
+        if (tolower(a[i]) != tolower(b[i])) {
+            return 1;
+        }
+    }
+    if (a[i] != b[i]) {
+        return 1;
+    }
+    return 0;
+}
+
 static inline bool req_has_header(const Req* req, const char* key)
 {
     for (size_t i = 0; i < req->headers.size; ++i) {
-        if (strcmp(key, req->headers.data[i].key) == 0) {
+        if (strcmp_lower(key, req->headers.data[i].key) == 0) {
             return true;
         }
     }
@@ -470,7 +489,7 @@ static inline bool req_has_header(const Req* req, const char* key)
 static inline const char* req_get_header(const Req* req, const char* key)
 {
     for (size_t i = 0; i < req->headers.size; ++i) {
-        if (strcmp(key, req->headers.data[i].key) == 0) {
+        if (strcmp_lower(key, req->headers.data[i].key) == 0) {
             return req->headers.data[i].value;
         }
     }

@@ -36,6 +36,7 @@ void route_post_users_register(HttpCtx* ctx);
 
 void route_post_sessions_login(HttpCtx* ctx);
 void route_post_sessions_logout(HttpCtx* ctx);
+void route_get_sessions_user(HttpCtx* ctx);
 
 const Session* header_session(HttpCtx* ctx);
 const Session* middleware_session(HttpCtx* ctx);
