@@ -4,7 +4,6 @@
 #include "json.h"
 #include "models.h"
 #include "models_json.h"
-#include "session.h"
 #include "str_util.h"
 #include <sqlite3.h>
 #include <stdio.h>
@@ -44,9 +43,10 @@ int main(void)
 
     http_server_get(server, "/api/products/all", route_get_products_all);
 
-    http_server_post(server, "/api/users/register", route_post_user_register);
-    http_server_post(server, "/api/auth/login", route_post_auth_login);
-    http_server_post(server, "/api/auth/logout", route_post_auth_logout);
+    http_server_post(server, "/api/users/register", route_post_users_register);
+    http_server_post(server, "/api/sessions/login", route_post_sessions_login);
+    http_server_post(
+        server, "/api/sessions/logout", route_post_sessions_logout);
 
     http_server_get(server, "/", route_get_index);
     http_server_post(server, "/set_number", route_post_set_number);

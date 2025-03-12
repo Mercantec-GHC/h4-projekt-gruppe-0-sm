@@ -2,9 +2,23 @@
 
 #include "db.h"
 #include "http_server.h"
-#include "session.h"
 #include <stdio.h>
 #include <string.h>
+
+typedef struct {
+    int64_t user_id;
+    char* token;
+    size_t token_hash;
+} Session;
+
+void session_construct(Session* session, int64_t user_id);
+void session_destroy(Session* session);
+
+DEFINE_VEC(Session, SessionVec, session_vec, 16)
+
+void sessions_remove(SessionVec* vec, int64_t user_id);
+Session* sessions_add(SessionVec* vec, int64_t user_id);
+const Session* sessions_find(SessionVec* vec, const char* token);
 
 typedef struct {
     int number;
@@ -18,10 +32,10 @@ void route_get_not_found(HttpCtx* ctx);
 
 void route_get_products_all(HttpCtx* ctx);
 
-void route_post_user_register(HttpCtx* ctx);
+void route_post_users_register(HttpCtx* ctx);
 
-void route_post_auth_login(HttpCtx* ctx);
-void route_post_auth_logout(HttpCtx* ctx);
+void route_post_sessions_login(HttpCtx* ctx);
+void route_post_sessions_logout(HttpCtx* ctx);
 
 const Session* header_session(HttpCtx* ctx);
 const Session* middleware_session(HttpCtx* ctx);

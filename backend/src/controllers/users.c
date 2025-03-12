@@ -4,7 +4,7 @@
 #include "../str_util.h"
 #include <string.h>
 
-void route_post_user_register(HttpCtx* ctx)
+void route_post_users_register(HttpCtx* ctx)
 {
     Cx* cx = http_ctx_user_ctx(ctx);
 
