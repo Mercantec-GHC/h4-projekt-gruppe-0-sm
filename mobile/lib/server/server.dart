@@ -1,4 +1,5 @@
 import 'package:mobile/models/product.dart';
+import 'package:mobile/models/user.dart';
 
 abstract class Server {
   Future<Response<List<Product>>> allProducts();
@@ -9,11 +10,15 @@ abstract class Server {
     String password,
   );
 
-  Future<Response<Null>> login(
-    String name,
+  Future<Response<String>> login(
     String email,
     String password,
   );
+  Future<Response<Null>> logout(String token);
+
+  Future<Response<User>> sessionUser(String token);
+
+  Future<Response<Null>> payForCart(String token);
 }
 
 sealed class Response<Data> {}

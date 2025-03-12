@@ -6,7 +6,6 @@ import 'package:mobile/models/product.dart';
 import 'package:mobile/pages/finish_shopping_page.dart';
 import 'package:mobile/controllers/cart.dart';
 import 'package:mobile/controllers/product.dart';
-import 'package:mobile/controllers/user.dart';
 import 'package:mobile/results.dart';
 import 'package:mobile/utils/price.dart';
 import 'package:mobile/widgets/primary_button.dart';
@@ -144,8 +143,7 @@ class CartItemView extends StatelessWidget {
 }
 
 class CartPage extends StatelessWidget {
-  final User user;
-  const CartPage({super.key, required this.user});
+  const CartPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -316,7 +314,7 @@ class CartPage extends StatelessWidget {
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) =>
-                                        FinishShoppingPage(user: user)));
+                                        const FinishShoppingPage()));
                           },
                           child: const Text("Afslut indkøb")),
                     ),

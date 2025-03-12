@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/controllers/session.dart';
 import 'package:mobile/pages/register_page.dart';
-import 'package:mobile/controllers/user.dart';
 import 'package:mobile/results.dart';
 import 'package:mobile/widgets/error_box.dart';
 import 'package:mobile/widgets/primary_button.dart';
 import 'package:mobile/widgets/primary_input.dart';
 import 'package:provider/provider.dart';
-import 'dashboard.dart';
 
 class LogInPage extends StatelessWidget {
   const LogInPage({super.key});
@@ -61,19 +60,15 @@ class LogInFormState extends State<LogInForm> {
           controller: passwordController,
         ),
         PrimaryButton(
-            onPressed: () {
-              final usersRepo = context.read<UsersControllerOld>();
-              final loginResult =
-                  usersRepo.login(mailController.text, passwordController.text);
-
-              if (loginResult is Ok) {
-                setState(() => loginError = false);
-                Navigator.of(context).popUntil((_) => false);
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) =>
-                        Dashboard(user: (loginResult as Ok).value)));
-              } else {
-                setState(() => loginError = true);
+            onPressed: () async {
+              final sessionController = context.read<SessionController>();
+              final loginResult = await sessionController.login(
+                  mailController.text, passwordController.text);
+              switch (loginResult) {
+                case Ok<Null, String>():
+                  setState(() => loginError = false);
+                case Err<Null, String>():
+                  setState(() => loginError = true);
               }
             },
             child: const Text("Log ind")),

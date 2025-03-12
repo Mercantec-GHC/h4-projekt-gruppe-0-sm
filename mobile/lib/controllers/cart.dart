@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/models/product.dart';
+import 'package:mobile/results.dart';
 
 class ProductIdException implements Exception {}
 
@@ -81,6 +82,10 @@ class CartController extends ChangeNotifier {
   void clearCart() {
     cart.clear();
     notifyListeners();
+  }
+
+  Result<Null, String> pay() {
+    return const Err("Not implemented");
   }
 }
 

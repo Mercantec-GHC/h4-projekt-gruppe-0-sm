@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/pages/log_in_page.dart';
+import 'package:mobile/controllers/session.dart';
 import 'package:mobile/pages/settings_pages/saldo.dart';
-import 'package:mobile/controllers/user.dart';
 import 'package:provider/provider.dart';
 
 class _Page {
@@ -31,11 +30,9 @@ class SettingsPage extends StatelessWidget {
         icon: Icons.door_back_door,
         title: "Log ud",
         action: (context) {
-          final users = context.read<UsersControllerOld>();
-          users.logout();
+          final sessionsController = context.read<SessionController>();
           Navigator.popUntil(context, (_) => false);
-          Navigator.of(context)
-              .push(MaterialPageRoute(builder: (context) => const LogInPage()));
+          sessionsController.logout();
         }),
   ];
 

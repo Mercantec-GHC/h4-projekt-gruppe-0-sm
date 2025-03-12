@@ -3,7 +3,6 @@ import 'package:mobile/controllers/routing.dart';
 import 'package:mobile/controllers/cart.dart';
 import 'package:mobile/controllers/paying_state.dart';
 import 'package:mobile/controllers/receipt.dart';
-import 'package:mobile/controllers/user.dart';
 import 'package:mobile/results.dart';
 import 'package:mobile/utils/price.dart';
 import 'package:mobile/widgets/primary_button.dart';
@@ -11,17 +10,15 @@ import 'package:mobile/widgets/receipt_item.dart';
 import 'package:provider/provider.dart';
 
 class FinishShoppingPage extends StatelessWidget {
-  final User user;
-
-  const FinishShoppingPage({super.key, required this.user});
+  const FinishShoppingPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final CartController cartRepo = context.read<CartController>();
+    final CartController cartController = context.read<CartController>();
     final ReceiptController receiptRepo = context.read<ReceiptController>();
     final PayingStateController payingStateRepo =
         context.watch<PayingStateController>();
-    final cart = cartRepo.allCartItems();
+    final cart = cartController.allCartItems();
 
     return Scaffold(
       body: SafeArea(
@@ -50,7 +47,7 @@ class FinishShoppingPage extends StatelessWidget {
                         "Total:",
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      Text(formatDkkCents(cartRepo.totalPrice())),
+                      Text(formatDkkCents(cartController.totalPrice())),
                     ],
                   ),
                 ),
@@ -60,7 +57,8 @@ class FinishShoppingPage extends StatelessWidget {
                           onPressed: () async {
                             payingStateRepo.next();
                             await Future.delayed(const Duration(seconds: 1));
-                            if (user.pay(cartRepo.totalPrice()) is Err) {
+                            // TODO: implement paying for user
+                            if (cartController.pay() is Err) {
                               if (context.mounted) {
                                 showDialog<String>(
                                   context: context,
@@ -84,7 +82,7 @@ class FinishShoppingPage extends StatelessWidget {
                             receiptRepo.createReceipt(cart);
                             payingStateRepo.next();
                             await Future.delayed(const Duration(seconds: 1));
-                            cartRepo.clearCart();
+                            cartController.clearCart();
                             payingStateRepo.reset();
                             if (context.mounted) {
                               Navigator.pop(context);

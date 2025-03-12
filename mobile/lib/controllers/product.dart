@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/models/product.dart';
 import 'package:mobile/results.dart';
-import 'package:mobile/server/mock_server.dart';
 import 'package:mobile/server/server.dart';
 
 class ProductController extends ChangeNotifier {
-  final server = MockServer();
+  final Server server;
 
   List<Product> products = [];
   String query = "";
-  ProductController() {
+  ProductController({required this.server}) {
     fetchProductsFromServer();
   }
 

@@ -1,5 +1,6 @@
 import 'package:mobile/models/coordinate.dart';
 import 'package:mobile/models/product.dart';
+import 'package:mobile/models/user.dart';
 import 'package:mobile/server/server.dart';
 
 class MockServer implements Server {
@@ -108,11 +109,30 @@ class MockServer implements Server {
   }
 
   @override
-  Future<Response<Null>> login(
-    String name,
+  Future<Response<String>> login(
     String email,
     String password,
   ) async {
+    return Success(data: "asdsadasdsad");
+  }
+
+  @override
+  Future<Response<Null>> logout(String token) async {
+    return Success(data: null);
+  }
+
+  @override
+  Future<Response<User>> sessionUser(String token) async {
+    return Success(
+        data: User(
+            id: 0,
+            email: "test@test.com",
+            name: "testuser",
+            balanceInDkkCents: 10000));
+  }
+
+  @override
+  Future<Response<Null>> payForCart(String token) async {
     return Success(data: null);
   }
 }

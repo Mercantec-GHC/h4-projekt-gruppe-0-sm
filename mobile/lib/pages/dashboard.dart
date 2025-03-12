@@ -5,21 +5,16 @@ import 'package:mobile/pages/all_receipts_page.dart';
 import 'package:mobile/pages/home_page.dart';
 import 'package:mobile/controllers/routing.dart';
 import 'package:mobile/controllers/cart.dart';
-import 'package:mobile/controllers/user.dart';
 import 'package:provider/provider.dart';
 
 class Dashboard extends StatelessWidget {
-  final User user;
-
   final List<StatelessWidget> pages = [];
 
-  Dashboard({super.key, required this.user}) {
+  Dashboard({super.key}) {
     pages.addAll([
-      HomePage(
-        user: user,
-      ),
+      const HomePage(),
       const AllProductsPage(),
-      CartPage(user: user),
+      const CartPage(),
       const AllReceiptsPage(),
     ]);
   }

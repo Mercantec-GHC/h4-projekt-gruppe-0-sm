@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/controllers/user.dart';
+import 'package:mobile/controllers/session.dart';
+import 'package:mobile/utils/build_if_session_exists.dart';
 import 'package:mobile/utils/price.dart';
 import 'package:provider/provider.dart';
 
@@ -8,8 +9,7 @@ class SaldoSettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final usersRepo = context.watch<UsersControllerOld>();
-    final user = usersRepo.loggedInUser()!;
+    final sessionController = context.watch<SessionController>();
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -25,12 +25,17 @@ class SaldoSettingsPage extends StatelessWidget {
                 ),
               ],
             ),
-            Text("Nuværende saldo: ${formatDkkCents(user.balanceInDkkCents)}",
-                style: Theme.of(context).textTheme.bodyLarge),
+            BuildIfSessionExists(
+              sessionController: sessionController,
+              placeholder: const CircularProgressIndicator(),
+              builder: (context, user) => Text(
+                  "Nuværende saldo: ${formatDkkCents(user.balanceInDkkCents)}",
+                  style: Theme.of(context).textTheme.bodyLarge),
+            ),
             ElevatedButton.icon(
               onPressed: () {
-                user.addBalanceFounds(10000);
-                usersRepo.veryBadNotifyAll();
+                // TODO: implement add balance
+                throw Exception("not implemented: Adding funds");
               },
               icon: const Icon(Icons.add),
               label: const Text("Tilføj 100,00 kr"),
