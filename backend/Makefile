@@ -15,10 +15,10 @@ C_FLAGS = \
 	-std=c17 \
 	-Wall -Wextra -Wpedantic -Wconversion \
 	-pedantic -pedantic-errors \
-	-Wno-unused-parameter \
+	-Wno-unused-parameter -Wno-format-zero-length \
 
 L_FLAGS = -lm -pthread $(shell pkg-config sqlite3 openssl --libs)
-C_FLAGS = $(shell pkg-config sqlite3 openssl --cflags)
+C_FLAGS += $(shell pkg-config sqlite3 openssl --cflags)
 
 F_FLAGS =
 OPTIMIZATION =

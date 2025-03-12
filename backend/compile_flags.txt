@@ -1,4 +1,4 @@
-xc
+-xc
 -std=c17
 -Wall
 -Wextra

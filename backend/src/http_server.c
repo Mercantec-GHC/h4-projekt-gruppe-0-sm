@@ -183,7 +183,11 @@ void http_ctx_respond(HttpCtx* ctx, int status, const char* body)
 
     string_push_str(&res, body);
 
-    write(ctx->client->file, res.data, res.size);
+    ssize_t bytes_written = write(ctx->client->file, res.data, res.size);
+    if (bytes_written != (ssize_t)res.size) {
+        fprintf(stderr, "error: could not send response\n");
+    }
+
     puts("\nResponse:");
     puts(res.data);
 
