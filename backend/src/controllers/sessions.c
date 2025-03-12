@@ -100,7 +100,7 @@ const Session* middleware_session(HttpCtx* ctx)
 {
     const Session* session = header_session(ctx);
     if (!session) {
-        RESPOND_JSON(ctx, 200, "{\"ok\":false,\"msg\":\"unauthorized\"}");
+        RESPOND_JSON(ctx, 400, "{\"ok\":false,\"msg\":\"unauthorized\"}");
         return NULL;
     }
     return session;

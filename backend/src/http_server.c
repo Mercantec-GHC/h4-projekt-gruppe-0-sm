@@ -89,8 +89,6 @@ int http_server_listen(HttpServer* server)
             return -1;
         }
 
-        printf("accepted\n");
-
         Client req = { .file = res, client_addr };
         pthread_mutex_lock(&ctx->mutex);
 

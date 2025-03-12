@@ -185,7 +185,8 @@ DbRes db_user_from_email(Db* db, User* user, const char* email)
         " FROM users WHERE email = ?",
         -1, &stmt, NULL);
     if (prepare_res != SQLITE_OK) {
-        fprintf(stderr, "error: %s\n  at %s:%d\n", sqlite3_errmsg(connection), __func__, __LINE__);
+        fprintf(stderr, "error: %s\n  at %s:%d\n", sqlite3_errmsg(connection),
+            __func__, __LINE__);
         res = DbRes_Error;
         goto l0_return;
     }
@@ -197,7 +198,8 @@ DbRes db_user_from_email(Db* db, User* user, const char* email)
         goto l0_return;
     } else if (step_res != SQLITE_ROW) {
         printf("step_res = %d, email = '%s'\n", step_res, email);
-        fprintf(stderr, "error: %s\n  at %s:%d\n", sqlite3_errmsg(connection), __func__, __LINE__);
+        fprintf(stderr, "error: %s\n  at %s:%d\n", sqlite3_errmsg(connection),
+            __func__, __LINE__);
         res = DbRes_Error;
         goto l0_return;
     }
@@ -216,7 +218,6 @@ l0_return:
     DISCONNECT;
     return res;
 }
-
 
 DbRes db_product_all(Db* db, ProductVec* vec)
 {
