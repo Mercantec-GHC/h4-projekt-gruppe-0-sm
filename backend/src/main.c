@@ -46,6 +46,7 @@ int main(void)
 
     http_server_post(server, "/api/users/register", route_post_user_register);
     http_server_post(server, "/api/auth/login", route_post_auth_login);
+    http_server_post(server, "/api/auth/logout", route_post_auth_logout);
 
     http_server_get(server, "/", route_get_index);
     http_server_post(server, "/set_number", route_post_set_number);

@@ -41,13 +41,46 @@ void route_post_auth_login(HttpCtx* ctx)
         goto l2_return;
     }
 
-    session_vec_remove_user_id(&cx->sessions, user.id);
-    char* token = str_random(64);
-    session_vec_add(&cx->sessions, user.id, token);
+    sessions_remove(&cx->sessions, user.id);
+    Session* session = sessions_add(&cx->sessions, user.id);
 
-    RESPOND_JSON(ctx, 200, "{\"ok\":true,\"token\":\"%s\"}", token);
+    RESPOND_JSON(ctx, 200, "{\"ok\":true,\"token\":\"%s\"}", session->token);
 l2_return:
     user_destroy(&user);
 l0_return:
     auth_login_req_destroy(&req);
+}
+
+void route_post_auth_logout(HttpCtx* ctx)
+{
+    Cx* cx = http_ctx_user_ctx(ctx);
+    const Session* session = header_session(ctx);
+    if (!session) {
+        RESPOND_JSON(ctx, 200, "{\"ok\":true}");
+        return;
+    }
+    sessions_remove(&cx->sessions, session->user_id);
+    RESPOND_JSON(ctx, 200, "{\"ok\":true}");
+}
+
+const Session* header_session(HttpCtx* ctx)
+{
+    Cx* cx = http_ctx_user_ctx(ctx);
+    if (!http_ctx_req_headers_has(ctx, "Session-Token")) {
+        return NULL;
+    }
+    const char* token = http_ctx_req_headers_get(ctx, "Session-Token");
+    // session expiration should be handled here
+    return sessions_find(&cx->sessions, token);
+}
+
+// Returns NULL AND responds if no valid session is found.
+const Session* middleware_session(HttpCtx* ctx)
+{
+    const Session* session = header_session(ctx);
+    if (!session) {
+        RESPOND_JSON(ctx, 200, "{\"ok\":false,\"msg\":\"unauthorized\"}");
+        return NULL;
+    }
+    return session;
 }

@@ -21,6 +21,10 @@ void route_get_products_all(HttpCtx* ctx);
 void route_post_user_register(HttpCtx* ctx);
 
 void route_post_auth_login(HttpCtx* ctx);
+void route_post_auth_logout(HttpCtx* ctx);
+
+const Session* header_session(HttpCtx* ctx);
+const Session* middleware_session(HttpCtx* ctx);
 
 #define RESPOND(HTTP_CTX, STATUS, MIME_TYPE, ...)                              \
     {                                                                          \
@@ -47,8 +51,7 @@ void route_post_auth_login(HttpCtx* ctx);
 #define RESPOND_SERVER_ERROR(HTTP_CTX)                                         \
     RESPOND_JSON(HTTP_CTX, 500, "{\"ok\":false,\"msg\":\"server error\"}")
 
-__attribute__((unused))
-static inline void ___include_user(void)
+__attribute__((unused)) static inline void ___include_user(void)
 {
     RESPOND((HttpCtx*)0, 200, "text/html", "")
 }

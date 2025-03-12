@@ -1,6 +1,7 @@
 #include "http_server.h"
 #include "http_server_internal.h"
 #include "str_util.h"
+#include <ctype.h>
 #include <netinet/in.h>
 #include <pthread.h>
 #include <stdbool.h>
@@ -358,10 +359,19 @@ static inline int parse_header(
         return -1;
     }
 
+    if (method_str.len >= 8) {
+        fprintf(stderr, "error: malformed http method\n");
+        return -1;
+    }
+    char normalized_method[8] = "";
+    for (size_t i = 0; i < method_str.len; ++i) {
+        normalized_method[i] = (char)toupper(method_str.ptr[i]);
+    }
+
     Method method;
-    if (strncmp(method_str.ptr, "GET", method_str.len) == 0) {
+    if (strncmp(normalized_method, "GET", method_str.len) == 0) {
         method = Method_GET;
-    } else if (strncmp(method_str.ptr, "POST", method_str.len) == 0) {
+    } else if (strncmp(normalized_method, "POST", method_str.len) == 0) {
         method = Method_POST;
     } else {
         fprintf(stderr, "error: unrecognized http method '%.*s'\n",

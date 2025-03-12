@@ -38,6 +38,8 @@ DEFINE_VEC(char*, RawStrVec, rawstr_vec, 8)
 char* str_hash(const char* input);
 bool str_hash_equal(const char* hash, const char* input);
 
+uint64_t str_fast_hash(const char* input);
+
 char* str_random(size_t length);
 
 void str_util_test(void);
