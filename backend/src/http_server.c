@@ -188,9 +188,6 @@ void http_ctx_respond(HttpCtx* ctx, int status, const char* body)
         fprintf(stderr, "error: could not send response\n");
     }
 
-    puts("\nResponse:");
-    puts(res.data);
-
     string_destroy(&res);
 }
 
@@ -289,8 +286,6 @@ static inline void worker_handle_request(Worker* worker, Client* client)
             MAX_HEADER_BUFFER_SIZE);
         goto l0_return;
     }
-    puts("\nRequest:");
-    puts((char*)buffer);
 
     Req req;
     size_t body_idx;

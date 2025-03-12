@@ -65,7 +65,6 @@ void route_post_sessions_logout(HttpCtx* ctx)
 
 void route_get_sessions_user(HttpCtx* ctx)
 {
-    printf("1\n");
     Cx* cx = http_ctx_user_ctx(ctx);
     const Session* session = middleware_session(ctx);
     if (!session)
