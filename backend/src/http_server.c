@@ -163,6 +163,9 @@ void http_ctx_res_headers_set(HttpCtx* ctx, const char* key, const char* value)
 
 void http_ctx_respond(HttpCtx* ctx, int status, const char* body)
 {
+    // https://httpwg.org/specs/rfc9112.html#persistent.tear-down
+    http_ctx_res_headers_set(ctx, "Connection", "close");
+
     String res;
     string_construct(&res);
 
