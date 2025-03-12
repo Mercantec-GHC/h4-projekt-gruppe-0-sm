@@ -8,18 +8,21 @@
 #include "str_util.h"
 #include <sqlite3.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 void test(void);
-
 
 HttpServer* server;
 
 int main(void)
 {
-    #ifdef RUN_TESTS
+    srand((unsigned int)time(NULL));
+
+#ifdef RUN_TESTS
     test();
-    #endif
+#endif
 
     Db* db = db_sqlite_new();
 

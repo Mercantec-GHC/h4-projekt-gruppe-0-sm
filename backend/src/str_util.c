@@ -164,13 +164,42 @@ bool str_hash_equal(const char* hash, const char* input)
     return hashdata_is_equal(data, input);
 }
 
-void str_util_test(void) {
-    char* hash = str_hash("1234");
-    if (!str_hash_equal(hash, "1234")) {
-        PANIC("hash should be equal");
+char* str_random(size_t length)
+{
+    char* string = calloc(length + 1, sizeof(char));
+    size_t string_i = 0;
+    for (size_t i = 0; i < length; ++i) {
+        int r = rand() % (10 + 26 + 26);
+        if (r < 10) {
+            string[string_i++] = (char)r + '0';
+        } else if (r < 10 + 26) {
+            string[string_i++] = (char)(r - 10) + 'A';
+        } else {
+            string[string_i++] = (char)(r - 10 - 26) + 'a';
+        }
     }
-    if (str_hash_equal(hash, "4321")) {
-        PANIC("hash should not be equal");
+    return string;
+}
+
+void str_util_test(void)
+{
+    {
+        char* hash = str_hash("1234");
+        if (!str_hash_equal(hash, "1234")) {
+            PANIC("hash should be equal");
+        }
+        if (str_hash_equal(hash, "4321")) {
+            PANIC("hash should not be equal");
+        }
+        free(hash);
     }
-    free(hash);
+    {
+        char* token_1 = str_random(16);
+        char* token_2 = str_random(16);
+        if (strcmp(token_1, token_2) == 0) {
+            PANIC("tokens should not be equal");
+        }
+        free(token_1);
+        free(token_2);
+    }
 }

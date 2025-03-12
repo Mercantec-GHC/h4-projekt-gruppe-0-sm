@@ -6,7 +6,6 @@
 
 void route_post_auth_login(HttpCtx* ctx)
 {
-
     Cx* cx = http_ctx_user_ctx(ctx);
 
     const char* body_str = http_ctx_req_body(ctx);
@@ -21,8 +20,7 @@ void route_post_auth_login(HttpCtx* ctx)
         RESPOND_BAD_REQUEST(ctx, "bad request");
         goto l0_return;
     }
-    if (strlen(req.email) == 0
-        || strlen(req.password) > MAX_HASH_INPUT_LEN) {
+    if (strlen(req.email) == 0 || strlen(req.password) > MAX_HASH_INPUT_LEN) {
 
         RESPOND_BAD_REQUEST(ctx, "bad request");
         goto l0_return;
@@ -33,8 +31,7 @@ void route_post_auth_login(HttpCtx* ctx)
     if (db_res == DbRes_NotFound) {
         RESPOND_BAD_REQUEST(ctx, "user with email not found");
         goto l0_return;
-    }
-    else if (db_res == DbRes_Error) {
+    } else if (db_res == DbRes_Error) {
         RESPOND_SERVER_ERROR(ctx);
         goto l0_return;
     }
@@ -44,9 +41,11 @@ void route_post_auth_login(HttpCtx* ctx)
         goto l2_return;
     }
 
-    session_vec_push(&cx->sessions, (Session) {.user_id = user.id});
+    session_vec_remove_user_id(&cx->sessions, user.id);
+    char* token = str_random(64);
+    session_vec_add(&cx->sessions, user.id, token);
 
-    RESPOND_JSON(ctx, 200, "{\"ok\":true}");
+    RESPOND_JSON(ctx, 200, "{\"ok\":true,\"token\":\"%s\"}", token);
 l2_return:
     user_destroy(&user);
 l0_return:
