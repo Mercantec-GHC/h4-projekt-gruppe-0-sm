@@ -55,7 +55,7 @@ HttpServer* http_server_new(HttpServerOpts opts)
         .user_ctx = NULL,
     };
 
-    ctx_construct(&server->ctx, server);
+    worker_ctx_construct(&server->ctx, server);
     for (size_t i = 0; i < opts.workers_amount; ++i) {
         worker_construct(&server->workers[i], &server->ctx);
     }
@@ -70,14 +70,14 @@ void http_server_free(HttpServer* server)
     for (size_t i = 0; i < server->workers_size; ++i) {
         worker_destroy(&server->workers[i]);
     }
-    ctx_destroy(&server->ctx);
+    worker_ctx_destroy(&server->ctx);
     handler_vec_destroy(&server->handlers);
     free(server);
 }
 
 int http_server_listen(HttpServer* server)
 {
-    Cx* ctx = &server->ctx;
+    WorkerCtx* ctx = &server->ctx;
 
     while (true) {
         SockAddrIn client_addr;
@@ -92,7 +92,7 @@ int http_server_listen(HttpServer* server)
         Client req = { .file = res, client_addr };
         pthread_mutex_lock(&ctx->mutex);
 
-        res = request_queue_push(&ctx->req_queue, req);
+        res = client_queue_push(&ctx->req_queue, req);
         if (res != 0) {
             fprintf(stderr, "error: request queue full\n");
             return -1;
@@ -138,12 +138,12 @@ const char* http_ctx_req_path(HttpCtx* ctx)
 
 bool http_ctx_req_headers_has(HttpCtx* ctx, const char* key)
 {
-    return req_has_header(ctx->req, key);
+    return request_has_header(ctx->req, key);
 }
 
 const char* http_ctx_req_headers_get(HttpCtx* ctx, const char* key)
 {
-    return req_get_header(ctx->req, key);
+    return request_get_header(ctx->req, key);
 }
 
 const char* http_ctx_req_body(HttpCtx* ctx)
@@ -196,22 +196,23 @@ void http_ctx_respond(HttpCtx* ctx, int status, const char* body)
 //
 //
 
-static inline void ctx_construct(Cx* ctx, const HttpServer* server)
+static inline void worker_ctx_construct(
+    WorkerCtx* ctx, const HttpServer* server)
 {
     ctx->server = server;
     pthread_mutex_init(&ctx->mutex, NULL);
     pthread_cond_init(&ctx->cond, NULL);
-    request_queue_construct(&ctx->req_queue, 8192);
+    client_queue_construct(&ctx->req_queue, 8192);
 }
 
-static inline void ctx_destroy(Cx* ctx)
+static inline void worker_ctx_destroy(WorkerCtx* ctx)
 {
     pthread_mutex_destroy(&ctx->mutex);
     pthread_cond_destroy(&ctx->cond);
-    request_queue_destroy(&ctx->req_queue);
+    client_queue_destroy(&ctx->req_queue);
 }
 
-static inline int worker_construct(Worker* worker, Cx* ctx)
+static inline int worker_construct(Worker* worker, WorkerCtx* ctx)
 {
     *worker = (Worker) {
         // .thread = {},
@@ -243,15 +244,15 @@ static inline void* worker_thread_fn(void* data)
 
 static inline void worker_listen(Worker* worker)
 {
-    Cx* ctx = worker->ctx;
+    WorkerCtx* ctx = worker->ctx;
     while (true) {
         pthread_testcancel();
 
         pthread_mutex_lock(&ctx->mutex);
 
-        if (request_queue_size(&ctx->req_queue) > 0) {
+        if (client_queue_size(&ctx->req_queue) > 0) {
             Client req;
-            request_queue_pop(&ctx->req_queue, &req);
+            client_queue_pop(&ctx->req_queue, &req);
             pthread_mutex_unlock(&ctx->mutex);
 
             worker_handle_request(worker, &req);
@@ -289,9 +290,9 @@ static inline void worker_handle_request(Worker* worker, Client* client)
         goto l0_return;
     }
 
-    Req req;
+    Request req;
     size_t body_idx;
-    int res = parse_header(&req, &body_idx, (char*)buffer, header_end);
+    int res = parse_request_header(&req, &body_idx, (char*)buffer, header_end);
     if (res != 0) {
         fprintf(stderr, "error: failed to parse header\n");
         goto l0_return;
@@ -299,13 +300,13 @@ static inline void worker_handle_request(Worker* worker, Client* client)
 
     char* body = NULL;
     if (req.method == Method_POST) {
-        if (!req_has_header(&req, "Content-Length")) {
+        if (!request_has_header(&req, "Content-Length")) {
             fprintf(stderr,
                 "error: POST request has no body and/or Content-Length "
                 "header\n");
             goto l1_return;
         }
-        const char* length_val = req_get_header(&req, "Content-Length");
+        const char* length_val = request_get_header(&req, "Content-Length");
         size_t length = strtoul(length_val, NULL, 10);
         body = calloc(length + 1, sizeof(char));
         strncpy(body, (char*)&buffer[body_idx], length);
@@ -368,7 +369,7 @@ static inline void worker_handle_request(Worker* worker, Client* client)
 
 l1_return:
     header_vec_destroy(&handler_ctx.res_headers);
-    req_destroy(&req);
+    request_destroy(&req);
     if (body)
         free(body);
 l0_return:
@@ -376,8 +377,8 @@ l0_return:
     close(client->file);
 }
 
-static inline int parse_header(
-    Req* req, size_t* body_idx, const char* const buf, size_t buf_size)
+static inline int parse_request_header(
+    Request* req, size_t* body_idx, const char* const buf, size_t buf_size)
 {
     StrSplitter splitter = str_split(buf, buf_size, "\r\n");
 
@@ -477,11 +478,11 @@ static inline int parse_header(
         header_vec_push(&headers, (Header) { key, value });
     }
 
-    *req = (Req) { method, path, query, headers };
+    *req = (Request) { method, path, query, headers };
     return 0;
 }
 
-static inline void req_destroy(Req* req)
+static inline void request_destroy(Request* req)
 {
     free(req->path);
     for (size_t i = 0; i < req->headers.size; ++i) {
@@ -505,7 +506,7 @@ static inline int strcmp_lower(const char* a, const char* b)
     return 0;
 }
 
-static inline bool req_has_header(const Req* req, const char* key)
+static inline bool request_has_header(const Request* req, const char* key)
 {
     for (size_t i = 0; i < req->headers.size; ++i) {
         if (strcmp_lower(key, req->headers.data[i].key) == 0) {
@@ -515,7 +516,8 @@ static inline bool req_has_header(const Req* req, const char* key)
     return false;
 }
 
-static inline const char* req_get_header(const Req* req, const char* key)
+static inline const char* request_get_header(
+    const Request* req, const char* key)
 {
     for (size_t i = 0; i < req->headers.size; ++i) {
         if (strcmp_lower(key, req->headers.data[i].key) == 0) {

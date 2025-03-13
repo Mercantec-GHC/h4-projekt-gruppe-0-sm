@@ -19,26 +19,27 @@ typedef struct {
     SockAddrIn addr;
 } Client;
 
-DEFINE_STATIC_QUEUE(Client, ReqQueue, request_queue)
+DEFINE_STATIC_QUEUE(Client, ClientQueue, client_queue)
 
 typedef struct {
     const HttpServer* server;
     pthread_mutex_t mutex;
     pthread_cond_t cond;
-    ReqQueue req_queue;
-} Cx;
+    ClientQueue req_queue;
+} WorkerCtx;
 
-static inline void ctx_construct(Cx* ctx, const HttpServer* server);
-static inline void ctx_destroy(Cx* ctx);
+static inline void worker_ctx_construct(
+    WorkerCtx* ctx, const HttpServer* server);
+static inline void worker_ctx_destroy(WorkerCtx* ctx);
 
 typedef struct {
     pthread_t thread;
-    Cx* ctx;
+    WorkerCtx* ctx;
 } Worker;
 
 /// On ok, returns 0.
 /// On error, returns -1;
-static inline int worker_construct(Worker* worker, Cx* ctx);
+static inline int worker_construct(Worker* worker, WorkerCtx* ctx);
 static inline void worker_destroy(Worker* worker);
 static inline void* worker_thread_fn(void* data);
 static inline void worker_listen(Worker* worker);
@@ -69,14 +70,15 @@ typedef struct {
     char* path;
     char* query;
     HeaderVec headers;
-} Req;
+} Request;
 
 /// On error, returns -1.
-static inline int parse_header(
-    Req* req, size_t* body_idx, const char* const buf, size_t buf_size);
-static inline void req_destroy(Req* req);
-static inline bool req_has_header(const Req* req, const char* key);
-static inline const char* req_get_header(const Req* req, const char* key);
+static inline int parse_request_header(
+    Request* req, size_t* body_idx, const char* const buf, size_t buf_size);
+static inline void request_destroy(Request* req);
+static inline bool request_has_header(const Request* req, const char* key);
+static inline const char* request_get_header(
+    const Request* req, const char* key);
 
 typedef struct {
     const char* path;
@@ -89,7 +91,7 @@ DEFINE_VEC(Handler, HandlerVec, handler_vec, 8)
 struct HttpServer {
     int file;
     SockAddrIn addr;
-    Cx ctx;
+    WorkerCtx ctx;
     Worker* workers;
     size_t workers_size;
     HandlerVec handlers;
@@ -99,7 +101,7 @@ struct HttpServer {
 
 struct HttpCtx {
     Client* client;
-    const Req* req;
+    const Request* req;
     const char* req_body;
     HeaderVec res_headers;
     void* user_ctx;
