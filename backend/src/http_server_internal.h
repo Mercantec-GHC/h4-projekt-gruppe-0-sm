@@ -44,7 +44,7 @@ static inline void* worker_thread_fn(void* data);
 static inline void worker_listen(Worker* worker);
 static inline void worker_handle_request(Worker* worker, Client* req);
 
-#define MAX_HEADER_BUFFER_SIZE 8192
+#define MAX_HEADER_BUFFER_SIZE 65536
 
 #define MAX_PATH_LEN 128 - 1
 #define MAX_QUERY_LEN 128 - 1

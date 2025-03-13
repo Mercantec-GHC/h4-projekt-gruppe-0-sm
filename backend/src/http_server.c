@@ -268,8 +268,8 @@ static inline void worker_handle_request(Worker* worker, Client* client)
 {
     (void)worker;
 
-    uint8_t buffer[MAX_HEADER_BUFFER_SIZE] = { 0 };
-    ssize_t bytes_received = recv(client->file, &buffer, sizeof(buffer), 0);
+    uint8_t* buffer = calloc(MAX_HEADER_BUFFER_SIZE, sizeof(char));
+    ssize_t bytes_received = recv(client->file, buffer, MAX_HEADER_BUFFER_SIZE * sizeof(char), 0);
 
     if (bytes_received == -1) {
         fprintf(stderr, "error: could not receive request\n");
