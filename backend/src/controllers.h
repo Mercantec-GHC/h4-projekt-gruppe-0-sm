@@ -59,7 +59,7 @@ const Session* middleware_session(HttpCtx* ctx);
 #define RESPOND_HTML(HTTP_CTX, STATUS, ...)                                    \
     RESPOND(HTTP_CTX, STATUS, "text/html", __VA_ARGS__)
 #define RESPOND_JSON(HTTP_CTX, STATUS, ...)                                    \
-    RESPOND(HTTP_CTX, STATUS, "application/json", __VA_ARGS__)
+    RESPOND(HTTP_CTX, STATUS, "application/json; charset=utf-8", __VA_ARGS__)
 
 #define RESPOND_BAD_REQUEST(HTTP_CTX, MSG)                                     \
     RESPOND_JSON(HTTP_CTX, 400, "{\"ok\":false,\"msg\":\"%s\"}", (MSG))
