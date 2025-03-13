@@ -1,5 +1,5 @@
 #include "json.h"
-#include "../collection.h"
+#include "../collections/collection.h"
 #include "../util/str.h"
 #include <stdbool.h>
 #include <stdio.h>

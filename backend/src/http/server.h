@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../collection.h"
+#include "../collections/collection.h"
 #include "client_connection.h"
 #include "http.h"
 #include "packet.h"

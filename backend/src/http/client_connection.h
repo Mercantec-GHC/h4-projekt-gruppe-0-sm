@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../collection.h"
+#include "../collections/collection.h"
 #include <netinet/in.h>
 #include <sys/socket.h>
 
