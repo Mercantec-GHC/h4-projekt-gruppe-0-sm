@@ -83,9 +83,11 @@ void http_worker_handle_connection(Worker* worker, ClientConnection connection)
         fprintf(stderr,
             "warning: failed to parse request. sending 400 Bad Request "
             "response\n");
-        const char* res = "HTTP/1.1 400 Bad Request\r\n\r\n";
-        ssize_t bytes_written = write(connection.file, res, strlen(res));
-        if (bytes_written != (ssize_t)strlen(res)) {
+        const char* response
+            = "HTTP/1.1 400 Bad Request\r\nConnection: close\r\n\r\n";
+        ssize_t bytes_written
+            = write(connection.file, response, strlen(response));
+        if (bytes_written != (ssize_t)strlen(response)) {
             fprintf(stderr, "error: could not send 400 Bad Request response\n");
         }
         goto l0_return;
