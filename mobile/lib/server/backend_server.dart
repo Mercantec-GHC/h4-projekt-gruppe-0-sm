@@ -6,7 +6,8 @@ import 'package:mobile/models/user.dart';
 import 'package:mobile/server/server.dart';
 
 class BackendServer implements Server {
-  final _apiUrl = "10.135.51.114:8080/api";
+  final _apiUrl = "http://192.168.1.128:8080/api";
+  // final _apiUrl = "http://127.0.0.1:8080/api";
 
   Future<http.Response> _post(
       {required String endpoint, required Map<String, dynamic> body}) async {
@@ -26,10 +27,12 @@ class BackendServer implements Server {
         )
         .then((res) => json.decode(res.body));
     if (res["ok"]) {
-      return Error(message: res["message"]);
-    } else {
       return Success(
-          data: res.map(((product) => Product.fromJson(product))).toList());
+          data: (res["products"] as List<dynamic>)
+              .map(((product) => Product.fromJson(product)))
+              .toList());
+    } else {
+      return Error(message: res["msg"]);
     }
   }
 
@@ -47,7 +50,7 @@ class BackendServer implements Server {
     if (res["ok"]) {
       return Success(data: null);
     } else {
-      return Error(message: res["message"]);
+      return Error(message: res["msg"]);
     }
   }
 
@@ -64,7 +67,7 @@ class BackendServer implements Server {
     if (res["ok"]) {
       return Success(data: res["token"]);
     } else {
-      return Error(message: res["message"]);
+      return Error(message: res["msg"]);
     }
   }
 
@@ -80,21 +83,21 @@ class BackendServer implements Server {
     if (res["ok"]) {
       return Success(data: null);
     } else {
-      return Error(message: res["message"]);
+      return Error(message: res["msg"]);
     }
   }
 
   @override
   Future<Response<User>> sessionUser(String token) async {
-    final res = await http
-        .get(
-          Uri.parse("$_apiUrl/sessions/user/$token"),
-        )
-        .then((res) => json.decode(res.body));
+    ("sending request fr with token $token");
+    final res = await http.get(
+      Uri.parse("$_apiUrl/sessions/user"),
+      headers: {"Session-Token": token},
+    ).then((res) => json.decode(res.body));
     if (res["ok"]) {
-      return Error(message: res["message"]);
+      return Success(data: User.fromJson(res["user"]));
     } else {
-      return Success(data: User.fromJson(res));
+      return Error(message: res["msg"]);
     }
   }
 
@@ -110,7 +113,7 @@ class BackendServer implements Server {
     if (res["ok"]) {
       return Success(data: null);
     } else {
-      return Error(message: res["message"]);
+      return Error(message: res["msg"]);
     }
   }
 }

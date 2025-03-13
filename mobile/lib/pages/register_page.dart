@@ -27,6 +27,7 @@ class RegisterForm extends StatefulWidget {
 
 class RegisterFormState extends State<RegisterForm> {
   bool registerError = false;
+  String errorText = "Ingen fejlbesked jeg skal ikke vises";
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +44,7 @@ class RegisterFormState extends State<RegisterForm> {
         ),
         ErrorBox(
             visible: registerError,
-            errorText: "Bruger med mailen ${mailController.text}",
+            errorText: errorText,
             onClosePressed: () {
               setState(() {
                 registerError = false;
@@ -70,14 +71,18 @@ class RegisterFormState extends State<RegisterForm> {
             placeholderText: "*********",
             obscure: true),
         PrimaryButton(
-            onPressed: () {
+            onPressed: () async {
               final sessionsRepo = context.read<UsersController>();
-              if (sessionsRepo.register(nameController.text,
-                  mailController.text, passwordController.text) is Ok) {
+              final res = await sessionsRepo.register(nameController.text,
+                  mailController.text, passwordController.text);
+              if (res is Ok<Null, String>) {
                 setState(() => registerError = false);
-                Navigator.of(context).pop();
+                if (context.mounted) Navigator.of(context).pop();
               } else {
-                setState(() => registerError = true);
+                setState(() {
+                  registerError = true;
+                  errorText = (res as Err<Null, String>).value;
+                });
               }
             },
             child: const Text("Opret bruger")),

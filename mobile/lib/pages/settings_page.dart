@@ -29,10 +29,10 @@ class SettingsPage extends StatelessWidget {
     _Page(
         icon: Icons.door_back_door,
         title: "Log ud",
-        action: (context) {
+        action: (context) async {
           final sessionsController = context.read<SessionController>();
-          Navigator.popUntil(context, (_) => false);
-          sessionsController.logout();
+          Navigator.pop(context);
+          await sessionsController.logout();
         }),
   ];
 

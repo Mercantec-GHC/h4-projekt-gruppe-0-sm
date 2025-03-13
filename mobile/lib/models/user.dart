@@ -16,10 +16,10 @@ class User {
   });
 
   User.fromJson(Map<String, dynamic> json)
-      : id = json["id"],
-        email = json["email"],
+      : email = json["email"],
+        id = json["id"],
         name = json["name"],
-        balanceInDkkCents = json["balanceInDkkCents"];
+        balanceInDkkCents = json["balance_dkk_cent"];
 
   void addBalanceFounds(int amount) {
     balanceInDkkCents += amount;

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile/controllers/session.dart';
-import 'package:mobile/models/user.dart';
 import 'package:mobile/pages/dashboard.dart';
 import 'package:mobile/pages/log_in_page.dart';
 import 'package:mobile/controllers/add_to_cart_state.dart';
@@ -11,7 +10,7 @@ import 'package:mobile/controllers/paying_state.dart';
 import 'package:mobile/controllers/product.dart';
 import 'package:mobile/controllers/receipt.dart';
 import 'package:mobile/controllers/user.dart';
-import 'package:mobile/server/mock_server.dart';
+import 'package:mobile/server/backend_server.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile/controllers/routing.dart';
 
@@ -24,7 +23,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final server = MockServer();
+    final server = BackendServer();
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => RoutingController()),
@@ -51,7 +50,9 @@ class MyApp extends StatelessWidget {
           ),
           home: Consumer<SessionController>(
             builder: (_, sessionController, __) {
-              if (sessionController.sessionToken is String) return Dashboard();
+              if (sessionController.sessionToken is String) {
+                return Dashboard();
+              }
               return const LogInPage();
             },
           )),

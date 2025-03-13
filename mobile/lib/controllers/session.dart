@@ -38,18 +38,16 @@ class SessionController extends ChangeNotifier {
     }
   }
 
-  get sessionToken {
+  String? get sessionToken {
     return _sessionToken;
   }
 
   Future<void> logout() async {
     final token = _sessionToken;
     if (token != null) {
-      server.logout(token);
+      await server.logout(token);
       _sessionToken = null;
     }
-    print(_sessionToken);
-    print("notifying listeners");
     notifyListeners();
   }
 

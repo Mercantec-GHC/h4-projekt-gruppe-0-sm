@@ -24,7 +24,7 @@ class ErrorBox extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Text("Ugyldigt mail eller password"),
+            Text(errorText),
             IconButton(onPressed: onClosePressed, icon: const Icon(Icons.close))
           ],
         ),

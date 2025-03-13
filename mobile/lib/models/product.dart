@@ -21,7 +21,7 @@ class Product {
       : id = json["id"],
         name = json["name"],
         description = json["description"],
-        priceInDkkCents = json["priceInDkkCents"],
+        priceInDkkCents = json["price_dkk_cent"],
         location = null,
-        barcode = null;
+        barcode = json["barcode"];
 }
