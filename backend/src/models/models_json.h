@@ -1,4 +1,4 @@
-#include "../json.h"
+#include "../json/json.h"
 #include "models.h"
 
 #define DEFINE_MODEL_JSON(TYPE, PREFIX)                                        \
