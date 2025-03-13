@@ -309,6 +309,32 @@ static inline void worker_handle_request(Worker* worker, Client* client)
         body = calloc(length + 1, sizeof(char));
         strncpy(body, (char*)&buffer[body_idx], length);
         body[length] = '\0';
+
+        // HACK
+        // TODO: We should treat the input as a stream rather than a block.
+        // Look at either @camper0008's stream example or other HTTP-server implementations.
+        size_t defacto_length = strlen(body);
+        int attempts = 0;
+        const int arbitrary_max_attempts = 10;
+        while (defacto_length < length && attempts < arbitrary_max_attempts) {
+            attempts += 1;
+
+            uint8_t buffer[8192];
+            ssize_t recieved = recv(client->file, buffer, 8192, 0);
+
+            if (recieved == -1) {
+                fprintf(stderr, "error: could not receive request body\n");
+                goto l1_return;
+            }
+
+            strncpy(&body[defacto_length], (char*)buffer, (size_t)recieved);
+            defacto_length += (size_t)recieved;
+            body[defacto_length] = '\0';
+        }
+        if (defacto_length < length) {
+            fprintf(stderr, "error: could not receive entire request body\n");
+            goto l1_return;
+        }
     }
 
     HttpCtx handler_ctx = {
@@ -344,6 +370,7 @@ l1_return:
     if (body)
         free(body);
 l0_return:
+    free(buffer);
     close(client->file);
 }
 
