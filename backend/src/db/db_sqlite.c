@@ -1,5 +1,5 @@
 #include "db_sqlite.h"
-#include "../models.h"
+#include "../models/models.h"
 #include "../str_util.h"
 #include "db.h"
 #include <assert.h>

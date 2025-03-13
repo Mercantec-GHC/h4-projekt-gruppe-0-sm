@@ -1,9 +1,7 @@
 #include "controllers/controllers.h"
 #include "db/db_sqlite.h"
 #include "http/http.h"
-#include "json.h"
-#include "models.h"
-#include "models_json.h"
+#include "models/models_json.h"
 #include "str_util.h"
 #include <sqlite3.h>
 #include <stdio.h>

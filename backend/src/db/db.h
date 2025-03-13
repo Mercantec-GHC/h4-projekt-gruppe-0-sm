@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../collection.h"
-#include "../models.h"
+#include "../models/models.h"
 #include <stdint.h>
 
 DEFINE_VEC(int64_t, Ids, ids, 8)

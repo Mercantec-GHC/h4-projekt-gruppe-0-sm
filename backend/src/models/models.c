@@ -1,7 +1,7 @@
 #include "models.h"
-#include "json.h"
+#include "../json.h"
+#include "../str_util.h"
 #include "models_json.h"
-#include "str_util.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -83,7 +83,11 @@ char* user_to_json_string(const User* m)
         "\"password_hash\":\"%s\","
         "\"balance_dkk_cent\":%ld"
         "}",
-        m->id, m->name, m->email, m->password_hash, m->balance_dkk_cent);
+        m->id,
+        m->name,
+        m->email,
+        m->password_hash,
+        m->balance_dkk_cent);
 
     char* result = string_copy(&string);
     string_destroy(&string);
@@ -102,7 +106,9 @@ char* coord_to_json_string(const Coord* m)
         "\"x\":%ld,"
         "\"y\":%ld"
         "}",
-        m->id, m->x, m->y);
+        m->id,
+        m->x,
+        m->y);
 
     char* result = string_copy(&string);
     string_destroy(&string);
@@ -124,7 +130,12 @@ char* product_to_json_string(const Product* m)
         "\"coord_id\":%ld,"
         "\"barcode\":\"%s\""
         "}",
-        m->id, m->name, m->description, m->price_dkk_cent, m->coord_id, m->barcode);
+        m->id,
+        m->name,
+        m->description,
+        m->price_dkk_cent,
+        m->coord_id,
+        m->barcode);
 
     char* result = string_copy(&string);
     string_destroy(&string);
@@ -143,7 +154,9 @@ char* product_price_to_json_string(const ProductPrice* m)
         "\"product_id\":%ld,"
         "\"price_dkk_cent\":%ld"
         "}",
-        m->id, m->product_id, m->price_dkk_cent);
+        m->id,
+        m->product_id,
+        m->price_dkk_cent);
 
     char* result = string_copy(&string);
     string_destroy(&string);
@@ -161,7 +174,8 @@ char* cart_to_json_string(const Cart* m)
         "\"id\":%ld,"
         "\"user_id\":%ld"
         "}",
-        m->id, m->user_id);
+        m->id,
+        m->user_id);
 
     char* result = string_copy(&string);
     string_destroy(&string);
@@ -181,7 +195,10 @@ char* cart_item_to_json_string(const CartItem* m)
         "\"product_id\":%ld,"
         "\"amount\":%ld"
         "}",
-        m->id, m->cart_id, m->product_id, m->amount);
+        m->id,
+        m->cart_id,
+        m->product_id,
+        m->amount);
 
     char* result = string_copy(&string);
     string_destroy(&string);
@@ -200,7 +217,9 @@ char* users_register_req_to_json(const UsersRegisterReq* m)
         "\"email\":\"%s\","
         "\"password\":\"%s\""
         "}",
-        m->name, m->email, m->password);
+        m->name,
+        m->email,
+        m->password);
 
     char* result = string_copy(&string);
     string_destroy(&string);
@@ -218,7 +237,8 @@ char* auth_login_req_to_json(const AuthLoginReq* m)
         "\"email\":\"%s\","
         "\"password\":\"%s\""
         "}",
-        m->email, m->password);
+        m->email,
+        m->password);
 
     char* result = string_copy(&string);
     string_destroy(&string);
@@ -299,7 +319,7 @@ int product_from_json(Product* m, const JsonValue* json)
     ObjField fields[] = {
         { "id", JsonType_Number },
         { "name", JsonType_String },
-        { "description", JsonType_String},
+        { "description", JsonType_String },
         { "price_dkk_cent", JsonType_Number },
         { "coord_id", JsonType_Number },
         { "barcode", JsonType_String },
