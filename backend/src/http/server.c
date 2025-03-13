@@ -170,7 +170,11 @@ void http_ctx_respond(HttpCtx* ctx, int status, const char* body)
     string_construct(&res);
 
     char first_line[32];
-    snprintf(first_line, 32 - 1, "HTTP/1.1 %d %s\r\n", status,
+    snprintf(
+        first_line,
+        32 - 1,
+        "HTTP/1.1 %d %s\r\n",
+        status,
         http_response_code_string(status));
     string_push_str(&res, first_line);
 
@@ -196,8 +200,8 @@ void http_ctx_respond(HttpCtx* ctx, int status, const char* body)
 //
 //
 
-static inline void worker_ctx_construct(
-    WorkerCtx* ctx, const HttpServer* server)
+static inline void
+worker_ctx_construct(WorkerCtx* ctx, const HttpServer* server)
 {
     ctx->server = server;
     pthread_mutex_init(&ctx->mutex, NULL);
@@ -285,7 +289,9 @@ static inline void worker_handle_request(Worker* worker, Client* client)
         }
     }
     if (header_end == 0) {
-        fprintf(stderr, "error: header too big, exceeded %d bytes\n",
+        fprintf(
+            stderr,
+            "error: header too big, exceeded %d bytes\n",
             MAX_HEADER_BUFFER_SIZE);
         goto l0_return;
     }
@@ -301,7 +307,8 @@ static inline void worker_handle_request(Worker* worker, Client* client)
     char* body = NULL;
     if (req.method == Method_POST) {
         if (!request_has_header(&req, "Content-Length")) {
-            fprintf(stderr,
+            fprintf(
+                stderr,
                 "error: POST request has no body and/or Content-Length "
                 "header\n");
             goto l1_return;
@@ -389,8 +396,11 @@ static inline int parse_request_header(
     StrSlice version_str = strsplit_next(&req_line_splitter);
 
     if (strncmp(version_str.ptr, "HTTP/1.1", 8) != 0) {
-        fprintf(stderr, "error: unrecognized http version '%.*s'\n",
-            (int)version_str.len, version_str.ptr);
+        fprintf(
+            stderr,
+            "error: unrecognized http version '%.*s'\n",
+            (int)version_str.len,
+            version_str.ptr);
         return -1;
     }
 
@@ -409,8 +419,11 @@ static inline int parse_request_header(
     } else if (strncmp(normalized_method, "POST", method_str.len) == 0) {
         method = Method_POST;
     } else {
-        fprintf(stderr, "error: unrecognized http method '%.*s'\n",
-            (int)method_str.len, method_str.ptr);
+        fprintf(
+            stderr,
+            "error: unrecognized http method '%.*s'\n",
+            (int)method_str.len,
+            method_str.ptr);
         return -1;
     }
 
@@ -421,7 +434,7 @@ static inline int parse_request_header(
 
     size_t path_len = 0;
     while (path_len < uri_str.len && uri_str.ptr[path_len] != '?'
-        && uri_str.ptr[path_len] != '#') {
+           && uri_str.ptr[path_len] != '#') {
         path_len += 1;
     }
 
@@ -433,7 +446,7 @@ static inline int parse_request_header(
     if (path_len < uri_str.len) {
         size_t query_len = 0;
         while (path_len + query_len < uri_str.len
-            && uri_str.ptr[path_len + query_len] != '#') {
+               && uri_str.ptr[path_len + query_len] != '#') {
             query_len += 1;
         }
         query = calloc(query_len + 1, sizeof(char));
@@ -516,8 +529,8 @@ static inline bool request_has_header(const Request* req, const char* key)
     return false;
 }
 
-static inline const char* request_get_header(
-    const Request* req, const char* key)
+static inline const char*
+request_get_header(const Request* req, const char* key)
 {
     for (size_t i = 0; i < req->headers.size; ++i) {
         if (strcmp_lower(key, req->headers.data[i].key) == 0) {

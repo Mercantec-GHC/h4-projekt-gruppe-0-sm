@@ -6,3 +6,10 @@ IndentCaseLabels: true
 InsertNewlineAtEOF: true
 AllowShortFunctionsOnASingleLine: None
 
+AlignAfterOpenBracket: AlwaysBreak
+BinPackArguments: false
+AllowAllArgumentsOnNextLine: true
+
+BinPackParameters: false
+AllowAllParametersOfDeclarationOnNextLine: true
+

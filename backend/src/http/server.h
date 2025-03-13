@@ -28,8 +28,8 @@ typedef struct {
     ClientQueue req_queue;
 } WorkerCtx;
 
-static inline void worker_ctx_construct(
-    WorkerCtx* ctx, const HttpServer* server);
+static inline void
+worker_ctx_construct(WorkerCtx* ctx, const HttpServer* server);
 static inline void worker_ctx_destroy(WorkerCtx* ctx);
 
 typedef struct {
@@ -77,8 +77,8 @@ static inline int parse_request_header(
     Request* req, size_t* body_idx, const char* const buf, size_t buf_size);
 static inline void request_destroy(Request* req);
 static inline bool request_has_header(const Request* req, const char* key);
-static inline const char* request_get_header(
-    const Request* req, const char* key);
+static inline const char*
+request_get_header(const Request* req, const char* key);
 
 typedef struct {
     const char* path;
