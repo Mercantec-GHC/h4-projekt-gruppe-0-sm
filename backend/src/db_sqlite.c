@@ -4,6 +4,7 @@
 #include "str_util.h"
 #include <assert.h>
 #include <sqlite3.h>
+#include <stdint.h>
 #include <stdio.h>
 
 static inline char* get_str_safe(sqlite3_stmt* stmt, int col)
@@ -100,7 +101,7 @@ l0_return:
     return res;
 }
 
-DbRes db_user_from_id(Db* db, User* user, int64_t id)
+DbRes db_user_with_id(Db* db, User* user, int64_t id)
 {
     static_assert(sizeof(User) == 40, "model has changed");
 
@@ -118,7 +119,6 @@ DbRes db_user_from_id(Db* db, User* user, int64_t id)
     int step_res = sqlite3_step(stmt);
     if (step_res == SQLITE_DONE) {
         res = DbRes_NotFound;
-        puts("didn't find user");
         goto l0_return;
     } else if (step_res != SQLITE_ROW) {
         fprintf(stderr, "error: %s\n", sqlite3_errmsg(connection));
@@ -173,7 +173,7 @@ l0_return:
     return res;
 }
 
-DbRes db_user_from_email(Db* db, User* user, const char* email)
+DbRes db_user_with_email(Db* db, User* user, const char* email)
 {
     static_assert(sizeof(User) == 40, "model has changed");
 
@@ -263,3 +263,65 @@ l0_return:
     DISCONNECT;
     return res;
 }
+
+
+DbRes db_cart_items_with_user_id(Db* db, CartItemVec* vec, int64_t user_id) {
+    static_assert(sizeof(Cart) == 16, "model has changed");
+    static_assert(sizeof(CartItem) == 32, "model has changed");
+
+    sqlite3* connection;
+    CONNECT;
+    DbRes res;
+
+    sqlite3_stmt* stmt;
+    int sqlite_res = sqlite3_prepare_v2(connection,
+        "SELECT id "
+        " FROM carts WHERE user = ?",
+        -1, &stmt, NULL);
+    if (sqlite_res != SQLITE_OK) {
+        fprintf(stderr, "error: %s\n  at %s:%d\n", sqlite3_errmsg(connection),
+            __func__, __LINE__);
+        res = DbRes_Error;
+        goto l0_return;
+    }
+    sqlite3_bind_int64(stmt, 1, user_id);
+
+    int step_res = sqlite3_step(stmt);
+    if (step_res == SQLITE_DONE) {
+        res = DbRes_NotFound;
+        goto l0_return;
+    } else if (step_res != SQLITE_ROW) {
+        fprintf(stderr, "error: %s\n", sqlite3_errmsg(connection));
+        res = DbRes_Error;
+        goto l0_return;
+    }
+    int64_t cart_id = GET_INT(0);
+
+    sqlite_res = sqlite3_prepare_v2(
+        connection, "SELECT id, cart, product, amount FROM cart_items WHERE cart = ?", -1, &stmt, NULL);
+    sqlite3_bind_int64(stmt, 1, cart_id);
+
+    while ((sqlite_res = sqlite3_step(stmt)) == SQLITE_ROW) {
+        CartItem cart_item = {
+            .id = GET_INT(0),
+            .cart_id = GET_INT(1),
+            .product_id = GET_INT(2),
+            .amount = GET_INT(3),
+        };
+        cart_item_vec_push(vec, cart_item);
+    }
+    if (sqlite_res != SQLITE_DONE) {
+        fprintf(stderr, "error: %s\n", sqlite3_errmsg(connection));
+        res = DbRes_Error;
+        goto l0_return;
+    }
+
+    res = DbRes_Ok;
+l0_return:
+    if (stmt)
+        sqlite3_finalize(stmt);
+    DISCONNECT;
+    return res;
+
+}
+

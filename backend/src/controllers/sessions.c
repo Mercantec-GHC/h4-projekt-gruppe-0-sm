@@ -27,7 +27,7 @@ void route_post_sessions_login(HttpCtx* ctx)
     }
 
     User user;
-    DbRes db_res = db_user_from_email(cx->db, &user, req.email);
+    DbRes db_res = db_user_with_email(cx->db, &user, req.email);
     if (db_res == DbRes_NotFound) {
         RESPOND_BAD_REQUEST(ctx, "user with email not found");
         goto l0_return;
@@ -71,7 +71,7 @@ void route_get_sessions_user(HttpCtx* ctx)
         return;
 
     User user;
-    DbRes db_res = db_user_from_id(cx->db, &user, session->user_id);
+    DbRes db_res = db_user_with_id(cx->db, &user, session->user_id);
     if (db_res != DbRes_Ok) {
         RESPOND_BAD_REQUEST(ctx, "user not found");
         return;

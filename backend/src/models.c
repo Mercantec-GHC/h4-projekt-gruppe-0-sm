@@ -47,7 +47,7 @@ void cart_destroy(Cart* m)
 
 void cart_item_destroy(CartItem* m)
 {
-    static_assert(sizeof(CartItem) == 24, "model has changed");
+    static_assert(sizeof(CartItem) == 32, "model has changed");
 
     (void)m;
 }
@@ -170,7 +170,7 @@ char* cart_to_json_string(const Cart* m)
 
 char* cart_item_to_json_string(const CartItem* m)
 {
-    static_assert(sizeof(CartItem) == 24, "model has changed");
+    static_assert(sizeof(CartItem) == 32, "model has changed");
 
     String string;
     string_construct(&string);
@@ -178,9 +178,10 @@ char* cart_item_to_json_string(const CartItem* m)
         "{"
         "\"id\":%ld,"
         "\"cart_id\":%ld,"
+        "\"product_id\":%ld,"
         "\"amount\":%ld"
         "}",
-        m->id, m->cart_id, m->amount);
+        m->id, m->cart_id, m->product_id, m->amount);
 
     char* result = string_copy(&string);
     string_destroy(&string);
@@ -354,11 +355,12 @@ int cart_from_json(Cart* m, const JsonValue* json)
 
 int cart_item_from_json(CartItem* m, const JsonValue* json)
 {
-    static_assert(sizeof(CartItem) == 24, "model has changed");
+    static_assert(sizeof(CartItem) == 32, "model has changed");
 
     ObjField fields[] = {
         { "id", JsonType_Number },
         { "cart_id", JsonType_Number },
+        { "product_id", JsonType_Number },
         { "amount", JsonType_Number },
     };
     if (!obj_conforms(json, fields, sizeof(fields) / sizeof(fields[0])))
@@ -366,6 +368,7 @@ int cart_item_from_json(CartItem* m, const JsonValue* json)
     *m = (CartItem) {
         .id = GET_INT("id"),
         .cart_id = GET_INT("cart_id"),
+        .product_id = GET_INT("product_id"),
         .amount = GET_INT("amount"),
     };
     return 0;

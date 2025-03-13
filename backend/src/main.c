@@ -43,6 +43,8 @@ int main(void)
 
     http_server_get(server, "/api/products/all", route_get_products_all);
 
+    http_server_get(server, "/api/cart", route_get_cart_items_from_session);
+
     http_server_post(server, "/api/users/register", route_post_users_register);
     http_server_post(server, "/api/sessions/login", route_post_sessions_login);
     http_server_post(

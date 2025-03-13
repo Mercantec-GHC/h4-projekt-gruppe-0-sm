@@ -39,6 +39,7 @@ typedef struct {
 typedef struct {
     int64_t id;
     int64_t cart_id;
+    int64_t product_id;
     int64_t amount;
 } CartItem;
 

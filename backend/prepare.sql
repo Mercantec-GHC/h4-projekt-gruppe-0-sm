@@ -42,9 +42,12 @@ CREATE TABLE IF NOT EXISTS carts (
 CREATE TABLE IF NOT EXISTS cart_items (
     id INTEGER PRIMARY KEY,
     cart INTEGER NOT NULL,
+    product INTEGER NOT NULL,
     amount INTEGER NOT NULL,
 
-    FOREIGN KEY(cart) REFERENCES carts(id)
+
+    FOREIGN KEY(cart) REFERENCES carts(id),
+    FOREIGN KEY(product) REFERENCES product(id)
 );
 
 

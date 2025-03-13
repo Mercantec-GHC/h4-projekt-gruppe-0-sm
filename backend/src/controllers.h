@@ -32,6 +32,8 @@ void route_get_not_found(HttpCtx* ctx);
 
 void route_get_products_all(HttpCtx* ctx);
 
+void route_get_cart_items_from_session(HttpCtx* ctx);
+
 void route_post_users_register(HttpCtx* ctx);
 
 void route_post_sessions_login(HttpCtx* ctx);
