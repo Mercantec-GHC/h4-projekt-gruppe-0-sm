@@ -1,4 +1,4 @@
-#include "str_util.h"
+#include "str.h"
 #include "panic.h"
 #include <openssl/rand.h>
 #include <openssl/sha.h>

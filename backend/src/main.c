@@ -2,7 +2,7 @@
 #include "db/db_sqlite.h"
 #include "http/http.h"
 #include "models/models_json.h"
-#include "str_util.h"
+#include "util/str.h"
 #include <sqlite3.h>
 #include <stdio.h>
 #include <stdlib.h>

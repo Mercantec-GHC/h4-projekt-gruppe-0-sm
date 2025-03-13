@@ -1,6 +1,6 @@
 #include "db_sqlite.h"
 #include "../models/models.h"
-#include "../str_util.h"
+#include "../util/str.h"
 #include "db.h"
 #include <assert.h>
 #include <sqlite3.h>

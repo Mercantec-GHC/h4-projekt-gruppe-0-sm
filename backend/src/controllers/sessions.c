@@ -1,6 +1,6 @@
 #include "../http/http.h"
 #include "../models/models_json.h"
-#include "../str_util.h"
+#include "../util/str.h"
 #include "controllers.h"
 #include <string.h>
 

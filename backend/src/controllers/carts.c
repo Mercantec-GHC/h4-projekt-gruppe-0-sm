@@ -1,5 +1,5 @@
 #include "../models/models_json.h"
-#include "../str_util.h"
+#include "../util/str.h"
 #include "controllers.h"
 
 void route_get_cart_items_from_session(HttpCtx* ctx)

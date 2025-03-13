@@ -1,5 +1,5 @@
 #include "server.h"
-#include "../str_util.h"
+#include "../util/str.h"
 #include "http.h"
 #include <errno.h>
 #include <netinet/in.h>

@@ -1,6 +1,6 @@
 #include "json.h"
 #include "../collection.h"
-#include "../str_util.h"
+#include "../util/str.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>

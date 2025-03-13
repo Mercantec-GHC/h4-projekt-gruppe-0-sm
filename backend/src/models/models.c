@@ -1,6 +1,6 @@
 #include "models.h"
 #include "../json/json.h"
-#include "../str_util.h"
+#include "../util/str.h"
 #include "models_json.h"
 #include <assert.h>
 #include <stdlib.h>
