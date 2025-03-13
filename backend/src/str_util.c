@@ -14,7 +14,7 @@ char* str_dup(const char* str)
     return clone;
 }
 
-StrSplitter str_split(const char* text, size_t text_len, const char* split)
+StrSplitter str_splitter(const char* text, size_t text_len, const char* split)
 {
     return (StrSplitter) {
         .text = text,
@@ -25,7 +25,7 @@ StrSplitter str_split(const char* text, size_t text_len, const char* split)
     };
 }
 
-StrSlice strsplit_next(StrSplitter* splitter)
+StrSlice str_split_next(StrSplitter* splitter)
 {
     for (size_t i = splitter->i; i < splitter->text_len; ++i) {
         if (strncmp(&splitter->text[i], splitter->split, splitter->split_len)

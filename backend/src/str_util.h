@@ -20,8 +20,8 @@ typedef struct {
     size_t split_len;
 } StrSplitter;
 
-StrSplitter str_split(const char* text, size_t text_len, const char* split);
-StrSlice strsplit_next(StrSplitter* splitter);
+StrSplitter str_splitter(const char* text, size_t text_len, const char* split);
+StrSlice str_split_next(StrSplitter* splitter);
 
 DEFINE_VEC(char, String, string, 8)
 
