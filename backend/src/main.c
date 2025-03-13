@@ -1,3 +1,4 @@
+#include "collections/kv_map.h"
 #include "controllers/controllers.h"
 #include "db/db_sqlite.h"
 #include "http/http.h"
@@ -61,9 +62,13 @@ int main(void)
     db_sqlite_free(db);
 }
 
+#ifdef RUN_TESTS
 void test(void)
 {
-    str_util_test();
-    printf("ALL TESTS PASSED 💅\n");
+    test_util_str();
+    test_collections_kv_map();
+    printf("\n\x1b[1;97m ALL TESTS \x1b[1;92mPASSED"
+           " \x1b[1;97mSUCCESSFULLY 💅\x1b[0m\n\n");
     exit(0);
 }
+#endif

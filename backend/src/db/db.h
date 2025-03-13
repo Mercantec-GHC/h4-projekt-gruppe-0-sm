@@ -30,4 +30,5 @@ DbRes db_user_with_email(Db* db, User* user, const char* email);
 /// Expects `vec` to be constructed.
 DbRes db_product_all(Db* db, ProductVec* vec);
 
-DbRes db_cart_items_with_user_id(Db* db, CartItemVec* vec, int64_t user_id);
+__attribute__((deprecated("store in memory instead"))) DbRes
+db_cart_items_with_user_id(Db* db, CartItemVec* vec, int64_t user_id);

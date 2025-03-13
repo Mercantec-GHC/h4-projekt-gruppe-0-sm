@@ -32,21 +32,14 @@ CREATE TABLE IF NOT EXISTS product_prices (
     FOREIGN KEY(product) REFERENCES products(id)
 );
 
-CREATE TABLE IF NOT EXISTS carts (
-    id INTEGER PRIMARY KEY,
-    user INTEGER NOT NULL,
-
-    FOREIGN KEY(user) REFERENCES users(id)
-);
-
 CREATE TABLE IF NOT EXISTS cart_items (
     id INTEGER PRIMARY KEY,
-    cart INTEGER NOT NULL,
+    user INTEGER NOT NULL,
     product INTEGER NOT NULL,
     amount INTEGER NOT NULL,
 
 
-    FOREIGN KEY(cart) REFERENCES carts(id),
+    FOREIGN KEY(user) REFERENCES users(id),
     FOREIGN KEY(product) REFERENCES product(id)
 );
 

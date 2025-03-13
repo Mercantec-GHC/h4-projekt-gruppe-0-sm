@@ -38,13 +38,6 @@ void product_price_destroy(ProductPrice* m)
     (void)m;
 }
 
-void cart_destroy(Cart* m)
-{
-    static_assert(sizeof(Cart) == 16, "model has changed");
-
-    (void)m;
-}
-
 void cart_item_destroy(CartItem* m)
 {
     static_assert(sizeof(CartItem) == 32, "model has changed");
@@ -163,25 +156,6 @@ char* product_price_to_json_string(const ProductPrice* m)
     return result;
 }
 
-char* cart_to_json_string(const Cart* m)
-{
-    static_assert(sizeof(Cart) == 16, "model has changed");
-
-    String string;
-    string_construct(&string);
-    string_pushf(&string,
-        "{"
-        "\"id\":%ld,"
-        "\"user_id\":%ld"
-        "}",
-        m->id,
-        m->user_id);
-
-    char* result = string_copy(&string);
-    string_destroy(&string);
-    return result;
-}
-
 char* cart_item_to_json_string(const CartItem* m)
 {
     static_assert(sizeof(CartItem) == 32, "model has changed");
@@ -191,12 +165,12 @@ char* cart_item_to_json_string(const CartItem* m)
     string_pushf(&string,
         "{"
         "\"id\":%ld,"
-        "\"cart_id\":%ld,"
+        "\"user_id\":%ld,"
         "\"product_id\":%ld,"
         "\"amount\":%ld"
         "}",
         m->id,
-        m->cart_id,
+        m->user_id,
         m->product_id,
         m->amount);
 
@@ -356,30 +330,13 @@ int product_price_from_json(ProductPrice* m, const JsonValue* json)
     return 0;
 }
 
-int cart_from_json(Cart* m, const JsonValue* json)
-{
-    static_assert(sizeof(Cart) == 16, "model has changed");
-
-    ObjField fields[] = {
-        { "id", JsonType_Number },
-        { "user_id", JsonType_Number },
-    };
-    if (!obj_conforms(json, fields, sizeof(fields) / sizeof(fields[0])))
-        return -1;
-    *m = (Cart) {
-        .id = GET_INT("id"),
-        .user_id = GET_INT("user_id"),
-    };
-    return 0;
-}
-
 int cart_item_from_json(CartItem* m, const JsonValue* json)
 {
     static_assert(sizeof(CartItem) == 32, "model has changed");
 
     ObjField fields[] = {
         { "id", JsonType_Number },
-        { "cart_id", JsonType_Number },
+        { "user_id", JsonType_Number },
         { "product_id", JsonType_Number },
         { "amount", JsonType_Number },
     };
@@ -387,7 +344,7 @@ int cart_item_from_json(CartItem* m, const JsonValue* json)
         return -1;
     *m = (CartItem) {
         .id = GET_INT("id"),
-        .cart_id = GET_INT("cart_id"),
+        .user_id = GET_INT("user_id"),
         .product_id = GET_INT("product_id"),
         .amount = GET_INT("amount"),
     };

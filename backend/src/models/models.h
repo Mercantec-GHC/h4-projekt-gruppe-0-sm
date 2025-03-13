@@ -34,11 +34,6 @@ typedef struct {
 typedef struct {
     int64_t id;
     int64_t user_id;
-} Cart;
-
-typedef struct {
-    int64_t id;
-    int64_t cart_id;
     int64_t product_id;
     int64_t amount;
 } CartItem;
@@ -47,7 +42,6 @@ void user_destroy(User* model);
 void coord_destroy(Coord* model);
 void product_destroy(Product* model);
 void product_price_destroy(ProductPrice* model);
-void cart_destroy(Cart* model);
 void cart_item_destroy(CartItem* model);
 
 //

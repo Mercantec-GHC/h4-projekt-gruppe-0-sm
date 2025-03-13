@@ -260,7 +260,8 @@ char* str_random(size_t length)
     return string;
 }
 
-void str_util_test(void)
+#ifdef RUN_TESTS
+void test_util_str(void)
 {
     {
         char* hash = str_hash("1234");
@@ -282,3 +283,4 @@ void str_util_test(void)
         free(token_2);
     }
 }
+#endif

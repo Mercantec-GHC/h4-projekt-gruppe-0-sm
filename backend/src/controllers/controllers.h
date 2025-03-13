@@ -68,7 +68,7 @@ const Session* middleware_session(HttpCtx* ctx);
 #define RESPOND_SERVER_ERROR(HTTP_CTX)                                         \
     RESPOND_JSON(HTTP_CTX, 500, "{\"ok\":false,\"msg\":\"server error\"}")
 
-__attribute__((unused)) static inline void ___include_user(void)
+__attribute__((unused)) static inline void ___controllers_include_user(void)
 {
     RESPOND((HttpCtx*)0, 200, "text/html", "")
 }

@@ -282,7 +282,6 @@ l0_return:
 
 DbRes db_cart_items_with_user_id(Db* db, CartItemVec* vec, int64_t user_id)
 {
-    static_assert(sizeof(Cart) == 16, "model has changed");
     static_assert(sizeof(CartItem) == 32, "model has changed");
 
     sqlite3* connection;
@@ -290,45 +289,19 @@ DbRes db_cart_items_with_user_id(Db* db, CartItemVec* vec, int64_t user_id)
     DbRes res;
 
     sqlite3_stmt* stmt;
-    int sqlite_res = sqlite3_prepare_v2(connection,
-        "SELECT id "
-        " FROM carts WHERE user = ?",
-        -1,
-        &stmt,
-        NULL);
-    if (sqlite_res != SQLITE_OK) {
-        fprintf(stderr,
-            "error: %s\n  at %s:%d\n",
-            sqlite3_errmsg(connection),
-            __func__,
-            __LINE__);
-        res = DbRes_Error;
-        goto l0_return;
-    }
-    sqlite3_bind_int64(stmt, 1, user_id);
-
-    int step_res = sqlite3_step(stmt);
-    if (step_res == SQLITE_DONE) {
-        res = DbRes_NotFound;
-        goto l0_return;
-    } else if (step_res != SQLITE_ROW) {
-        fprintf(stderr, "error: %s\n", sqlite3_errmsg(connection));
-        res = DbRes_Error;
-        goto l0_return;
-    }
-    int64_t cart_id = GET_INT(0);
+    int sqlite_res;
 
     sqlite_res = sqlite3_prepare_v2(connection,
-        "SELECT id, cart, product, amount FROM cart_items WHERE cart = ?",
+        "SELECT id, user, product, amount FROM cart_items WHERE user = ?",
         -1,
         &stmt,
         NULL);
-    sqlite3_bind_int64(stmt, 1, cart_id);
+    sqlite3_bind_int64(stmt, 1, user_id);
 
     while ((sqlite_res = sqlite3_step(stmt)) == SQLITE_ROW) {
         CartItem cart_item = {
             .id = GET_INT(0),
-            .cart_id = GET_INT(1),
+            .user_id = GET_INT(1),
             .product_id = GET_INT(2),
             .amount = GET_INT(3),
         };
