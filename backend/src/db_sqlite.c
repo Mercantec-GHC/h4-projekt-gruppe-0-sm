@@ -1,5 +1,6 @@
 #include "db_sqlite.h"
 #include "db.h"
+#include "models.h"
 #include "str_util.h"
 #include <assert.h>
 #include <sqlite3.h>
@@ -117,6 +118,7 @@ DbRes db_user_from_id(Db* db, User* user, int64_t id)
     int step_res = sqlite3_step(stmt);
     if (step_res == SQLITE_DONE) {
         res = DbRes_NotFound;
+        puts("didn't find user");
         goto l0_return;
     } else if (step_res != SQLITE_ROW) {
         fprintf(stderr, "error: %s\n", sqlite3_errmsg(connection));
@@ -221,6 +223,7 @@ l0_return:
 
 DbRes db_product_all(Db* db, ProductVec* vec)
 {
+    static_assert(sizeof(Product) == 48, "model has changed");
     sqlite3* connection;
     CONNECT;
     DbRes res;
@@ -228,7 +231,7 @@ DbRes db_product_all(Db* db, ProductVec* vec)
 
     sqlite3_stmt* stmt;
     sqlite_res = sqlite3_prepare_v2(connection,
-        "SELECT id, name, price_dkk_cent, coord, barcode FROM products", -1,
+        "SELECT id, name, description, price_dkk_cent, coord, barcode FROM products", -1,
         &stmt, NULL);
     if (sqlite_res != SQLITE_OK) {
         fprintf(stderr, "error: %s\n", sqlite3_errmsg(connection));
@@ -240,9 +243,10 @@ DbRes db_product_all(Db* db, ProductVec* vec)
         Product product = {
             .id = GET_INT(0),
             .name = GET_STR(1),
-            .price_dkk_cent = GET_INT(2),
-            .coord_id = GET_INT(3),
-            .barcode = GET_STR(4),
+            .description = GET_STR(2),
+            .price_dkk_cent = GET_INT(3),
+            .coord_id = GET_INT(4),
+            .barcode = GET_STR(5),
         };
         product_vec_push(vec, product);
     }

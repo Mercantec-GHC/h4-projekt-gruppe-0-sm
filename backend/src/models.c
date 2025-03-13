@@ -24,9 +24,10 @@ void coord_destroy(Coord* m)
 
 void product_destroy(Product* m)
 {
-    static_assert(sizeof(Product) == 40, "model has changed");
+    static_assert(sizeof(Product) == 48, "model has changed");
 
     free(m->name);
+    free(m->description);
     free(m->barcode);
 }
 
@@ -110,7 +111,7 @@ char* coord_to_json_string(const Coord* m)
 
 char* product_to_json_string(const Product* m)
 {
-    static_assert(sizeof(Product) == 40, "model has changed");
+    static_assert(sizeof(Product) == 48, "model has changed");
 
     String string;
     string_construct(&string);
@@ -118,11 +119,12 @@ char* product_to_json_string(const Product* m)
         "{"
         "\"id\":%ld,"
         "\"name\":\"%s\","
+        "\"description\":\"%s\","
         "\"price_dkk_cent\":%ld,"
         "\"coord_id\":%ld,"
         "\"barcode\":\"%s\""
         "}",
-        m->id, m->name, m->price_dkk_cent, m->coord_id, m->barcode);
+        m->id, m->name, m->description, m->price_dkk_cent, m->coord_id, m->barcode);
 
     char* result = string_copy(&string);
     string_destroy(&string);
@@ -291,11 +293,12 @@ int coord_from_json(Coord* m, const JsonValue* json)
 
 int product_from_json(Product* m, const JsonValue* json)
 {
-    static_assert(sizeof(Product) == 40, "model has changed");
+    static_assert(sizeof(Product) == 48, "model has changed");
 
     ObjField fields[] = {
         { "id", JsonType_Number },
         { "name", JsonType_String },
+        { "description", JsonType_String},
         { "price_dkk_cent", JsonType_Number },
         { "coord_id", JsonType_Number },
         { "barcode", JsonType_String },
@@ -305,6 +308,7 @@ int product_from_json(Product* m, const JsonValue* json)
     *m = (Product) {
         .id = GET_INT("id"),
         .name = GET_STR("name"),
+        .description = GET_STR("description"),
         .price_dkk_cent = GET_INT("price_dkk_cent"),
         .coord_id = GET_INT("coord_id"),
         .barcode = GET_STR("y"),

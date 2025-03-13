@@ -19,6 +19,7 @@ typedef struct {
 typedef struct {
     int64_t id;
     char* name;
+    char* description;
     int64_t price_dkk_cent;
     int64_t coord_id;
     char* barcode;
