@@ -1,6 +1,6 @@
+#include "server.h"
 #include "../http.h"
 #include "../str_util.h"
-#include "http_server_internal.h"
 #include <ctype.h>
 #include <netinet/in.h>
 #include <pthread.h>
