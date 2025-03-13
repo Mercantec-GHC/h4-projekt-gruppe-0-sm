@@ -1,6 +1,9 @@
 
 # HTTP server i C
 
+> [!IMPORTANT]  
+> Projektet er under udvikling, og har filerne ændret sig siden dette er blevet. [Gå til seneste kompatible commit 71e6c48](https://github.com/Mercantec-GHC/h4-projekt-gruppe-0-sm/blob/71e6c48cd5aa46696fc174d7cbd7e258763b1fc5/docs/http_server_i_c.md).
+
 Jeg vil her forsøge at beskrive definerende problemer og væsentlige designdetaljer i vores implementering.
 
 ## Showcase 
