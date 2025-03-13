@@ -1,7 +1,7 @@
 #include "db_sqlite.h"
+#include "../models.h"
+#include "../str_util.h"
 #include "db.h"
-#include "models.h"
-#include "str_util.h"
 #include <assert.h>
 #include <sqlite3.h>
 #include <stdint.h>
@@ -43,7 +43,8 @@ static inline DbRes connect(sqlite3** connection)
 {
     int res = sqlite3_open("database.db", connection);
     if (res != SQLITE_OK) {
-        fprintf(stderr, "error: could not open sqlite 'database.db'\n    %s\n",
+        fprintf(stderr,
+            "error: could not open sqlite 'database.db'\n    %s\n",
             sqlite3_errmsg(*connection));
         return DbRes_Error;
     }
@@ -79,7 +80,9 @@ DbRes db_user_insert(Db* db, const User* user)
     sqlite3_prepare_v2(connection,
         "INSERT INTO users (name, email, password_hash, balance_dkk_cent) "
         "VALUES (?, ?, ?, ?)",
-        -1, &stmt, NULL);
+        -1,
+        &stmt,
+        NULL);
 
     sqlite3_bind_text(stmt, 1, user->name, -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 2, user->email, -1, SQLITE_STATIC);
@@ -113,7 +116,9 @@ DbRes db_user_with_id(Db* db, User* user, int64_t id)
     sqlite3_prepare_v2(connection,
         "SELECT id, name, email, password_hash, balance_dkk_cent"
         " FROM users WHERE id = ?",
-        -1, &stmt, NULL);
+        -1,
+        &stmt,
+        NULL);
     sqlite3_bind_int64(stmt, 1, id);
 
     int step_res = sqlite3_step(stmt);
@@ -185,10 +190,15 @@ DbRes db_user_with_email(Db* db, User* user, const char* email)
     int prepare_res = sqlite3_prepare_v2(connection,
         "SELECT id, name, email, password_hash, balance_dkk_cent"
         " FROM users WHERE email = ?",
-        -1, &stmt, NULL);
+        -1,
+        &stmt,
+        NULL);
     if (prepare_res != SQLITE_OK) {
-        fprintf(stderr, "error: %s\n  at %s:%d\n", sqlite3_errmsg(connection),
-            __func__, __LINE__);
+        fprintf(stderr,
+            "error: %s\n  at %s:%d\n",
+            sqlite3_errmsg(connection),
+            __func__,
+            __LINE__);
         res = DbRes_Error;
         goto l0_return;
     }
@@ -200,8 +210,11 @@ DbRes db_user_with_email(Db* db, User* user, const char* email)
         goto l0_return;
     } else if (step_res != SQLITE_ROW) {
         printf("step_res = %d, email = '%s'\n", step_res, email);
-        fprintf(stderr, "error: %s\n  at %s:%d\n", sqlite3_errmsg(connection),
-            __func__, __LINE__);
+        fprintf(stderr,
+            "error: %s\n  at %s:%d\n",
+            sqlite3_errmsg(connection),
+            __func__,
+            __LINE__);
         res = DbRes_Error;
         goto l0_return;
     }
@@ -231,8 +244,11 @@ DbRes db_product_all(Db* db, ProductVec* vec)
 
     sqlite3_stmt* stmt;
     sqlite_res = sqlite3_prepare_v2(connection,
-        "SELECT id, name, description, price_dkk_cent, coord, barcode FROM products", -1,
-        &stmt, NULL);
+        "SELECT id, name, description, price_dkk_cent, coord, barcode FROM "
+        "products",
+        -1,
+        &stmt,
+        NULL);
     if (sqlite_res != SQLITE_OK) {
         fprintf(stderr, "error: %s\n", sqlite3_errmsg(connection));
         res = DbRes_Error;
@@ -264,8 +280,8 @@ l0_return:
     return res;
 }
 
-
-DbRes db_cart_items_with_user_id(Db* db, CartItemVec* vec, int64_t user_id) {
+DbRes db_cart_items_with_user_id(Db* db, CartItemVec* vec, int64_t user_id)
+{
     static_assert(sizeof(Cart) == 16, "model has changed");
     static_assert(sizeof(CartItem) == 32, "model has changed");
 
@@ -277,10 +293,15 @@ DbRes db_cart_items_with_user_id(Db* db, CartItemVec* vec, int64_t user_id) {
     int sqlite_res = sqlite3_prepare_v2(connection,
         "SELECT id "
         " FROM carts WHERE user = ?",
-        -1, &stmt, NULL);
+        -1,
+        &stmt,
+        NULL);
     if (sqlite_res != SQLITE_OK) {
-        fprintf(stderr, "error: %s\n  at %s:%d\n", sqlite3_errmsg(connection),
-            __func__, __LINE__);
+        fprintf(stderr,
+            "error: %s\n  at %s:%d\n",
+            sqlite3_errmsg(connection),
+            __func__,
+            __LINE__);
         res = DbRes_Error;
         goto l0_return;
     }
@@ -297,8 +318,11 @@ DbRes db_cart_items_with_user_id(Db* db, CartItemVec* vec, int64_t user_id) {
     }
     int64_t cart_id = GET_INT(0);
 
-    sqlite_res = sqlite3_prepare_v2(
-        connection, "SELECT id, cart, product, amount FROM cart_items WHERE cart = ?", -1, &stmt, NULL);
+    sqlite_res = sqlite3_prepare_v2(connection,
+        "SELECT id, cart, product, amount FROM cart_items WHERE cart = ?",
+        -1,
+        &stmt,
+        NULL);
     sqlite3_bind_int64(stmt, 1, cart_id);
 
     while ((sqlite_res = sqlite3_step(stmt)) == SQLITE_ROW) {
@@ -322,6 +346,4 @@ l0_return:
         sqlite3_finalize(stmt);
     DISCONNECT;
     return res;
-
 }
-
