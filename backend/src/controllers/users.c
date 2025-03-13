@@ -14,7 +14,7 @@ void route_post_users_register(HttpCtx* ctx)
 
     UsersRegisterReq req;
     if (users_register_req_from_json(&req, body_json) != 0) {
-        RESPOND_BAD_REQUEST(ctx, "bad request");
+        RESPOND_BAD_REQUEST(ctx, "invalid json");
         json_free(body_json);
         return;
     }
