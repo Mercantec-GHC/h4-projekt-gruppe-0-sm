@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../collection.h"
-#include "../http.h"
 #include "client_connection.h"
+#include "http.h"
 #include "packet.h"
 #include "request.h"
 #include "worker.h"
