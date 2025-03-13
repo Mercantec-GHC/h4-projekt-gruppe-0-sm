@@ -1,7 +1,7 @@
 #pragma once
 
-#include "collection.h"
-#include "http_server.h"
+#include "../collection.h"
+#include "../http.h"
 #include <bits/pthreadtypes.h>
 #include <netinet/in.h>
 #include <pthread.h>

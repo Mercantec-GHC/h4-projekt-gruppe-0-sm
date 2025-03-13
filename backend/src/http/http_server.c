@@ -1,6 +1,6 @@
-#include "http_server.h"
+#include "../http.h"
+#include "../str_util.h"
 #include "http_server_internal.h"
-#include "str_util.h"
 #include <ctype.h>
 #include <netinet/in.h>
 #include <pthread.h>
@@ -269,7 +269,8 @@ static inline void worker_handle_request(Worker* worker, Client* client)
     (void)worker;
 
     uint8_t* buffer = calloc(MAX_HEADER_BUFFER_SIZE, sizeof(char));
-    ssize_t bytes_received = recv(client->file, buffer, MAX_HEADER_BUFFER_SIZE * sizeof(char), 0);
+    ssize_t bytes_received
+        = recv(client->file, buffer, MAX_HEADER_BUFFER_SIZE * sizeof(char), 0);
 
     if (bytes_received == -1) {
         fprintf(stderr, "error: could not receive request\n");
@@ -312,7 +313,8 @@ static inline void worker_handle_request(Worker* worker, Client* client)
 
         // HACK
         // TODO: We should treat the input as a stream rather than a block.
-        // Look at either @camper0008's stream example or other HTTP-server implementations.
+        // Look at either @camper0008's stream example or other HTTP-server
+        // implementations.
         size_t defacto_length = strlen(body);
         int attempts = 0;
         const int arbitrary_max_attempts = 10;
