@@ -32,10 +32,30 @@ typedef struct {
     int64_t price_dkk_cent;
 } ProductPrice;
 
+DECLARE_VEC_TYPE(ProductPrice, ProductPriceVec, product_price_vec, )
+
+typedef struct {
+    int64_t id;
+    int64_t receipt_id;
+    int64_t product_price_id;
+    int64_t amount;
+} ReceiptProduct;
+
+DECLARE_VEC_TYPE(ReceiptProduct, ReceiptProductVec, receipt_product_vec, )
+
+typedef struct {
+    int64_t id;
+    int64_t user_id;
+    char* timestamp;
+    ReceiptProductVec products;
+} Receipt;
+
 void user_destroy(User* model);
 void coord_destroy(Coord* model);
 void product_destroy(Product* model);
 void product_price_destroy(ProductPrice* model);
+void receipt_product_destroy(ReceiptProduct* model);
+void receipt_destroy(Receipt* model);
 
 //
 

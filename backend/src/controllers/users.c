@@ -27,21 +27,17 @@ void route_post_users_register(HttpCtx* ctx)
         return;
     }
 
-    Ids ids;
-    ids_construct(&ids);
-    if (db_users_with_email(cx->db, &ids, req.email) != DbRes_Ok) {
+    bool email_used;
+    if (db_user_with_email_exists(cx->db, &email_used, req.email) != DbRes_Ok) {
         RESPOND_SERVER_ERROR(ctx);
-        ids_destroy(&ids);
         users_register_req_destroy(&req);
         return;
     }
-    if (ids.size > 0) {
+    if (email_used) {
         RESPOND_BAD_REQUEST(ctx, "email in use");
-        ids_destroy(&ids);
         users_register_req_destroy(&req);
         return;
     }
-    ids_destroy(&ids);
 
     char* password_hash = str_hash(req.password);
 

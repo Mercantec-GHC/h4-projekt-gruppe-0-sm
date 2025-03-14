@@ -7,6 +7,13 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#define REPORT_SQLITE3_ERROR()                                                 \
+    fprintf(stderr,                                                            \
+        "error: %s\n  at %s:%d\n",                                             \
+        sqlite3_errmsg(connection),                                            \
+        __func__,                                                              \
+        __LINE__)
+
 static inline char* get_str_safe(sqlite3_stmt* stmt, int col)
 {
     const char* val = (const char*)sqlite3_column_text(stmt, col);
@@ -146,10 +153,8 @@ l0_return:
     return res;
 }
 
-DbRes db_users_with_email(Db* db, Ids* ids, const char* email)
+DbRes db_user_with_email_exists(Db* db, bool* exists, const char* email)
 {
-    static_assert(sizeof(User) == 40, "model has changed");
-
     sqlite3* connection;
     CONNECT;
     DbRes res;
@@ -160,9 +165,9 @@ DbRes db_users_with_email(Db* db, Ids* ids, const char* email)
         connection, "SELECT id FROM users WHERE email = ?", -1, &stmt, NULL);
     sqlite3_bind_text(stmt, 1, email, -1, NULL);
 
-    while ((sqlite_res = sqlite3_step(stmt)) == SQLITE_ROW) {
-        int64_t id = GET_INT(0);
-        ids_push(ids, id);
+    *exists = false;
+    if ((sqlite_res = sqlite3_step(stmt)) == SQLITE_ROW) {
+        *exists = true;
     }
     if (sqlite_res != SQLITE_DONE) {
         fprintf(stderr, "error: %s\n", sqlite3_errmsg(connection));
@@ -194,11 +199,7 @@ DbRes db_user_with_email(Db* db, User* user, const char* email)
         &stmt,
         NULL);
     if (prepare_res != SQLITE_OK) {
-        fprintf(stderr,
-            "error: %s\n  at %s:%d\n",
-            sqlite3_errmsg(connection),
-            __func__,
-            __LINE__);
+        REPORT_SQLITE3_ERROR();
         res = DbRes_Error;
         goto l0_return;
     }
@@ -209,12 +210,7 @@ DbRes db_user_with_email(Db* db, User* user, const char* email)
         res = DbRes_NotFound;
         goto l0_return;
     } else if (step_res != SQLITE_ROW) {
-        printf("step_res = %d, email = '%s'\n", step_res, email);
-        fprintf(stderr,
-            "error: %s\n  at %s:%d\n",
-            sqlite3_errmsg(connection),
-            __func__,
-            __LINE__);
+        REPORT_SQLITE3_ERROR();
         res = DbRes_Error;
         goto l0_return;
     }
@@ -270,6 +266,215 @@ DbRes db_product_all(Db* db, ProductVec* vec)
         fprintf(stderr, "error: %s\n", sqlite3_errmsg(connection));
         res = DbRes_Error;
         goto l0_return;
+    }
+
+    res = DbRes_Ok;
+l0_return:
+    if (stmt)
+        sqlite3_finalize(stmt);
+    DISCONNECT;
+    return res;
+}
+
+static inline DbRes get_product_price_from_product_id(
+    sqlite3* connection, int64_t product_id, int64_t* price)
+{
+    DbRes res;
+    sqlite3_stmt* stmt = NULL;
+    int prepare_res = sqlite3_prepare_v2(connection,
+        "SELECT price_dkk_cent FROM products WHERE id = ?",
+        -1,
+        &stmt,
+        NULL);
+    if (prepare_res != SQLITE_OK) {
+        REPORT_SQLITE3_ERROR();
+        res = DbRes_Error;
+        goto l0_return;
+    }
+    sqlite3_bind_int64(stmt, 1, product_id);
+
+    int step_res = sqlite3_step(stmt);
+    if (step_res == SQLITE_DONE) {
+        res = DbRes_NotFound;
+        goto l0_return;
+    } else if (step_res != SQLITE_ROW) {
+        REPORT_SQLITE3_ERROR();
+        res = DbRes_Error;
+        goto l0_return;
+    }
+    *price = GET_INT(0);
+
+    res = DbRes_Ok;
+l0_return:
+    if (stmt)
+        sqlite3_finalize(stmt);
+    return res;
+}
+
+static inline DbRes insert_product_price(sqlite3* connection,
+    ProductPrice* product_price,
+    int64_t product_id,
+    int64_t price)
+{
+    DbRes res;
+    sqlite3_stmt* stmt = NULL;
+    int prepare_res = sqlite3_prepare_v2(connection,
+        "INSERT INTO product_prices (product, price_dkk_cent) "
+        "VALUES (?, ?)",
+        -1,
+        &stmt,
+        NULL);
+    if (prepare_res != SQLITE_OK) {
+        REPORT_SQLITE3_ERROR();
+        res = DbRes_Error;
+        goto l0_return;
+    }
+
+    sqlite3_bind_int64(stmt, 1, product_id);
+    sqlite3_bind_int64(stmt, 2, price);
+
+    int step_res = sqlite3_step(stmt);
+    if (step_res != SQLITE_DONE) {
+        fprintf(stderr, "error: %s\n", sqlite3_errmsg(connection));
+        res = DbRes_Error;
+        goto l0_return;
+    }
+
+    int64_t id = sqlite3_last_insert_rowid(connection);
+    *product_price = (ProductPrice) {
+        .id = id,
+        .product_id = product_id,
+        .price_dkk_cent = price,
+    };
+
+    res = DbRes_Ok;
+l0_return:
+    if (stmt)
+        sqlite3_finalize(stmt);
+    return res;
+}
+
+DbRes db_product_price_of_product(
+    Db* db, ProductPrice* product_price, int64_t product_id)
+{
+    static_assert(sizeof(ProductPrice) == 24, "model has changed");
+
+    sqlite3* connection;
+    CONNECT;
+    DbRes res;
+
+    sqlite3_stmt* stmt = NULL;
+    int prepare_res;
+
+    int64_t current_price;
+    res = get_product_price_from_product_id(
+        connection, product_id, &current_price);
+    if (res != DbRes_Ok) {
+        goto l0_return;
+    }
+
+    // find maybe existing product price
+    prepare_res = sqlite3_prepare_v2(connection,
+        "SELECT id FROM product_prices"
+        " WHERE product = ? AND price_dkk_cent = ?",
+        -1,
+        &stmt,
+        NULL);
+    if (prepare_res != SQLITE_OK) {
+        REPORT_SQLITE3_ERROR();
+        res = DbRes_Error;
+        goto l0_return;
+    }
+    sqlite3_bind_int64(stmt, 1, product_id);
+    sqlite3_bind_int64(stmt, 2, current_price);
+
+    int step_res = sqlite3_step(stmt);
+    if (step_res == SQLITE_ROW) {
+        *product_price = (ProductPrice) {
+            .id = GET_INT(0),
+            .product_id = product_id,
+            .price_dkk_cent = current_price,
+        };
+    } else if (step_res == SQLITE_DONE) {
+        insert_product_price(
+            connection, product_price, product_id, current_price);
+    } else {
+        REPORT_SQLITE3_ERROR();
+        res = DbRes_Error;
+        goto l0_return;
+    }
+
+    res = DbRes_Ok;
+l0_return:
+    if (stmt)
+        sqlite3_finalize(stmt);
+    DISCONNECT;
+    return res;
+}
+
+DbRes db_receipt_insert(Db* db, const Receipt* receipt, int64_t* id)
+{
+    static_assert(sizeof(Receipt) == 48, "model has changed");
+    static_assert(sizeof(ReceiptProduct) == 32, "model has changed");
+
+    sqlite3* connection;
+    CONNECT;
+    DbRes res;
+
+    sqlite3_stmt* stmt;
+    int prepare_res = sqlite3_prepare_v2(connection,
+        "INSERT INTO receipts (user, datetime) "
+        "VALUES (?, unixepoch('now'))",
+        -1,
+        &stmt,
+        NULL);
+
+    if (prepare_res != SQLITE_OK) {
+        REPORT_SQLITE3_ERROR();
+        res = DbRes_Error;
+        goto l0_return;
+    }
+
+    sqlite3_bind_int64(stmt, 1, receipt->user_id);
+
+    int step_res = sqlite3_step(stmt);
+    if (step_res != SQLITE_DONE) {
+        fprintf(stderr, "error: %s\n", sqlite3_errmsg(connection));
+        res = DbRes_Error;
+        goto l0_return;
+    }
+
+    int64_t receipt_id = sqlite3_last_insert_rowid(connection);
+
+    if (id) {
+        *id = receipt_id;
+    }
+
+    for (size_t i = 0; i < receipt->products.size; ++i) {
+        sqlite3_finalize(stmt);
+        prepare_res = sqlite3_prepare_v2(connection,
+            "INSERT INTO receipt_products (receipt, product_price, amount) "
+            "VALUES (?, ?, ?)",
+            -1,
+            &stmt,
+            NULL);
+
+        if (prepare_res != SQLITE_OK) {
+            REPORT_SQLITE3_ERROR();
+            res = DbRes_Error;
+            goto l0_return;
+        }
+
+        sqlite3_bind_int64(stmt, 1, receipt_id);
+        sqlite3_bind_int64(stmt, 2, receipt->products.data[i].product_price_id);
+        sqlite3_bind_int64(stmt, 3, receipt->products.data[i].amount);
+
+        int step_res = sqlite3_step(stmt);
+        if (step_res != SQLITE_DONE) {
+            fprintf(stderr, "error: %s\n", sqlite3_errmsg(connection));
+            res = DbRes_Error;
+            goto l0_return;
+        }
     }
 
     res = DbRes_Ok;

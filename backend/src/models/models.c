@@ -39,6 +39,20 @@ void product_price_destroy(ProductPrice* m)
     (void)m;
 }
 
+void receipt_product_destroy(ReceiptProduct* m)
+{
+    static_assert(sizeof(ReceiptProduct) == 32, "model has changed");
+
+    (void)m;
+}
+
+void receipt_destroy(Receipt* m)
+{
+    static_assert(sizeof(Receipt) == 48, "model has changed");
+
+    (void)m;
+}
+
 void users_register_req_destroy(UsersRegisterReq* model)
 {
     static_assert(sizeof(UsersRegisterReq) == 24, "model has changed");
@@ -152,6 +166,43 @@ char* product_price_to_json_string(const ProductPrice* m)
         m->product_id,
         m->price_dkk_cent);
 
+    char* result = string_copy(&string);
+    string_destroy(&string);
+    return result;
+}
+char* receipt_to_json_string(const Receipt* m)
+{
+    static_assert(sizeof(Receipt) == 48, "model has changed");
+
+    String string;
+    string_construct(&string);
+    string_pushf(&string,
+        "{"
+        "\"id\":%ld,"
+        "\"user_id\":%ld,"
+        "\"timestamp\":\"%s\","
+        "\"products\":[",
+        m->id,
+        m->user_id,
+        m->timestamp);
+
+    for (size_t i = 0; i < m->products.size; ++i) {
+        if (i != 0) {
+            string_pushf(&string, ",");
+        }
+        string_pushf(&string,
+            "{"
+            "\"id\":%ld,"
+            "\"receipt_id\":%ld,"
+            "\"product_price_id\":%ld,"
+            "\"amount\":%ld"
+            "}",
+            m->products.data[i].id,
+            m->products.data[i].receipt_id,
+            m->products.data[i].product_price_id,
+            m->products.data[i].amount);
+    }
+    string_pushf(&string, "]}");
     char* result = string_copy(&string);
     string_destroy(&string);
     return result;
@@ -321,6 +372,13 @@ int product_price_from_json(ProductPrice* m, const JsonValue* json)
     return 0;
 }
 
+int receipt_from_json(Receipt* m, const JsonValue* json)
+{
+    static_assert(sizeof(Receipt) == 48, "model has changed");
+
+    PANIC("not implemented");
+}
+
 int users_register_req_from_json(UsersRegisterReq* m, const JsonValue* json)
 {
     static_assert(sizeof(UsersRegisterReq) == 24, "model has changed");
@@ -396,4 +454,6 @@ int carts_purchase_req_from_json(CartsPurchaseReq* m, const JsonValue* json)
     return 0;
 }
 
+DEFINE_VEC_IMPL(ProductPrice, ProductPriceVec, product_price_vec, )
+DEFINE_VEC_IMPL(ReceiptProduct, ReceiptProductVec, receipt_product_vec, )
 DEFINE_VEC_IMPL(CartsItem, CartsItemVec, carts_item_vec, )

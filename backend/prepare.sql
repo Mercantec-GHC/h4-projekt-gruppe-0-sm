@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
-    email TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     balance_dkk_cent INTEGER NOT NULL
 );
@@ -30,6 +30,24 @@ CREATE TABLE IF NOT EXISTS product_prices (
     price_dkk_cent INTEGER NOT NULL,
 
     FOREIGN KEY(product) REFERENCES products(id)
+);
+
+CREATE TABLE IF NOT EXISTS receipts (
+    id INTEGER PRIMARY KEY,
+    user INTEGER NOT NULL,
+    datetime INTEGER NOT NULL,
+
+    FOREIGN KEY(user) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS receipt_products (
+    id INTEGER PRIMARY KEY,
+    receipt INTEGER NOT NULL,
+    product_price INTEGER NOT NULL,
+    amount INTEGER NOT NULL,
+
+    FOREIGN KEY(receipt) REFERENCES receipts(id)
+    FOREIGN KEY(product_price) REFERENCES product_prices(id)
 );
 
 INSERT OR REPLACE INTO users (name, email, password_hash, balance_dkk_cent)
