@@ -37,3 +37,11 @@ DbRes db_product_price_of_product(
 /// are ignored.
 /// `id` is an out parameter.
 DbRes db_receipt_insert(Db* db, const Receipt* receipt, int64_t* id);
+
+/// `receipt` field is an out parameter.
+DbRes db_receipt_with_id(Db* db, Receipt* receipt, int64_t id);
+
+/// `product_prices` field is an out parameter.
+/// Expects `product_prices` to be constructed.
+DbRes db_receipt_prices(
+    Db* db, ProductPriceVec* product_prices, int64_t receipt_id);

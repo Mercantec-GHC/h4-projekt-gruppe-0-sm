@@ -14,6 +14,14 @@ char* str_dup(const char* str)
     return clone;
 }
 
+const char* str_slice_copy(const StrSlice* slice)
+{
+    char* copy = malloc(slice->len + 1);
+    strncpy(copy, slice->ptr, slice->len);
+    copy[slice->len] = '\0';
+    return copy;
+}
+
 StrSplitter str_splitter(const char* text, size_t text_len, const char* split)
 {
     return (StrSplitter) {
@@ -36,10 +44,12 @@ StrSlice str_split_next(StrSplitter* splitter)
             return (StrSlice) { ptr, len };
         }
     }
-    return (StrSlice) {
+    StrSlice slice = {
         .ptr = &splitter->text[splitter->i],
         .len = splitter->text_len - splitter->i,
     };
+    splitter->i = splitter->text_len;
+    return slice;
 }
 
 void string_push_str(String* string, const char* str)

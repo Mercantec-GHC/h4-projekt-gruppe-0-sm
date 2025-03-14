@@ -1,6 +1,7 @@
 #include "../http/http.h"
 #include "../models/models_json.h"
 #include "controllers.h"
+#include <string.h>
 
 void route_get_index(HttpCtx* ctx)
 {
@@ -40,6 +41,16 @@ l0_return:
 
 void route_get_not_found(HttpCtx* ctx)
 {
+    if (http_ctx_req_headers_has(ctx, "Accept")) {
+        const char* accept = http_ctx_req_headers_get(ctx, "Accept");
+        if (strcmp(accept, "application/json") == 0) {
+            RESPOND_JSON(ctx,
+                404,
+                "{\"ok\":false,\"msg\":\"404 Not Found\",\"path\":\"%s\"}",
+                http_ctx_req_path(ctx));
+            return;
+        }
+    }
     RESPOND_HTML(ctx,
         404,
         "<!DOCTYPE html><html><head><meta "

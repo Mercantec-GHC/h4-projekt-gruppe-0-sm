@@ -49,7 +49,7 @@ Deno.test("test backend", async (t) => {
         // console.log(sessionUserRes.user);
     });
 
-    await testCarts(t, token);
+    await testCartsAndReceipts(t, token);
 
     await t.step("test /api/sessions/logout", async () => {
         const logoutRes = await post<{ ok: boolean }>(
@@ -62,9 +62,11 @@ Deno.test("test backend", async (t) => {
     });
 });
 
-async function testCarts(t: Deno.TestContext, token: string) {
+async function testCartsAndReceipts(t: Deno.TestContext, token: string) {
+    let receiptId: number | undefined = undefined;
+
     await t.step("test /api/carts/purchase", async () => {
-        const res = await post<{ ok: boolean }>(
+        const res = await post<{ ok: boolean; receipt_id: number }>(
             "/api/carts/purchase",
             {
                 items: [
@@ -76,6 +78,21 @@ async function testCarts(t: Deno.TestContext, token: string) {
         );
 
         assertEquals(res.ok, true);
+        receiptId = res.receipt_id;
+    });
+
+    if (!receiptId) {
+        return;
+    }
+
+    await t.step("test /api/receipts/one", async () => {
+        const res = await get<{ ok: boolean }>(
+            `/api/receipts/one?receipt_id=${receiptId}`,
+            { "Session-Token": token },
+        );
+
+        console.log(res);
+        assertEquals(res.ok, true);
     });
 }
 
@@ -83,7 +100,9 @@ function get<Res>(
     path: string,
     headers: Record<string, string>,
 ): Promise<Res> {
-    return fetch(`${url}${path}`, { headers })
+    return fetch(`${url}${path}`, {
+        headers: { ...headers, "Accept": "application/json" },
+    })
         .then((res) => res.json());
 }
 
@@ -94,7 +113,11 @@ function post<Res, Req = unknown>(
 ): Promise<Res> {
     return fetch(`${url}${path}`, {
         method: "post",
-        headers: { ...headers, "Content-Type": "application/json" },
+        headers: {
+            ...headers,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
         body: JSON.stringify(body),
     }).then((res) => res.json());
 }

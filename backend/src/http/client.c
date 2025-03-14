@@ -143,12 +143,12 @@ static inline int parse_request_header(Client* client, Request* request)
     char* query = NULL;
     if (path_len < uri_str.len) {
         size_t query_len = 0;
-        while (path_len + query_len < uri_str.len
+        while (path_len + query_len + 1 < uri_str.len
             && uri_str.ptr[path_len + query_len] != '#') {
             query_len += 1;
         }
         query = calloc(query_len + 1, sizeof(char));
-        strncpy(query, &uri_str.ptr[path_len], query_len);
+        strncpy(query, &uri_str.ptr[path_len + 1], query_len);
         query[query_len] = '\0';
     }
 

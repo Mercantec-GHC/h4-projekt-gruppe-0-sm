@@ -45,14 +45,17 @@ void route_post_sessions_login(HttpCtx* ctx);
 void route_post_sessions_logout(HttpCtx* ctx);
 void route_get_sessions_user(HttpCtx* ctx);
 
+void route_get_receipt(HttpCtx* ctx);
+
 const Session* header_session(HttpCtx* ctx);
 const Session* middleware_session(HttpCtx* ctx);
 
 #define RESPOND(HTTP_CTX, STATUS, MIME_TYPE, ...)                              \
     {                                                                          \
         HttpCtx* _ctx = (HTTP_CTX);                                            \
-        char _body[8192];                                                       \
-        snprintf(_body, 8192 - 1, __VA_ARGS__);                                 \
+        size_t _body_size = (size_t)snprintf(NULL, 0, __VA_ARGS__);            \
+        char* _body = calloc(_body_size + 1, sizeof(char));                    \
+        sprintf(_body, __VA_ARGS__);                                           \
                                                                                \
         char content_length[24] = { 0 };                                       \
         snprintf(content_length, 24 - 1, "%ld", strlen(_body));                \
@@ -61,6 +64,7 @@ const Session* middleware_session(HttpCtx* ctx);
         http_ctx_res_headers_set(_ctx, "Content-Length", content_length);      \
                                                                                \
         http_ctx_respond(_ctx, (STATUS), _body);                               \
+        free(_body);                                                           \
     }
 
 #define RESPOND_HTML(HTTP_CTX, STATUS, ...)                                    \

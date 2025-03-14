@@ -32,6 +32,7 @@ void* http_ctx_user_ctx(HttpCtx* ctx);
 const char* http_ctx_req_path(HttpCtx* ctx);
 bool http_ctx_req_headers_has(HttpCtx* ctx, const char* key);
 const char* http_ctx_req_headers_get(HttpCtx* ctx, const char* key);
+const char* http_ctx_req_query(HttpCtx* ctx);
 const char* http_ctx_req_body(HttpCtx* ctx);
 void http_ctx_res_headers_set(HttpCtx* ctx, const char* key, const char* value);
 void http_ctx_respond(HttpCtx* ctx, int status, const char* body);

@@ -155,6 +155,11 @@ const char* http_ctx_req_headers_get(HttpCtx* ctx, const char* key)
     return http_request_get_header(ctx->req, key);
 }
 
+const char* http_ctx_req_query(HttpCtx* ctx)
+{
+    return ctx->req->query;
+}
+
 const char* http_ctx_req_body(HttpCtx* ctx)
 {
     return ctx->req_body;
