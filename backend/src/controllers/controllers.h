@@ -51,8 +51,8 @@ const Session* middleware_session(HttpCtx* ctx);
 #define RESPOND(HTTP_CTX, STATUS, MIME_TYPE, ...)                              \
     {                                                                          \
         HttpCtx* _ctx = (HTTP_CTX);                                            \
-        char _body[512];                                                       \
-        snprintf(_body, 512 - 1, __VA_ARGS__);                                 \
+        char _body[8192];                                                       \
+        snprintf(_body, 8192 - 1, __VA_ARGS__);                                 \
                                                                                \
         char content_length[24] = { 0 };                                       \
         snprintf(content_length, 24 - 1, "%ld", strlen(_body));                \

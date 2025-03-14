@@ -2,6 +2,7 @@
 #include "../models/models_json.h"
 #include "../util/str.h"
 #include "controllers.h"
+#include <stdio.h>
 
 void route_get_products_all(HttpCtx* ctx)
 {
