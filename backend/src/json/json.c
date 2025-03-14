@@ -11,8 +11,8 @@ typedef struct {
     JsonValue* val;
 } KV;
 
-DEFINE_VEC(JsonValue*, Arr, arr, 4)
-DEFINE_VEC(KV, Obj, obj, 4)
+DEFINE_VEC(JsonValue*, Arr, arr)
+DEFINE_VEC(KV, Obj, obj)
 
 struct JsonValue {
     JsonType type;

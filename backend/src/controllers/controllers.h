@@ -15,7 +15,7 @@ typedef struct {
 void session_construct(Session* session, int64_t user_id);
 void session_destroy(Session* session);
 
-DEFINE_VEC(Session, SessionVec, session_vec, 16)
+DEFINE_VEC(Session, SessionVec, session_vec)
 
 typedef struct {
     pthread_mutex_t mutex;
@@ -37,7 +37,7 @@ void route_get_not_found(HttpCtx* ctx);
 
 void route_get_products_all(HttpCtx* ctx);
 
-void route_get_cart_items_from_session(HttpCtx* ctx);
+void route_post_carts_purchase(HttpCtx* ctx);
 
 void route_post_users_register(HttpCtx* ctx);
 

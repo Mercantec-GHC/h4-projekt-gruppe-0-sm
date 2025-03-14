@@ -4,9 +4,8 @@
 #include "../models/models.h"
 #include <stdint.h>
 
-DEFINE_VEC(int64_t, Ids, ids, 8)
-DEFINE_VEC(Product, ProductVec, product_vec, 32)
-DEFINE_VEC(CartItem, CartItemVec, cart_item_vec, 32)
+DEFINE_VEC(int64_t, Ids, ids)
+DEFINE_VEC(Product, ProductVec, product_vec)
 
 typedef enum {
     DbRes_Ok,

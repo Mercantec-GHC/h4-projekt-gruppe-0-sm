@@ -21,4 +21,4 @@ typedef struct {
     char* value;
 } Header;
 
-DEFINE_VEC(Header, HeaderVec, header_vec, 8)
+DEFINE_VEC(Header, HeaderVec, header_vec)

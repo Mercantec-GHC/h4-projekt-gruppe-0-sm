@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../collections/collection.h"
 #include <stdint.h>
 
 typedef struct {
@@ -31,18 +32,10 @@ typedef struct {
     int64_t price_dkk_cent;
 } ProductPrice;
 
-typedef struct {
-    int64_t id;
-    int64_t user_id;
-    int64_t product_id;
-    int64_t amount;
-} CartItem;
-
 void user_destroy(User* model);
 void coord_destroy(Coord* model);
 void product_destroy(Product* model);
 void product_price_destroy(ProductPrice* model);
-void cart_item_destroy(CartItem* model);
 
 //
 
@@ -52,10 +45,24 @@ typedef struct {
     char* password;
 } UsersRegisterReq;
 
+void users_register_req_destroy(UsersRegisterReq* model);
+
 typedef struct {
     char* email;
     char* password;
-} AuthLoginReq;
+} SessionsLoginReq;
 
-void users_register_req_destroy(UsersRegisterReq* model);
-void auth_login_req_destroy(AuthLoginReq* model);
+void sessions_login_req_destroy(SessionsLoginReq* model);
+
+typedef struct {
+    int64_t product_id;
+    int64_t amount;
+} CartsItem;
+
+DECLARE_VEC_TYPE(CartsItem, CartsItemVec, carts_item_vec, )
+
+typedef struct {
+    CartsItemVec items;
+} CartsPurchaseReq;
+
+void carts_purchase_req_destroy(CartsPurchaseReq* model);

@@ -10,7 +10,7 @@
         MAP_TYPE##Value value;                                                 \
     } MAP_TYPE_Entry;                                                          \
                                                                                \
-    DEFINE_VEC(MAP_TYPE_Entry, MAP_TYPE, FN_PREFIX##_entry_vec, 8)             \
+    DEFINE_VEC(MAP_TYPE_Entry, MAP_TYPE, FN_PREFIX##_entry_vec)                \
                                                                                \
     MAYBE_UNUSED static inline int FN_PREFIX##_construct(MAP_TYPE* map)        \
     {                                                                          \

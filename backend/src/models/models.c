@@ -1,5 +1,6 @@
 #include "models.h"
 #include "../json/json.h"
+#include "../util/panic.h"
 #include "../util/str.h"
 #include "models_json.h"
 #include <assert.h>
@@ -38,13 +39,6 @@ void product_price_destroy(ProductPrice* m)
     (void)m;
 }
 
-void cart_item_destroy(CartItem* m)
-{
-    static_assert(sizeof(CartItem) == 32, "model has changed");
-
-    (void)m;
-}
-
 void users_register_req_destroy(UsersRegisterReq* model)
 {
     static_assert(sizeof(UsersRegisterReq) == 24, "model has changed");
@@ -54,12 +48,19 @@ void users_register_req_destroy(UsersRegisterReq* model)
     free(model->password);
 }
 
-void auth_login_req_destroy(AuthLoginReq* model)
+void sessions_login_req_destroy(SessionsLoginReq* model)
 {
-    static_assert(sizeof(AuthLoginReq) == 16, "model has changed");
+    static_assert(sizeof(SessionsLoginReq) == 16, "model has changed");
 
     free(model->email);
     free(model->password);
+}
+
+void carts_purchase_req_destroy(CartsPurchaseReq* model)
+{
+    static_assert(sizeof(CartsPurchaseReq) == 24, "model has changed");
+
+    carts_item_vec_destroy(&model->items);
 }
 
 char* user_to_json_string(const User* m)
@@ -156,29 +157,6 @@ char* product_price_to_json_string(const ProductPrice* m)
     return result;
 }
 
-char* cart_item_to_json_string(const CartItem* m)
-{
-    static_assert(sizeof(CartItem) == 32, "model has changed");
-
-    String string;
-    string_construct(&string);
-    string_pushf(&string,
-        "{"
-        "\"id\":%ld,"
-        "\"user_id\":%ld,"
-        "\"product_id\":%ld,"
-        "\"amount\":%ld"
-        "}",
-        m->id,
-        m->user_id,
-        m->product_id,
-        m->amount);
-
-    char* result = string_copy(&string);
-    string_destroy(&string);
-    return result;
-}
-
 char* users_register_req_to_json(const UsersRegisterReq* m)
 {
     static_assert(sizeof(UsersRegisterReq) == 24, "model has changed");
@@ -200,9 +178,9 @@ char* users_register_req_to_json(const UsersRegisterReq* m)
     return result;
 }
 
-char* auth_login_req_to_json(const AuthLoginReq* m)
+char* sessions_login_req_to_json(const SessionsLoginReq* m)
 {
-    static_assert(sizeof(AuthLoginReq) == 16, "model has changed");
+    static_assert(sizeof(SessionsLoginReq) == 16, "model has changed");
 
     String string;
     string_construct(&string);
@@ -217,6 +195,13 @@ char* auth_login_req_to_json(const AuthLoginReq* m)
     char* result = string_copy(&string);
     string_destroy(&string);
     return result;
+}
+
+char* carts_purchase_req_to_json(const CartsPurchaseReq* m)
+{
+    static_assert(sizeof(CartsPurchaseReq) == 24, "model has changed");
+
+    PANIC("not implemented");
 }
 
 typedef struct {
@@ -241,8 +226,14 @@ static inline bool obj_conforms(
     return true;
 }
 
-#define GET_INT(K) json_int(json_object_get(json, K))
-#define GET_STR(K) str_dup(json_string(json_object_get(json, K)))
+#define OBJ_GET_INT(JSON, K) json_int(json_object_get(JSON, K))
+#define OBJ_GET_STR(JSON, K) str_dup(json_string(json_object_get(JSON, K)))
+
+#define OBJ_CONFORMS(JSON, FIELDS)                                             \
+    obj_conforms(JSON, FIELDS, sizeof(FIELDS) / sizeof(FIELDS[0]))
+
+#define GET_INT(K) OBJ_GET_INT(json, K)
+#define GET_STR(K) OBJ_GET_STR(json, K)
 
 int user_from_json(User* m, const JsonValue* json)
 {
@@ -255,7 +246,7 @@ int user_from_json(User* m, const JsonValue* json)
         { "password_hash", JsonType_String },
         { "balance_dkk_cent", JsonType_Number },
     };
-    if (!obj_conforms(json, fields, sizeof(fields) / sizeof(fields[0])))
+    if (!OBJ_CONFORMS(json, fields))
         return -1;
     *m = (User) {
         .id = GET_INT("id"),
@@ -276,7 +267,7 @@ int coord_from_json(Coord* m, const JsonValue* json)
         { "x", JsonType_Number },
         { "y", JsonType_Number },
     };
-    if (!obj_conforms(json, fields, sizeof(fields) / sizeof(fields[0])))
+    if (!OBJ_CONFORMS(json, fields))
         return -1;
     *m = (Coord) {
         .id = GET_INT("id"),
@@ -298,7 +289,7 @@ int product_from_json(Product* m, const JsonValue* json)
         { "coord_id", JsonType_Number },
         { "barcode", JsonType_String },
     };
-    if (!obj_conforms(json, fields, sizeof(fields) / sizeof(fields[0])))
+    if (!OBJ_CONFORMS(json, fields))
         return -1;
     *m = (Product) {
         .id = GET_INT("id"),
@@ -320,33 +311,12 @@ int product_price_from_json(ProductPrice* m, const JsonValue* json)
         { "product_id", JsonType_Number },
         { "price_dkk_cent", JsonType_Number },
     };
-    if (!obj_conforms(json, fields, sizeof(fields) / sizeof(fields[0])))
+    if (!OBJ_CONFORMS(json, fields))
         return -1;
     *m = (ProductPrice) {
         .id = GET_INT("id"),
         .product_id = GET_INT("product_id"),
         .price_dkk_cent = GET_INT("price_dkk_cent"),
-    };
-    return 0;
-}
-
-int cart_item_from_json(CartItem* m, const JsonValue* json)
-{
-    static_assert(sizeof(CartItem) == 32, "model has changed");
-
-    ObjField fields[] = {
-        { "id", JsonType_Number },
-        { "user_id", JsonType_Number },
-        { "product_id", JsonType_Number },
-        { "amount", JsonType_Number },
-    };
-    if (!obj_conforms(json, fields, sizeof(fields) / sizeof(fields[0])))
-        return -1;
-    *m = (CartItem) {
-        .id = GET_INT("id"),
-        .user_id = GET_INT("user_id"),
-        .product_id = GET_INT("product_id"),
-        .amount = GET_INT("amount"),
     };
     return 0;
 }
@@ -360,7 +330,7 @@ int users_register_req_from_json(UsersRegisterReq* m, const JsonValue* json)
         { "email", JsonType_String },
         { "password", JsonType_String },
     };
-    if (!obj_conforms(json, fields, sizeof(fields) / sizeof(fields[0])))
+    if (!OBJ_CONFORMS(json, fields))
         return -1;
     *m = (UsersRegisterReq) {
         .name = GET_STR("name"),
@@ -370,19 +340,60 @@ int users_register_req_from_json(UsersRegisterReq* m, const JsonValue* json)
     return 0;
 }
 
-int auth_login_req_from_json(AuthLoginReq* m, const JsonValue* json)
+int sessions_login_req_from_json(SessionsLoginReq* m, const JsonValue* json)
 {
-    static_assert(sizeof(AuthLoginReq) == 16, "model has changed");
+    static_assert(sizeof(SessionsLoginReq) == 16, "model has changed");
 
     ObjField fields[] = {
         { "email", JsonType_String },
         { "password", JsonType_String },
     };
-    if (!obj_conforms(json, fields, sizeof(fields) / sizeof(fields[0])))
+    if (!OBJ_CONFORMS(json, fields))
         return -1;
-    *m = (AuthLoginReq) {
+    *m = (SessionsLoginReq) {
         .email = GET_STR("email"),
         .password = GET_STR("password"),
     };
     return 0;
 }
+
+int carts_purchase_req_from_json(CartsPurchaseReq* m, const JsonValue* json)
+{
+    static_assert(sizeof(CartsPurchaseReq) == 24, "model has changed");
+
+    ObjField fields[] = {
+        { "items", JsonType_Array },
+    };
+    if (!OBJ_CONFORMS(json, fields))
+        return -1;
+    *m = (CartsPurchaseReq) {
+        .items = (CartsItemVec) { 0 },
+    };
+    carts_item_vec_construct(&m->items);
+
+    const JsonValue* items = json_object_get(json, "items");
+    size_t items_size = json_array_size(items);
+
+    for (size_t i = 0; i < items_size; ++i) {
+        const JsonValue* item = json_array_get(items, i);
+
+        ObjField item_fields[] = {
+            { "product_id", JsonType_Number },
+            { "amount", JsonType_Number },
+        };
+        if (!OBJ_CONFORMS(item, item_fields)) {
+            carts_item_vec_destroy(&m->items);
+            return -1;
+        }
+
+        carts_item_vec_push(&m->items,
+            (CartsItem) {
+                .product_id = OBJ_GET_INT(item, "product_id"),
+                .amount = OBJ_GET_INT(item, "amount"),
+            });
+    }
+
+    return 0;
+}
+
+DEFINE_VEC_IMPL(CartsItem, CartsItemVec, carts_item_vec, )

@@ -21,7 +21,7 @@ typedef struct {
     HttpHandlerFn handler;
 } Handler;
 
-DEFINE_VEC(Handler, HandlerVec, handler_vec, 8)
+DEFINE_VEC(Handler, HandlerVec, handler_vec)
 
 struct HttpServer {
     int fd;

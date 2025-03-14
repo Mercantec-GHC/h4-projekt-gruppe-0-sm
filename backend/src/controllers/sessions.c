@@ -12,8 +12,8 @@ void route_post_sessions_login(HttpCtx* ctx)
 
     JsonValue* body_json = json_parse(body_str, strlen(body_str));
 
-    AuthLoginReq req;
-    int parse_res = auth_login_req_from_json(&req, body_json);
+    SessionsLoginReq req;
+    int parse_res = sessions_login_req_from_json(&req, body_json);
     json_free(body_json);
 
     if (parse_res != 0) {
@@ -48,7 +48,7 @@ void route_post_sessions_login(HttpCtx* ctx)
 l2_return:
     user_destroy(&user);
 l0_return:
-    auth_login_req_destroy(&req);
+    sessions_login_req_destroy(&req);
 }
 
 void route_post_sessions_logout(HttpCtx* ctx)

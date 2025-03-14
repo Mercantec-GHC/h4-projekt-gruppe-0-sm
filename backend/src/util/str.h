@@ -23,7 +23,7 @@ typedef struct {
 StrSplitter str_splitter(const char* text, size_t text_len, const char* split);
 StrSlice str_split_next(StrSplitter* splitter);
 
-DEFINE_VEC(char, String, string, 8)
+DEFINE_VEC(char, String, string)
 
 void string_push_str(String* string, const char* str);
 void string_push_fmt_va(String* string, const char* fmt, ...);
@@ -31,7 +31,7 @@ char* string_copy(const String* string);
 
 #define string_pushf(STRING, ...) string_push_fmt_va(STRING, __VA_ARGS__)
 
-DEFINE_VEC(char*, RawStrVec, rawstr_vec, 8)
+DEFINE_VEC(char*, RawStrVec, rawstr_vec)
 
 #define MAX_HASH_INPUT_LEN 256 - 1
 

@@ -32,19 +32,6 @@ CREATE TABLE IF NOT EXISTS product_prices (
     FOREIGN KEY(product) REFERENCES products(id)
 );
 
-CREATE TABLE IF NOT EXISTS cart_items (
-    id INTEGER PRIMARY KEY,
-    user INTEGER NOT NULL,
-    product INTEGER NOT NULL,
-    amount INTEGER NOT NULL,
-
-
-    FOREIGN KEY(user) REFERENCES users(id),
-    FOREIGN KEY(product) REFERENCES product(id)
-);
-
-
-
 INSERT OR REPLACE INTO users (name, email, password_hash, balance_dkk_cent)
     VALUES ('User','test@email.com','08ce0220f6d63d85c3ac313e308f4fca35ecfb850baa8ddb924cfab98137b6b18b4a8e027067cb98802757df1337246a0f3aa25c44c2b788517a871086419dcf',10000);
 
