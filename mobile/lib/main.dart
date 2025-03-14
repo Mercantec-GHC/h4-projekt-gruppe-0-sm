@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => RoutingController()),
         ChangeNotifierProvider(
             create: (_) => ProductController(server: server)),
-        ChangeNotifierProvider(create: (_) => CartController()),
+        ChangeNotifierProvider(create: (_) => CartControllerCache()),
         ChangeNotifierProvider(create: (_) => ReceiptController()),
         ChangeNotifierProvider(create: (_) => PayingStateController()),
         ChangeNotifierProvider(create: (_) => AddToCartStateController()),

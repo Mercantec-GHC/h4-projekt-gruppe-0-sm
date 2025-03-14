@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/models/cart_item.dart';
 import 'package:mobile/models/product.dart';
-import 'package:mobile/controllers/cart.dart';
 
 class ReceiptController extends ChangeNotifier {
   int nextId = 0;
@@ -80,6 +80,6 @@ class ReceiptItem {
   ReceiptItem({required this.product, required this.amount});
 
   int totalPrice() {
-    return product.priceInDkkCents * amount;
+    return product.priceDkkCent * amount;
   }
 }

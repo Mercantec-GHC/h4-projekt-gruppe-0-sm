@@ -23,7 +23,7 @@ class ProductController extends ChangeNotifier {
     }
   }
 
-  get filteredProducts {
+  List<Product> get filteredProducts {
     if (query.trim().isEmpty) {
       return products;
     }

@@ -29,7 +29,7 @@ class SaldoSettingsPage extends StatelessWidget {
               sessionController: sessionController,
               placeholder: const CircularProgressIndicator(),
               builder: (context, user) => Text(
-                  "Nuværende saldo: ${formatDkkCents(user.balanceInDkkCents)}",
+                  "Nuværende saldo: ${formatDkkCents(user.balanceDkkCents)}",
                   style: Theme.of(context).textTheme.bodyLarge),
             ),
             ElevatedButton.icon(

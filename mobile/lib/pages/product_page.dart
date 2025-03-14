@@ -38,7 +38,7 @@ class ProductPage extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            formatDkkCents(product.priceInDkkCents),
+                            formatDkkCents(product.priceDkkCent),
                             style: const TextStyle(
                               fontSize: 16,
                             ),
@@ -66,7 +66,7 @@ class ProductPage extends StatelessWidget {
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
                     Text(
-                      formatDkkCents(product.priceInDkkCents),
+                      formatDkkCents(product.priceDkkCent),
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
                     Padding(
@@ -90,7 +90,7 @@ class ProductPage extends StatelessWidget {
                             duration: const Duration(seconds: 2),
                           );
                           ScaffoldMessenger.of(context).removeCurrentSnackBar();
-                          final cartRepo = context.read<CartController>();
+                          final cartRepo = context.read<CartControllerCache>();
                           cartRepo.addToCart(product);
                           ScaffoldMessenger.of(context).showSnackBar(snackBar);
                         },

@@ -129,7 +129,7 @@ class AllProductsPage extends StatelessWidget {
                   itemBuilder: (_, idx) => ProductListItem(
                     productId: products[idx].id,
                     name: products[idx].name,
-                    price: products[idx].priceInDkkCents,
+                    price: products[idx].priceDkkCent,
                     productPage: ProductPage(product: products[idx]),
                     product: products[idx],
                   ),

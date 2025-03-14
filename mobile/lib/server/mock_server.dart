@@ -11,90 +11,80 @@ class MockServer implements Server {
       Product(
           id: nextId++,
           name: "Minimælk",
-          priceInDkkCents: 1200,
+          priceDkkCent: 1200,
           description: "Konventionel minimælk med fedtprocent på 0,4%"),
       Product(
           id: nextId++,
           name: "Letmælk",
-          priceInDkkCents: 1300,
+          priceDkkCent: 1300,
           description: "Konventionel letmælk med fedtprocent på 1,5%",
           location: Coordinate(x: 1800, y: 100)),
       Product(
           id: nextId++,
           name: "Frilands Øko Supermælk",
-          priceInDkkCents: 2000,
+          priceDkkCent: 2000,
           description:
               "Økologisk mælk af frilandskøer med fedtprocent på 3,5%. Ikke homogeniseret eller pasteuriseret. Skaber store muskler og styrker knoglerne 💪"),
       Product(
           id: nextId++,
           name: "Øko Gulerødder 1 kg",
-          priceInDkkCents: 1000,
+          priceDkkCent: 1000,
           description: ""),
       Product(
-          id: nextId++,
-          name: "Øko Agurk",
-          priceInDkkCents: 1000,
-          description: ""),
+          id: nextId++, name: "Øko Agurk", priceDkkCent: 1000, description: ""),
       Product(
           id: nextId++,
           name: "Æbler 1 kg",
-          priceInDkkCents: 1000,
+          priceDkkCent: 1000,
           description: ""),
       Product(
           id: nextId++,
           name: "Basmati Ris",
-          priceInDkkCents: 2000,
+          priceDkkCent: 2000,
           description: ""),
       Product(
           id: nextId++,
           name: "Haribo Mix",
-          priceInDkkCents: 3000,
+          priceDkkCent: 3000,
           description: ""),
-      Product(
-          id: nextId++, name: "Smør", priceInDkkCents: 3000, description: ""),
+      Product(id: nextId++, name: "Smør", priceDkkCent: 3000, description: ""),
       Product(
           id: nextId++,
           name: "Harboe Cola",
-          priceInDkkCents: 500,
+          priceDkkCent: 500,
           description: ""),
       Product(
           id: nextId++,
           barcode: "5060337502900",
           name: "Monster Energi Drik",
-          priceInDkkCents: 1500,
+          priceDkkCent: 1500,
           description: ""),
       Product(
           id: nextId++,
           barcode: "5712870659220",
           name: "Amper Energi Drik",
-          priceInDkkCents: 750,
+          priceDkkCent: 750,
           description: ""),
       Product(
           id: nextId++,
           barcode: "5710326001937",
           name: "Danskvand Med Brus",
-          priceInDkkCents: 500,
+          priceDkkCent: 500,
           description: "Med smag a blåbær"),
       Product(
-          id: nextId++,
-          name: "Spaghetti",
-          priceInDkkCents: 1000,
-          description: ""),
+          id: nextId++, name: "Spaghetti", priceDkkCent: 1000, description: ""),
       Product(
-          id: nextId++,
-          name: "Rød Cecil",
-          priceInDkkCents: 6000,
-          description: ""),
+          id: nextId++, name: "Rød Cecil", priceDkkCent: 6000, description: ""),
       Product(
           id: nextId++,
           name: "Jägermeister 750 ml",
-          priceInDkkCents: 12000,
+          priceDkkCent: 12000,
           description: ""),
       Product(
           id: nextId++,
           barcode: "5711953068881",
           name: "Protein Chokoladedrik",
-          priceInDkkCents: 1500,
+          priceDkkCent: 1500,
           description: "Arla's protein chokolade drik der giver store muskler"),
     ]);
   }
@@ -128,7 +118,7 @@ class MockServer implements Server {
             id: 0,
             email: "test@test.com",
             name: "testuser",
-            balanceInDkkCents: 10000));
+            balanceDkkCents: 10000));
   }
 
   @override

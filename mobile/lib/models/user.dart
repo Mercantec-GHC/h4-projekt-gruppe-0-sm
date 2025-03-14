@@ -6,30 +6,30 @@ class User {
   final String name;
 
   // balance is in øre
-  int balanceInDkkCents;
+  int balanceDkkCents;
 
   User({
     required this.id,
     required this.email,
     required this.name,
-    required this.balanceInDkkCents,
+    required this.balanceDkkCents,
   });
 
   User.fromJson(Map<String, dynamic> json)
       : email = json["email"],
         id = json["id"],
         name = json["name"],
-        balanceInDkkCents = json["balance_dkk_cent"];
+        balanceDkkCents = json["balance_dkk_cent"];
 
   void addBalanceFounds(int amount) {
-    balanceInDkkCents += amount;
+    balanceDkkCents += amount;
   }
 
   Result<int, String> pay(int amount) {
-    if (balanceInDkkCents < amount) {
+    if (balanceDkkCents < amount) {
       return Err("User can not afford paying amount $amount");
     }
-    balanceInDkkCents -= amount;
-    return Ok(balanceInDkkCents);
+    balanceDkkCents -= amount;
+    return Ok(balanceDkkCents);
   }
 }

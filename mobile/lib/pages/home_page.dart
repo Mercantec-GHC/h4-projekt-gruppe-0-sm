@@ -38,7 +38,7 @@ class HomePage extends StatelessWidget {
                   sessionController: sessionController,
                   placeholder: const CircularProgressIndicator(),
                   builder: (context, user) => Text(
-                      "Saldo: ${formatDkkCents(user.balanceInDkkCents)}",
+                      "Saldo: ${formatDkkCents(user.balanceDkkCents)}",
                       style: Theme.of(context).textTheme.headlineSmall))),
         ),
         Expanded(

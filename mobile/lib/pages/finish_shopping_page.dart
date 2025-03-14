@@ -14,7 +14,8 @@ class FinishShoppingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final CartController cartController = context.read<CartController>();
+    final CartControllerCache cartController =
+        context.read<CartControllerCache>();
     final ReceiptController receiptRepo = context.read<ReceiptController>();
     final PayingStateController payingStateRepo =
         context.watch<PayingStateController>();
@@ -33,7 +34,7 @@ class FinishShoppingPage extends StatelessWidget {
                   child: ListView.builder(
                       shrinkWrap: true,
                       itemBuilder: (_, idx) => ReceiptItemView(
-                          pricePerAmount: cart[idx].product.priceInDkkCents,
+                          pricePerAmount: cart[idx].product.priceDkkCent,
                           name: cart[idx].product.name,
                           amount: cart[idx].amount),
                       itemCount: cart.length),

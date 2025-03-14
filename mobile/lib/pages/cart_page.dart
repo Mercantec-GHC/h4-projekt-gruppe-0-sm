@@ -13,7 +13,7 @@ import 'package:mobile/widgets/sized_card.dart';
 import 'package:provider/provider.dart';
 
 class CartItemView extends StatelessWidget {
-  final CartController cartRepo;
+  final CartControllerCache cartRepo;
   final int productId;
   final String name;
   final int price;
@@ -150,7 +150,7 @@ class CartPage extends StatelessWidget {
     return Column(
       children: [
         Expanded(
-          child: Consumer<CartController>(
+          child: Consumer<CartControllerCache>(
             builder: (_, cartRepo, __) {
               final cart = cartRepo.allCartItems();
               return ListView.builder(
@@ -159,7 +159,7 @@ class CartPage extends StatelessWidget {
                     cartRepo: cartRepo,
                     productId: cart[idx].product.id,
                     name: cart[idx].product.name,
-                    price: cart[idx].product.priceInDkkCents,
+                    price: cart[idx].product.priceDkkCent,
                     amount: cart[idx].amount),
                 itemCount: cart.length,
               );
@@ -202,9 +202,9 @@ class CartPage extends StatelessWidget {
                                             onPressed: () {
                                               final productRepo = context
                                                   .read<ProductController>();
-                                              final CartController cartRepo =
-                                                  context
-                                                      .read<CartController>();
+                                              final CartControllerCache
+                                                  cartRepo = context.read<
+                                                      CartControllerCache>();
                                               final productResult = productRepo
                                                   .productWithBarcode(
                                                       inputController.text);
@@ -260,8 +260,8 @@ class CartPage extends StatelessWidget {
                                 if (!context.mounted) {
                                   return;
                                 }
-                                final CartController cartRepo =
-                                    context.read<CartController>();
+                                final CartControllerCache cartRepo =
+                                    context.read<CartControllerCache>();
                                 final productRepo =
                                     context.read<ProductController>();
                                 final productResult = productRepo
