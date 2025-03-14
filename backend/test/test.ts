@@ -70,9 +70,6 @@ async function testCarts(t: Deno.TestContext, token: string) {
                 items: [
                     { product_id: 1, amount: 2 },
                     { product_id: 2, amount: 5 },
-                    { product_id: 2, amount: 5 },
-                    { product_id: 2, amount: 5 },
-                    { product_id: 2, amount: 5 },
                 ],
             },
             { "Session-Token": token },
