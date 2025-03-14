@@ -24,11 +24,8 @@ int main(void)
 
     Db* db = db_sqlite_new();
 
-    Cx cx = {
-        .number = 1,
-        .db = db,
-    };
-    session_vec_construct(&cx.sessions);
+    Cx cx;
+    cx_construct(&cx, db);
 
     server = http_server_new((HttpServerOpts) {
         .port = 8080,
@@ -59,6 +56,7 @@ int main(void)
     http_server_listen(server);
 
     http_server_free(server);
+    cx_destroy(&cx);
     db_sqlite_free(db);
 }
 

@@ -2,6 +2,7 @@
 
 #include "../db/db.h"
 #include "../http/http.h"
+#include <pthread.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -16,15 +17,19 @@ void session_destroy(Session* session);
 
 DEFINE_VEC(Session, SessionVec, session_vec, 16)
 
-void sessions_remove(SessionVec* vec, int64_t user_id);
-Session* sessions_add(SessionVec* vec, int64_t user_id);
-const Session* sessions_find(SessionVec* vec, const char* token);
-
 typedef struct {
+    pthread_mutex_t mutex;
     int number;
     SessionVec sessions;
     Db* db;
 } Cx;
+
+void cx_construct(Cx* cx, Db* db);
+void cx_destroy(Cx* cx);
+
+void cx_sessions_remove(Cx* cx, int64_t user_id);
+Session* cx_sessions_add(Cx* cx, int64_t user_id);
+const Session* cx_sessions_find(Cx* cx, const char* token);
 
 void route_get_index(HttpCtx* ctx);
 void route_post_set_number(HttpCtx* ctx);

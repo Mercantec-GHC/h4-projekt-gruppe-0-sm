@@ -41,8 +41,8 @@ void route_post_sessions_login(HttpCtx* ctx)
         goto l2_return;
     }
 
-    sessions_remove(&cx->sessions, user.id);
-    Session* session = sessions_add(&cx->sessions, user.id);
+    cx_sessions_remove(cx, user.id);
+    Session* session = cx_sessions_add(cx, user.id);
 
     RESPOND_JSON(ctx, 200, "{\"ok\":true,\"token\":\"%s\"}", session->token);
 l2_return:
@@ -59,7 +59,7 @@ void route_post_sessions_logout(HttpCtx* ctx)
         RESPOND_JSON(ctx, 200, "{\"ok\":true}");
         return;
     }
-    sessions_remove(&cx->sessions, session->user_id);
+    cx_sessions_remove(cx, session->user_id);
     RESPOND_JSON(ctx, 200, "{\"ok\":true}");
 }
 
@@ -92,7 +92,7 @@ const Session* header_session(HttpCtx* ctx)
     }
     const char* token = http_ctx_req_headers_get(ctx, "Session-Token");
     // session expiration should be handled here
-    return sessions_find(&cx->sessions, token);
+    return cx_sessions_find(cx, token);
 }
 
 // Returns NULL AND responds if no valid session is found.
@@ -104,55 +104,4 @@ const Session* middleware_session(HttpCtx* ctx)
         return NULL;
     }
     return session;
-}
-
-void session_construct(Session* session, int64_t user_id)
-{
-    char* token = str_random(64);
-    size_t token_hash = str_fast_hash(token);
-    *session = (Session) { user_id, token, token_hash };
-}
-
-void session_destroy(Session* session)
-{
-    free(session->token);
-    *session = (Session) {
-        .user_id = 0,
-        .token = NULL,
-        .token_hash = 0,
-    };
-}
-
-void sessions_remove(SessionVec* vec, int64_t user_id)
-{
-    for (size_t i = 0; i < vec->size; ++i) {
-        if (vec->data[i].user_id == user_id) {
-            session_destroy(&vec->data[i]);
-        }
-    }
-}
-
-Session* sessions_add(SessionVec* vec, int64_t user_id)
-{
-    for (size_t i = 0; i < vec->size; ++i) {
-        if (vec->data[i].user_id == 0) {
-            session_construct(&vec->data[i], user_id);
-            return &vec->data[i];
-        }
-    }
-    Session session;
-    session_construct(&session, user_id);
-    session_vec_push(vec, session);
-    return &vec->data[vec->size - 1];
-}
-
-const Session* sessions_find(SessionVec* vec, const char* token)
-{
-    size_t token_hash = str_fast_hash(token);
-    for (size_t i = 0; i < vec->size; ++i) {
-        if (vec->data[i].token_hash == token_hash) {
-            return &vec->data[i];
-        }
-    }
-    return NULL;
 }

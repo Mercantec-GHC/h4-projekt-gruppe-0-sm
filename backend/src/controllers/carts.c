@@ -12,13 +12,6 @@ void route_get_cart_items_from_session(HttpCtx* ctx)
     CartItemVec cart_items;
     cart_item_vec_construct(&cart_items);
 
-    DbRes db_res
-        = db_cart_items_with_user_id(cx->db, &cart_items, session->user_id);
-    if (db_res != DbRes_Ok) {
-        RESPOND_BAD_REQUEST(ctx, "Could not find cart for user");
-        return;
-    }
-
     String res;
     string_construct(&res);
 
