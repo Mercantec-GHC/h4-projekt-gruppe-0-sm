@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/controllers/session.dart';
+import 'package:mobile/controllers/user.dart';
 import 'package:mobile/pages/settings_pages/saldo.dart';
 import 'package:provider/provider.dart';
 
@@ -30,7 +30,7 @@ class SettingsPage extends StatelessWidget {
         icon: Icons.door_back_door,
         title: "Log ud",
         action: (context) async {
-          final sessionsController = context.read<SessionController>();
+          final sessionsController = context.read<UserController>();
           Navigator.pop(context);
           await sessionsController.logout();
         }),

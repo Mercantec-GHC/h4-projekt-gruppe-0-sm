@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/controllers/session.dart';
 import 'package:mobile/controllers/user.dart';
 import 'package:mobile/results.dart';
 import 'package:mobile/utils/build_if_session_exists.dart';
@@ -11,8 +10,7 @@ class SaldoSettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sessionController = context.watch<SessionController>();
-    final userController = context.watch<UsersController>();
+    final sessionController = context.watch<UserController>();
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -38,7 +36,7 @@ class SaldoSettingsPage extends StatelessWidget {
                 }),
             ElevatedButton.icon(
               onPressed: () async {
-                final res = await userController.addBalance();
+                final res = await sessionController.addBalance();
                 switch (res) {
                   case Ok<Null, String>():
                     print("yay");

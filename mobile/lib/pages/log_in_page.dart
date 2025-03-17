@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/controllers/session.dart';
+import 'package:mobile/controllers/user.dart';
 import 'package:mobile/pages/register_page.dart';
 import 'package:mobile/results.dart';
 import 'package:mobile/widgets/error_box.dart';
@@ -30,6 +30,8 @@ class LogInFormState extends State<LogInForm> {
   bool loginError = false;
   @override
   Widget build(BuildContext context) {
+    final userController = context.read<UserController>();
+
     final mailController = TextEditingController();
     final passwordController = TextEditingController();
 
@@ -61,8 +63,7 @@ class LogInFormState extends State<LogInForm> {
         ),
         PrimaryButton(
             onPressed: () async {
-              final sessionController = context.read<SessionController>();
-              final loginResult = await sessionController.login(
+              final loginResult = await userController.login(
                   mailController.text, passwordController.text);
               switch (loginResult) {
                 case Ok<Null, String>():

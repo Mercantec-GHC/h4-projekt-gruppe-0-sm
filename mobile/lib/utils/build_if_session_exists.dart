@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/controllers/session.dart';
+import 'package:mobile/controllers/user.dart';
 import 'package:mobile/models/user.dart';
 
 class BuildIfSessionUserExists extends StatelessWidget {
-  final SessionController sessionController;
+  final UserController sessionController;
   final Widget placeholder;
   final Widget Function(BuildContext, User) builder;
 
@@ -16,9 +16,9 @@ class BuildIfSessionUserExists extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-        future: sessionController.loadUser(),
+        future: sessionController.loadUserOld(),
         builder: (context, snapshot) {
-          final user = sessionController.user;
+          final user = sessionController.userOld;
           if (user == null) {
             return placeholder;
           }

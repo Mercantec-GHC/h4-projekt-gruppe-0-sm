@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mobile/controllers/session.dart';
+import 'package:mobile/controllers/user.dart';
 import 'package:mobile/pages/dashboard.dart';
 import 'package:mobile/pages/log_in_page.dart';
 import 'package:mobile/controllers/add_to_cart_state.dart';
@@ -9,25 +9,37 @@ import 'package:mobile/controllers/location_image.dart';
 import 'package:mobile/controllers/paying_state.dart';
 import 'package:mobile/controllers/product.dart';
 import 'package:mobile/controllers/receipt.dart';
-import 'package:mobile/controllers/user.dart';
+import 'package:mobile/controllers/users.dart';
 import 'package:mobile/server/backend_server.dart';
+import 'package:mobile/server/server.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile/controllers/routing.dart';
 
 void main() {
-  runApp(const MyApp());
+  final server = BackendServer();
+  final users = UsersController(server: server);
+
+  final user = UserController(server: server);
+  user.loadUser().ignore();
+
+  runApp(MyApp(
+    users: users,
+    server: server,
+  ));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final UsersController users;
+
+  final Server server;
+
+  const MyApp({super.key, required this.users, required this.server});
 
   @override
   Widget build(BuildContext context) {
-    final server = BackendServer();
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-            create: (_) => SessionController(server: server)),
+        ChangeNotifierProvider(create: (_) => UserController(server: server)),
         ChangeNotifierProvider(create: (_) => RoutingController()),
         ChangeNotifierProvider(
             create: (_) => ProductController(server: server)),
@@ -37,10 +49,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => PayingStateController()),
         ChangeNotifierProvider(create: (_) => AddToCartStateController()),
         ChangeNotifierProvider(create: (_) => LocationImageController()),
-        ChangeNotifierProvider(
-            create: (context) => UsersController(
-                server: server,
-                sessionController: context.read<SessionController>())),
+        Provider(create: (_) => users),
       ],
       child: MaterialApp(
           title: 'Fresh Plaza',
@@ -52,7 +61,7 @@ class MyApp extends StatelessWidget {
                 GoogleFonts.merriweatherTextTheme(Theme.of(context).textTheme),
             useMaterial3: true,
           ),
-          home: Consumer<SessionController>(
+          home: Consumer<UserController>(
             builder: (_, sessionController, __) {
               if (sessionController.sessionToken is String) {
                 return Dashboard();

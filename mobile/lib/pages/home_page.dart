@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/controllers/session.dart';
 import 'package:mobile/controllers/user.dart';
 import 'package:mobile/pages/settings_page.dart';
 import 'package:mobile/utils/build_if_session_exists.dart';
@@ -11,8 +10,8 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sessionController = context.watch<SessionController>();
-    context.watch<UsersController>();
+    final userController = context.watch<UserController>();
+
     return Column(
       children: [
         Row(
@@ -37,7 +36,7 @@ class HomePage extends StatelessWidget {
               ),
               padding: const EdgeInsets.all(10),
               child: BuildIfSessionUserExists(
-                  sessionController: sessionController,
+                  sessionController: userController,
                   placeholder: const CircularProgressIndicator(),
                   builder: (context, user) => Text(
                       "Saldo: ${formatDkkCents(user.balanceDkkCents)}",
@@ -48,7 +47,7 @@ class HomePage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               BuildIfSessionUserExists(
-                  sessionController: sessionController,
+                  sessionController: userController,
                   placeholder: const CircularProgressIndicator(),
                   builder: (context, user) => Text(
                         "Velkommen ${user.name}",
