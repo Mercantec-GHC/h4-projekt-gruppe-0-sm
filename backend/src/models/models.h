@@ -86,3 +86,24 @@ typedef struct {
 } CartsPurchaseReq;
 
 void carts_purchase_req_destroy(CartsPurchaseReq* model);
+
+typedef struct {
+    int64_t product_id;
+    char* name;
+    int64_t price_dkk_cent;
+    int64_t amount;
+} ReceiptsOneResProduct;
+
+void receipts_one_res_product_destroy(ReceiptsOneResProduct* model);
+
+DECLARE_VEC_TYPE(ReceiptsOneResProduct,
+    ReceiptsOneResProductVec,
+    receipts_one_res_product_vec, )
+
+typedef struct {
+    int64_t receipt_id;
+    char* timestamp;
+    ReceiptsOneResProductVec products;
+} ReceiptsOneRes;
+
+void receipts_one_res_destroy(ReceiptsOneRes* model);

@@ -225,7 +225,7 @@ DbRes db_user_with_email_exists(Db* db, bool* exists, const char* email)
         *exists = true;
     }
     if (sqlite_res != SQLITE_DONE) {
-        fprintf(stderr, "error: %s\n", sqlite3_errmsg(connection));
+        REPORT_SQLITE3_ERROR();
         res = DbRes_Error;
         goto l0_return;
     }
@@ -276,6 +276,55 @@ DbRes db_user_with_email(Db* db, User* user, const char* email)
         .password_hash = GET_STR(3),
         .balance_dkk_cent = GET_INT(4),
     };
+
+    res = DbRes_Ok;
+l0_return:
+    if (stmt)
+        sqlite3_finalize(stmt);
+    DISCONNECT;
+    return res;
+}
+
+/// `product` is an out parameter.
+DbRes db_product_with_id(Db* db, Product* product, int64_t id)
+{
+    static_assert(sizeof(Product) == 48, "model has changed");
+
+    sqlite3* connection;
+    CONNECT;
+    DbRes res;
+
+    sqlite3_stmt* stmt;
+    int prepare_res = sqlite3_prepare_v2(connection,
+        "SELECT id, name, price_dkk_cent, description, coord, barcode FROM "
+        "products WHERE id = ?",
+        -1,
+        &stmt,
+        NULL);
+    if (prepare_res != SQLITE_OK) {
+        REPORT_SQLITE3_ERROR();
+        res = DbRes_Error;
+        goto l0_return;
+    }
+    sqlite3_bind_int64(stmt, 1, id);
+
+    int step_res = sqlite3_step(stmt);
+    if (step_res == SQLITE_DONE) {
+        res = DbRes_NotFound;
+        goto l0_return;
+    } else if (step_res != SQLITE_ROW) {
+        REPORT_SQLITE3_ERROR();
+        res = DbRes_Error;
+        goto l0_return;
+    }
+    *product = (Product){
+        .id = GET_INT(0),
+        .name = GET_STR(1),
+        .price_dkk_cent = GET_INT(2),
+        .description = GET_STR(3),
+        .coord_id = GET_INT(4),
+        .barcode = GET_STR(5),
+    },
 
     res = DbRes_Ok;
 l0_return:
@@ -654,6 +703,66 @@ DbRes db_receipt_prices(
             .price_dkk_cent = GET_INT(2),
         };
         product_price_vec_push(product_prices, product_price);
+    }
+    if (sqlite_res != SQLITE_DONE) {
+        fprintf(stderr, "error: %s\n", sqlite3_errmsg(connection));
+        res = DbRes_Error;
+        goto l0_return;
+    }
+
+    res = DbRes_Ok;
+l0_return:
+    if (stmt)
+        sqlite3_finalize(stmt);
+    DISCONNECT;
+    return res;
+}
+
+DbRes db_receipt_products(Db* db, ProductVec* products, int64_t receipt_id)
+{
+    static_assert(sizeof(Product) == 48, "model has changed");
+
+    sqlite3* connection;
+    CONNECT;
+    DbRes res;
+    sqlite3_stmt* stmt = NULL;
+
+    int prepare_res = sqlite3_prepare_v2(connection,
+        "SELECT"
+        "  products.id,"
+        "  products.name,"
+        "  products.price_dkk_cent,"
+        "  products.description,"
+        "  products.coord,"
+        "  products.barcode"
+        " FROM receipt_products"
+        " JOIN product_prices"
+        "  ON receipt_products.product_price = product_prices.id"
+        " JOIN products"
+        "  ON product_prices.product = products.id"
+        " WHERE receipt_products.receipt = ?",
+        -1,
+        &stmt,
+        NULL);
+
+    if (prepare_res != SQLITE_OK) {
+        REPORT_SQLITE3_ERROR();
+        res = DbRes_Error;
+        goto l0_return;
+    }
+    sqlite3_bind_int64(stmt, 1, receipt_id);
+
+    int sqlite_res;
+    while ((sqlite_res = sqlite3_step(stmt)) == SQLITE_ROW) {
+        Product product = {
+            .id = GET_INT(0),
+            .name = GET_STR(1),
+            .price_dkk_cent = GET_INT(2),
+            .description = GET_STR(3),
+            .coord_id = GET_INT(4),
+            .barcode = GET_STR(5),
+        };
+        product_vec_push(products, product);
     }
     if (sqlite_res != SQLITE_DONE) {
         fprintf(stderr, "error: %s\n", sqlite3_errmsg(connection));

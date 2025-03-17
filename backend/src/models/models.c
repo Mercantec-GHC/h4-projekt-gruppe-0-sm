@@ -77,6 +77,21 @@ void carts_purchase_req_destroy(CartsPurchaseReq* model)
     carts_item_vec_destroy(&model->items);
 }
 
+void receipts_one_res_product_destroy(ReceiptsOneResProduct* m)
+{
+    static_assert(sizeof(ReceiptsOneResProduct) == 32, "model has changed");
+
+    free(m->name);
+}
+
+void receipts_one_res_destroy(ReceiptsOneRes* m)
+{
+    static_assert(sizeof(ReceiptsOneRes) == 40, "model has changed");
+
+    free(m->timestamp);
+    receipts_one_res_product_vec_destroy(&m->products);
+}
+
 char* user_to_json_string(const User* m)
 {
     static_assert(sizeof(User) == 40, "model has changed");
@@ -208,7 +223,7 @@ char* receipt_to_json_string(const Receipt* m)
     return result;
 }
 
-char* users_register_req_to_json(const UsersRegisterReq* m)
+char* users_register_req_to_json_string(const UsersRegisterReq* m)
 {
     static_assert(sizeof(UsersRegisterReq) == 24, "model has changed");
 
@@ -229,7 +244,7 @@ char* users_register_req_to_json(const UsersRegisterReq* m)
     return result;
 }
 
-char* sessions_login_req_to_json(const SessionsLoginReq* m)
+char* sessions_login_req_to_json_string(const SessionsLoginReq* m)
 {
     static_assert(sizeof(SessionsLoginReq) == 16, "model has changed");
 
@@ -248,11 +263,64 @@ char* sessions_login_req_to_json(const SessionsLoginReq* m)
     return result;
 }
 
-char* carts_purchase_req_to_json(const CartsPurchaseReq* m)
+char* carts_purchase_req_to_json_string(const CartsPurchaseReq* m)
 {
     static_assert(sizeof(CartsPurchaseReq) == 24, "model has changed");
 
     PANIC("not implemented");
+}
+
+char* receipts_one_res_product_to_json_string(const ReceiptsOneResProduct* m)
+{
+    static_assert(sizeof(ReceiptsOneResProduct) == 32, "model has changed");
+
+    String string;
+    string_construct(&string);
+    string_pushf(&string,
+        "{"
+        "\"product_id\":\"%ld\","
+        "\"name\":\"%s\","
+        "\"price_dkk_cent\":\"%ld\","
+        "\"price_dkk_cent\":\"%ld\""
+        "}",
+        m->product_id,
+        m->name,
+        m->price_dkk_cent,
+        m->amount);
+
+    char* result = string_copy(&string);
+    string_destroy(&string);
+    return result;
+}
+
+char* receipts_one_res_to_json_string(const ReceiptsOneRes* m)
+{
+    static_assert(sizeof(ReceiptsOneRes) == 40, "model has changed");
+
+    String string;
+    string_construct(&string);
+    string_pushf(&string,
+        "{"
+        "\"receipt_id\":\"%ld\","
+        "\"timestamp\":\"%s\","
+        "\"products:\":[",
+        m->receipt_id,
+        m->timestamp);
+
+    for (size_t i = 0; i < m->products.size; ++i) {
+        if (i != 0) {
+            string_pushf(&string, ",");
+        }
+        char* product
+            = receipts_one_res_product_to_json_string(&m->products.data[i]);
+        string_push_str(&string, product);
+    }
+
+    string_pushf(&string, "]}");
+
+    char* result = string_copy(&string);
+    string_destroy(&string);
+    return result;
 }
 
 typedef struct {
@@ -454,6 +522,24 @@ int carts_purchase_req_from_json(CartsPurchaseReq* m, const JsonValue* json)
     return 0;
 }
 
+int receipts_one_res_product_from_json(
+    ReceiptsOneResProduct* m, const JsonValue* json)
+{
+    static_assert(sizeof(ReceiptsOneResProduct) == 32, "model has changed");
+
+    PANIC("not implemented");
+}
+
+int receipts_one_res_from_json(ReceiptsOneRes* m, const JsonValue* json)
+{
+    static_assert(sizeof(ReceiptsOneRes) == 40, "model has changed");
+
+    PANIC("not implemented");
+}
+
 DEFINE_VEC_IMPL(ProductPrice, ProductPriceVec, product_price_vec, )
 DEFINE_VEC_IMPL(ReceiptProduct, ReceiptProductVec, receipt_product_vec, )
 DEFINE_VEC_IMPL(CartsItem, CartsItemVec, carts_item_vec, )
+DEFINE_VEC_IMPL(ReceiptsOneResProduct,
+    ReceiptsOneResProductVec,
+    receipts_one_res_product_vec, )

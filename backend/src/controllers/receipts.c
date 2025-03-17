@@ -72,37 +72,49 @@ void route_get_receipts_one(HttpCtx* ctx)
     free(receipt_id_str);
 
     Receipt receipt;
-    DbRes db_rizz = db_receipt_with_id(cx->db, &receipt, receipt_id);
-    if (db_rizz != DbRes_Ok) {
+    DbRes db_res = db_receipt_with_id(cx->db, &receipt, receipt_id);
+    if (db_res != DbRes_Ok) {
         RESPOND_BAD_REQUEST(ctx, "receipt not found");
         return;
     }
 
     ProductPriceVec product_prices = { 0 };
     product_price_vec_construct(&product_prices);
-    db_receipt_prices(cx->db, &product_prices, receipt_id);
-
-    String res;
-    string_construct(&res);
-
-    char* receipt_str = receipt_to_json_string(&receipt);
-
-    string_pushf(
-        &res, "{\"ok\":true,\"receipt\":%s,\"product_prices\":[", receipt_str);
-
-    for (size_t i = 0; i < product_prices.size; ++i) {
-        if (i != 0) {
-            string_pushf(&res, ",");
-        }
-        char* product_price_str
-            = product_price_to_json_string(&product_prices.data[i]);
-        string_pushf(&res, "%s", product_price_str);
-        free(product_price_str);
+    db_res = db_receipt_prices(cx->db, &product_prices, receipt_id);
+    if (db_res != DbRes_Ok) {
+        RESPOND_SERVER_ERROR(ctx);
+        return;
     }
-    string_pushf(&res, "]}");
 
-    RESPOND_JSON(ctx, 200, "%s", res.data);
-    string_destroy(&res);
+    ProductVec products = { 0 };
+    product_vec_construct(&products);
+    db_res = db_receipt_products(cx->db, &products, receipt_id);
+    if (db_res != DbRes_Ok) {
+        RESPOND_SERVER_ERROR(ctx);
+        return;
+    }
+
+    ReceiptsOneRes res = {
+        .receipt_id = receipt.id,
+        .timestamp = receipt.timestamp,
+        .products = (ReceiptsOneResProductVec) { 0 },
+    };
+    receipts_one_res_product_vec_construct(&res.products);
+    for (size_t i = 0; i < receipt.products.size; ++i) {
+        receipts_one_res_product_vec_push(&res.products,
+            (ReceiptsOneResProduct) {
+                .product_id = products.data[i].id,
+                .name = products.data[i].name,
+                .price_dkk_cent = product_prices.data[i].price_dkk_cent,
+            });
+    }
+
+    char* res_json = receipts_one_res_to_json_string(&res);
+
+    RESPOND_JSON(ctx, 200, "{\"ok\":true,\"receipt\":%s}", res_json);
+    free(res_json);
+    receipts_one_res_destroy(&res);
+    product_vec_destroy(&products);
     product_price_vec_destroy(&product_prices);
     receipt_destroy(&receipt);
 }

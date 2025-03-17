@@ -30,6 +30,9 @@ DbRes db_user_with_email_exists(Db* db, bool* exists, const char* email);
 /// `user` is an out parameter.
 DbRes db_user_with_email(Db* db, User* user, const char* email);
 
+/// `product` is an out parameter.
+DbRes db_product_with_id(Db* db, Product* product, int64_t id);
+
 /// Expects `vec` to be constructed.
 DbRes db_product_all(Db* db, ProductVec* vec);
 
@@ -49,3 +52,7 @@ DbRes db_receipt_with_id(Db* db, Receipt* receipt, int64_t id);
 /// Expects `product_prices` to be constructed.
 DbRes db_receipt_prices(
     Db* db, ProductPriceVec* product_prices, int64_t receipt_id);
+
+/// `products` field is an out parameter.
+/// Expects `products` to be constructed.
+DbRes db_receipt_products(Db* db, ProductVec* products, int64_t receipt_id);

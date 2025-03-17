@@ -45,8 +45,8 @@ Deno.test("test backend", async (t) => {
             { "Session-Token": token! },
         );
 
-        assertEquals(sessionUserRes.ok, true);
         // console.log(sessionUserRes.user);
+        assertEquals(sessionUserRes.ok, true);
     });
 
     await t.step("test /api/users/balance/add", async () => {
