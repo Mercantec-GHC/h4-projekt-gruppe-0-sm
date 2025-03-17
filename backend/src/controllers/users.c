@@ -60,3 +60,25 @@ void route_post_users_register(HttpCtx* ctx)
     users_register_req_destroy(&req);
     RESPOND_JSON(ctx, 200, "{\"ok\":true}");
 }
+
+void route_add_balance(HttpCtx* ctx)
+{
+    Cx* cx = http_ctx_user_ctx(ctx);
+    const Session* session = middleware_session(ctx);
+    if (!session)
+        return;
+    printf("token: %s\n user_id: %ld\n", session->token, session->user_id);
+
+    const char* body_str = http_ctx_req_body(ctx);
+    JsonValue* body_json = json_parse(body_str, strlen(body_str));
+    if (!body_json) {
+        RESPOND_BAD_REQUEST(ctx, "bad request");
+        return;
+    }
+    json_free(body_json);
+
+
+    
+}
+
+
