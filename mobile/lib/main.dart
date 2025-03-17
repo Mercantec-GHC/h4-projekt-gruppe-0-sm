@@ -26,17 +26,21 @@ class MyApp extends StatelessWidget {
     final server = BackendServer();
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(
+            create: (_) => SessionController(server: server)),
         ChangeNotifierProvider(create: (_) => RoutingController()),
         ChangeNotifierProvider(
             create: (_) => ProductController(server: server)),
-        ChangeNotifierProvider(create: (_) => CartControllerCache()),
+        ChangeNotifierProvider(
+            create: (_) => CartControllerCache(server: server)),
         ChangeNotifierProvider(create: (_) => ReceiptController()),
         ChangeNotifierProvider(create: (_) => PayingStateController()),
         ChangeNotifierProvider(create: (_) => AddToCartStateController()),
         ChangeNotifierProvider(create: (_) => LocationImageController()),
-        ChangeNotifierProvider(create: (_) => UsersController(server: server)),
         ChangeNotifierProvider(
-            create: (_) => SessionController(server: server)),
+            create: (context) => UsersController(
+                server: server,
+                sessionController: context.read<SessionController>())),
       ],
       child: MaterialApp(
           title: 'Fresh Plaza',

@@ -94,8 +94,22 @@ class ProductListItem extends StatelessWidget {
   }
 }
 
-class AllProductsPage extends StatelessWidget {
+class AllProductsPage extends StatefulWidget {
   const AllProductsPage({super.key});
+
+  @override
+  State<AllProductsPage> createState() => _AllProductsPageState();
+}
+
+class _AllProductsPageState extends State<AllProductsPage> {
+  final seawchContwowwew = TextEditingController();
+
+  @override
+  void initState() {
+    final contwowwew = context.read<ProductController>();
+    seawchContwowwew.text = contwowwew.query;
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -114,6 +128,7 @@ class AllProductsPage extends StatelessWidget {
                         onChanged: (query) {
                           productRepo.searchProducts(query);
                         },
+                        controller: seawchContwowwew,
                         decoration: const InputDecoration(
                             label: Text("Search"),
                             contentPadding: EdgeInsets.only(top: 20))),
@@ -127,6 +142,7 @@ class AllProductsPage extends StatelessWidget {
                 return ListView.builder(
                   shrinkWrap: true,
                   itemBuilder: (_, idx) => ProductListItem(
+                    key: Key(products[idx].name),
                     productId: products[idx].id,
                     name: products[idx].name,
                     price: products[idx].priceDkkCent,

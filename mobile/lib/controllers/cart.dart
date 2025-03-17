@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile/models/cart_item.dart';
 import 'package:mobile/models/product.dart';
 import 'package:mobile/results.dart';
+import 'package:mobile/server/server.dart';
 import 'package:path_provider/path_provider.dart';
 
 class ProductIdException implements Exception {}
@@ -23,9 +24,10 @@ abstract class CartController extends ChangeNotifier {
 }
 
 class CartControllerMemory extends CartController {
+  final Server server;
   final List<CartItem> cart = [];
 
-  CartControllerMemory();
+  CartControllerMemory({required this.server});
 
   @override
   List<CartItem> allCartItems() {
@@ -114,8 +116,14 @@ class CartControllerMemory extends CartController {
     notifyListeners();
   }
 
-  Result<Null, String> pay() {
-    return const Err("Not implemented");
+  Future<Result<Null, String>> purchase(String token) async {
+    final res = await server.purchaseCart(token, cart);
+    switch (res) {
+      case Success<Null>():
+        return const Ok(null);
+      case Error<Null>(message: final message):
+        return Err(message);
+    }
   }
 }
 
@@ -125,7 +133,7 @@ class CartControllerCache extends CartControllerMemory {
     return File("${directory.path}/cart.json").create();
   }
 
-  CartControllerCache() {
+  CartControllerCache({required super.server}) {
     load();
   }
 
@@ -137,7 +145,6 @@ class CartControllerCache extends CartControllerMemory {
 
   void load() async {
     final json = await (await _cacheFile).readAsString();
-    print("Loading cache: $json");
     if (json.isEmpty) {
       return;
     }

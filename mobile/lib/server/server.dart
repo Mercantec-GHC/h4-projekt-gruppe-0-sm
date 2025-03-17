@@ -1,3 +1,4 @@
+import 'package:mobile/models/cart_item.dart';
 import 'package:mobile/models/product.dart';
 import 'package:mobile/models/user.dart';
 
@@ -18,7 +19,9 @@ abstract class Server {
 
   Future<Response<User>> sessionUser(String token);
 
-  Future<Response<Null>> payForCart(String token);
+  Future<Response<Null>> purchaseCart(String token, List<CartItem> cartItems);
+
+  Future<Response<Null>> addBalance(String token);
 }
 
 sealed class Response<Data> {}

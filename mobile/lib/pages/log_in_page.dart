@@ -74,6 +74,7 @@ class LogInFormState extends State<LogInForm> {
             child: const Text("Log ind")),
         TextButton(
           onPressed: () {
+            setState(() => loginError = false);
             Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => const RegisterPage()));
           },

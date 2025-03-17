@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/controllers/session.dart';
+import 'package:mobile/controllers/user.dart';
 import 'package:mobile/pages/settings_page.dart';
 import 'package:mobile/utils/build_if_session_exists.dart';
 import 'package:mobile/utils/price.dart';
@@ -10,7 +11,8 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sessionController = context.read<SessionController>();
+    final sessionController = context.watch<SessionController>();
+    context.watch<UsersController>();
     return Column(
       children: [
         Row(
@@ -34,7 +36,7 @@ class HomePage extends StatelessWidget {
                 color: Color(0xFFFFFFFF),
               ),
               padding: const EdgeInsets.all(10),
-              child: BuildIfSessionExists(
+              child: BuildIfSessionUserExists(
                   sessionController: sessionController,
                   placeholder: const CircularProgressIndicator(),
                   builder: (context, user) => Text(
@@ -45,7 +47,7 @@ class HomePage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              BuildIfSessionExists(
+              BuildIfSessionUserExists(
                   sessionController: sessionController,
                   placeholder: const CircularProgressIndicator(),
                   builder: (context, user) => Text(

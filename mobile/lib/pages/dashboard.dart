@@ -8,7 +8,7 @@ import 'package:mobile/controllers/cart.dart';
 import 'package:provider/provider.dart';
 
 class Dashboard extends StatelessWidget {
-  final List<StatelessWidget> pages = [];
+  final List<Widget> pages = [];
 
   Dashboard({super.key}) {
     pages.addAll([

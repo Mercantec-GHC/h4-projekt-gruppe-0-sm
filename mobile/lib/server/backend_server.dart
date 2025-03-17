@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:mobile/models/cart_item.dart';
 import 'package:mobile/models/product.dart';
 import 'package:mobile/models/user.dart';
 import 'package:mobile/server/server.dart';
@@ -10,7 +11,7 @@ class BackendServer implements Server {
   // final _apiUrl = "http://127.0.0.1:8080/api";
 
   Future<http.Response> _post(
-      {required String endpoint, required Map<String, dynamic> body}) async {
+      {required String endpoint, Map<String, dynamic>? body}) async {
     final encoded = json.encode(body);
     return await http.post(
       Uri.parse("$_apiUrl/$endpoint"),
@@ -75,9 +76,6 @@ class BackendServer implements Server {
   Future<Response<Null>> logout(String token) async {
     final res = await _post(
       endpoint: "sessions/logout",
-      body: {
-        "token": token,
-      },
     ).then((res) => json.decode(res.body));
 
     if (res["ok"]) {
@@ -102,11 +100,34 @@ class BackendServer implements Server {
   }
 
   @override
-  Future<Response<Null>> payForCart(String token) async {
-    final res = await _post(
-      endpoint: "cart/pay",
-      body: {
-        "token": token,
+  Future<Response<Null>> purchaseCart(
+      String token, List<CartItem> cartItems) async {
+    final res = await http.post(Uri.parse("$_apiUrl/carts/purchase"), headers: {
+      "Content-Type": "application/json",
+      "Session-Token": token
+    }, body: {
+      "cart_items": cartItems
+          .map((cartItem) =>
+              {"product_id": cartItem.product.id, "amount": cartItem.amount})
+          .toList()
+    }).then((res) => json.decode(res.body));
+
+    if (res["ok"]) {
+      return Success(data: null);
+    } else {
+      return Error(message: res["msg"]);
+    }
+  }
+
+  @override
+  Future<Response<Null>> addBalance(String token) async {
+    print("$_apiUrl/api/users/balance/add");
+    final res = await http.post(
+      Uri.parse("$_apiUrl/users/balance/add"),
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Session-Token": token
       },
     ).then((res) => json.decode(res.body));
 

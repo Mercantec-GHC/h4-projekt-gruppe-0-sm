@@ -88,6 +88,7 @@ class RegisterFormState extends State<RegisterForm> {
             child: const Text("Opret bruger")),
         TextButton(
           onPressed: () {
+            setState(() => registerError = false);
             Navigator.of(context).pop();
           },
           child: RichText(

@@ -6,6 +6,7 @@ import 'package:mobile/server/server.dart';
 class SessionController extends ChangeNotifier {
   final Server server;
   String? _sessionToken;
+  User? _user;
 
   SessionController({required this.server});
 
@@ -21,24 +22,53 @@ class SessionController extends ChangeNotifier {
     }
   }
 
-  Future<Result<User, Null>> user() async {
+  Future<void> _validateToken() async {
     final token = _sessionToken;
     if (token == null) {
+      return;
+    }
+    final res = await server.sessionUser(token);
+    switch (res) {
+      case Success<User>():
+        return;
+      case Error<User>():
+        _sessionToken = null;
+        return;
+    }
+  }
+
+  User? get user {
+    loadUser();
+    return _user;
+  }
+
+  Future<void> _notifyIfTokenChanged() async {
+    final prev = _sessionToken;
+    _validateToken();
+    if (prev != _sessionToken) {
       notifyListeners();
-      return const Err(null);
+    }
+  }
+
+  Future<void> loadUser() async {
+    final token = _sessionToken;
+    if (token == null) {
+      _user = null;
+      return;
     }
     final res = await server.sessionUser(token);
     switch (res) {
       case Success<User>(data: final user):
-        return Ok(user);
+        _user = user;
+        return;
       case Error<User>():
-        _sessionToken = null;
-        notifyListeners();
-        return const Err(null);
+        _user = null;
+        return;
     }
   }
 
   String? get sessionToken {
+    _notifyIfTokenChanged();
     return _sessionToken;
   }
 
@@ -49,9 +79,5 @@ class SessionController extends ChangeNotifier {
       _sessionToken = null;
     }
     notifyListeners();
-  }
-
-  Result<int, String> pay(int userId, int amount) {
-    return const Err("not implemented");
   }
 }

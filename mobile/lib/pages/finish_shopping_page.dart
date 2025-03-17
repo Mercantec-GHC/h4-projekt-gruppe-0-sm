@@ -3,6 +3,7 @@ import 'package:mobile/controllers/routing.dart';
 import 'package:mobile/controllers/cart.dart';
 import 'package:mobile/controllers/paying_state.dart';
 import 'package:mobile/controllers/receipt.dart';
+import 'package:mobile/controllers/session.dart';
 import 'package:mobile/results.dart';
 import 'package:mobile/utils/price.dart';
 import 'package:mobile/widgets/primary_button.dart';
@@ -56,10 +57,11 @@ class FinishShoppingPage extends StatelessWidget {
                   child: Center(
                       child: PrimaryButton(
                           onPressed: () async {
+                            final session = context.read<SessionController>();
                             payingStateRepo.next();
                             await Future.delayed(const Duration(seconds: 1));
-                            // TODO: implement paying for user
-                            if (cartController.pay() is Err) {
+                            if (cartController.purchase(session.sessionToken!)
+                                is Err) {
                               if (context.mounted) {
                                 showDialog<String>(
                                   context: context,

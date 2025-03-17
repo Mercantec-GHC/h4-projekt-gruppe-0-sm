@@ -1,3 +1,4 @@
+import 'package:mobile/models/cart_item.dart';
 import 'package:mobile/models/coordinate.dart';
 import 'package:mobile/models/product.dart';
 import 'package:mobile/models/user.dart';
@@ -122,7 +123,13 @@ class MockServer implements Server {
   }
 
   @override
-  Future<Response<Null>> payForCart(String token) async {
+  Future<Response<Null>> purchaseCart(
+      String token, List<CartItem> cartItems) async {
+    return Success(data: null);
+  }
+
+  @override
+  Future<Response<Null>> addBalance(String token) async {
     return Success(data: null);
   }
 }
