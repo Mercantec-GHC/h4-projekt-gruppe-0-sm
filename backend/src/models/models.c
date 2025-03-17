@@ -50,31 +50,41 @@ void receipt_destroy(Receipt* m)
 {
     static_assert(sizeof(Receipt) == 48, "model has changed");
 
-    (void)m;
+    free(m->timestamp);
+    for (size_t i = 0; i < m->products.size; ++i)
+        receipt_product_destroy(&m->products.data[i]);
+    receipt_product_vec_destroy(&m->products);
 }
 
-void users_register_req_destroy(UsersRegisterReq* model)
+void receipt_header_destroy(ReceiptHeader* m)
+{
+    static_assert(sizeof(ReceiptHeader) == 24, "model has changed");
+
+    free(m->timestamp);
+}
+
+void users_register_req_destroy(UsersRegisterReq* m)
 {
     static_assert(sizeof(UsersRegisterReq) == 24, "model has changed");
 
-    free(model->name);
-    free(model->email);
-    free(model->password);
+    free(m->name);
+    free(m->email);
+    free(m->password);
 }
 
-void sessions_login_req_destroy(SessionsLoginReq* model)
+void sessions_login_req_destroy(SessionsLoginReq* m)
 {
     static_assert(sizeof(SessionsLoginReq) == 16, "model has changed");
 
-    free(model->email);
-    free(model->password);
+    free(m->email);
+    free(m->password);
 }
 
-void carts_purchase_req_destroy(CartsPurchaseReq* model)
+void carts_purchase_req_destroy(CartsPurchaseReq* m)
 {
     static_assert(sizeof(CartsPurchaseReq) == 24, "model has changed");
 
-    carts_item_vec_destroy(&model->items);
+    carts_item_vec_destroy(&m->items);
 }
 
 void receipts_one_res_product_destroy(ReceiptsOneResProduct* m)
@@ -89,6 +99,8 @@ void receipts_one_res_destroy(ReceiptsOneRes* m)
     static_assert(sizeof(ReceiptsOneRes) == 40, "model has changed");
 
     free(m->timestamp);
+    for (size_t i = 0; i < m->products.size; ++i)
+        receipts_one_res_product_destroy(&m->products.data[i]);
     receipts_one_res_product_vec_destroy(&m->products);
 }
 
@@ -185,6 +197,7 @@ char* product_price_to_json_string(const ProductPrice* m)
     string_destroy(&string);
     return result;
 }
+
 char* receipt_to_json_string(const Receipt* m)
 {
     static_assert(sizeof(Receipt) == 48, "model has changed");
@@ -218,6 +231,25 @@ char* receipt_to_json_string(const Receipt* m)
             m->products.data[i].amount);
     }
     string_pushf(&string, "]}");
+    char* result = string_copy(&string);
+    string_destroy(&string);
+    return result;
+}
+
+char* receipt_header_to_json_string(const ReceiptHeader* m)
+{
+    static_assert(sizeof(ReceiptHeader) == 24, "model has changed");
+
+    String string;
+    string_construct(&string);
+    string_pushf(&string,
+        "{"
+        "\"id\":%ld,"
+        "\"user_id\":%ld,"
+        "\"timestamp\":\"%s\"}",
+        m->id,
+        m->user_id,
+        m->timestamp);
     char* result = string_copy(&string);
     string_destroy(&string);
     return result;
@@ -311,9 +343,10 @@ char* receipts_one_res_to_json_string(const ReceiptsOneRes* m)
         if (i != 0) {
             string_pushf(&string, ",");
         }
-        char* product
+        char* product_json
             = receipts_one_res_product_to_json_string(&m->products.data[i]);
-        string_push_str(&string, product);
+        string_push_str(&string, product_json);
+        free(product_json);
     }
 
     string_pushf(&string, "]}");
@@ -446,6 +479,12 @@ int receipt_from_json(Receipt* m, const JsonValue* json)
 
     PANIC("not implemented");
 }
+int receipt_header_from_json(ReceiptHeader* m, const JsonValue* json)
+{
+    static_assert(sizeof(ReceiptHeader) == 24, "model has changed");
+
+    PANIC("not implemented");
+}
 
 int users_register_req_from_json(UsersRegisterReq* m, const JsonValue* json)
 {
@@ -539,6 +578,8 @@ int receipts_one_res_from_json(ReceiptsOneRes* m, const JsonValue* json)
 
 DEFINE_VEC_IMPL(ProductPrice, ProductPriceVec, product_price_vec, )
 DEFINE_VEC_IMPL(ReceiptProduct, ReceiptProductVec, receipt_product_vec, )
+DEFINE_VEC_IMPL(Receipt, ReceiptVec, receipt_vec, )
+DEFINE_VEC_IMPL(ReceiptHeader, ReceiptHeaderVec, receipt_header_vec, )
 DEFINE_VEC_IMPL(CartsItem, CartsItemVec, carts_item_vec, )
 DEFINE_VEC_IMPL(ReceiptsOneResProduct,
     ReceiptsOneResProductVec,

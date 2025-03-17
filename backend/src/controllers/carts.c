@@ -71,4 +71,5 @@ void route_post_carts_purchase(HttpCtx* ctx)
 l0_return:
     receipt_destroy(&receipt);
     product_price_vec_destroy(&prices);
+    carts_purchase_req_destroy(&req);
 }

@@ -46,7 +46,12 @@ DbRes db_product_price_of_product(
 DbRes db_receipt_insert(Db* db, const Receipt* receipt, int64_t* id);
 
 /// `receipt` field is an out parameter.
-DbRes db_receipt_with_id(Db* db, Receipt* receipt, int64_t id);
+DbRes db_receipt_with_id_and_user_id(
+    Db* db, Receipt* receipt, int64_t id, int64_t user_id);
+
+/// Expects `receipts` to be constructed.
+DbRes db_receipt_all_headers_with_user_id(
+    Db* db, ReceiptHeaderVec* receipts, int64_t user_id);
 
 /// `product_prices` field is an out parameter.
 /// Expects `product_prices` to be constructed.

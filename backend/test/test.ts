@@ -105,6 +105,16 @@ async function testCartsAndReceipts(t: Deno.TestContext, token: string) {
         // console.log(res);
         assertEquals(res.ok, true);
     });
+
+    await t.step("test /api/receipts/all", async () => {
+        const res = await get<{ ok: boolean }>(
+            `/api/receipts/all`,
+            { "Session-Token": token },
+        );
+
+        console.log(res);
+        assertEquals(res.ok, true);
+    });
 }
 
 function get<Res>(

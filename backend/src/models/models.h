@@ -50,12 +50,23 @@ typedef struct {
     ReceiptProductVec products;
 } Receipt;
 
+DECLARE_VEC_TYPE(Receipt, ReceiptVec, receipt_vec, )
+
+typedef struct {
+    int64_t id;
+    int64_t user_id;
+    char* timestamp;
+} ReceiptHeader;
+
+DECLARE_VEC_TYPE(ReceiptHeader, ReceiptHeaderVec, receipt_header_vec, )
+
 void user_destroy(User* model);
 void coord_destroy(Coord* model);
 void product_destroy(Product* model);
 void product_price_destroy(ProductPrice* model);
 void receipt_product_destroy(ReceiptProduct* model);
 void receipt_destroy(Receipt* model);
+void receipt_header_destroy(ReceiptHeader* model);
 
 //
 

@@ -588,7 +588,8 @@ l0_return:
     return res;
 }
 
-DbRes db_receipt_with_id(Db* db, Receipt* receipt, int64_t id)
+DbRes db_receipt_with_id_and_user_id(
+    Db* db, Receipt* receipt, int64_t id, int64_t user_id)
 {
     static_assert(sizeof(Receipt) == 48, "model has changed");
 
@@ -598,7 +599,8 @@ DbRes db_receipt_with_id(Db* db, Receipt* receipt, int64_t id)
     sqlite3_stmt* stmt = NULL;
 
     int prepare_res = sqlite3_prepare_v2(connection,
-        "SELECT id, user, datetime(datetime) FROM receipts WHERE id = ?",
+        "SELECT id, user, datetime(datetime, 'unixepoch') FROM receipts"
+        " WHERE id = ? AND user = ?",
         -1,
         &stmt,
         NULL);
@@ -610,6 +612,7 @@ DbRes db_receipt_with_id(Db* db, Receipt* receipt, int64_t id)
     }
 
     sqlite3_bind_int64(stmt, 1, id);
+    sqlite3_bind_int64(stmt, 2, user_id);
 
     int step_res = sqlite3_step(stmt);
     if (step_res == SQLITE_DONE) {
@@ -653,6 +656,53 @@ DbRes db_receipt_with_id(Db* db, Receipt* receipt, int64_t id)
             .amount = GET_INT(3),
         };
         receipt_product_vec_push(&receipt->products, product);
+    }
+    if (sqlite_res != SQLITE_DONE) {
+        fprintf(stderr, "error: %s\n", sqlite3_errmsg(connection));
+        res = DbRes_Error;
+        goto l0_return;
+    }
+
+    res = DbRes_Ok;
+l0_return:
+    if (stmt)
+        sqlite3_finalize(stmt);
+    DISCONNECT;
+    return res;
+}
+
+DbRes db_receipt_all_headers_with_user_id(
+    Db* db, ReceiptHeaderVec* receipts, int64_t user_id)
+{
+    static_assert(sizeof(Receipt) == 48, "model has changed");
+
+    sqlite3* connection;
+    CONNECT;
+    DbRes res;
+    int sqlite_res;
+
+    sqlite3_stmt* stmt;
+    sqlite_res = sqlite3_prepare_v2(connection,
+        "SELECT id, user, datetime(datetime, 'unixepoch') FROM receipts WHERE "
+        "user = ?",
+        -1,
+        &stmt,
+        NULL);
+    if (sqlite_res != SQLITE_OK) {
+        fprintf(stderr, "error: %s\n", sqlite3_errmsg(connection));
+        res = DbRes_Error;
+        goto l0_return;
+    }
+
+    sqlite3_bind_int64(stmt, 1, user_id);
+
+    while ((sqlite_res = sqlite3_step(stmt)) == SQLITE_ROW) {
+        ReceiptHeader receipt = {
+            .id = GET_INT(0),
+            .user_id = GET_INT(1),
+            .timestamp = GET_STR(2),
+        };
+        receipt_header_vec_push(receipts, receipt);
     }
     if (sqlite_res != SQLITE_DONE) {
         fprintf(stderr, "error: %s\n", sqlite3_errmsg(connection));

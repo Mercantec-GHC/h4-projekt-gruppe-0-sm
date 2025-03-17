@@ -31,7 +31,7 @@ ifeq ($(RELEASE),1)
 	OPTIMIZATION += -O3
 else
 	C_FLAGS += -g
-	F_FLAGS += -fsanitize=address,undefined
+	F_FLAGS += -fsanitize=address,undefined,leak
 	OPTIMIZATION += -Og
 endif
 

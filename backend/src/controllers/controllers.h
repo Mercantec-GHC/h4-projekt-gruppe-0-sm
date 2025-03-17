@@ -47,6 +47,7 @@ void route_post_sessions_logout(HttpCtx* ctx);
 void route_get_sessions_user(HttpCtx* ctx);
 
 void route_get_receipts_one(HttpCtx* ctx);
+void route_get_receipts_all(HttpCtx* ctx);
 
 const Session* header_session(HttpCtx* ctx);
 const Session* middleware_session(HttpCtx* ctx);
