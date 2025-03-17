@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../util/str.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -36,3 +37,10 @@ const char* http_ctx_req_query(HttpCtx* ctx);
 const char* http_ctx_req_body(HttpCtx* ctx);
 void http_ctx_res_headers_set(HttpCtx* ctx, const char* key, const char* value);
 void http_ctx_respond(HttpCtx* ctx, int status, const char* body);
+
+typedef struct HttpQueryParams HttpQueryParams;
+
+HttpQueryParams* http_parse_query_params(const char* query);
+void http_query_params_free(HttpQueryParams* query_params);
+char* http_query_params_get(
+    const HttpQueryParams* query_params, const char* key);

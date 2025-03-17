@@ -4,54 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct {
-    StrSlice key;
-    StrSlice value;
-} QueryParamEntry;
-
-DEFINE_VEC(QueryParamEntry, QueryParamVec, query_param_vec)
-
-typedef struct {
-    QueryParamVec vec;
-} QueryParams;
-
-QueryParams parse_query_params(const char* query)
-{
-    QueryParams result = {
-        .vec = (QueryParamVec) { 0 },
-    };
-    query_param_vec_construct(&result.vec);
-
-    StrSplitter params = str_splitter(query, strlen(query), "&");
-    StrSlice param;
-    while ((param = str_split_next(&params)).len != 0) {
-        StrSplitter left_right = str_splitter(param.ptr, param.len, "=");
-        StrSlice key = str_split_next(&left_right);
-        StrSlice value = str_split_next(&left_right);
-
-        query_param_vec_push(&result.vec, (QueryParamEntry) { key, value });
-    }
-
-    return result;
-}
-
-void query_params_destroy(QueryParams* query_params)
-{
-    query_param_vec_destroy(&query_params->vec);
-}
-
-char* query_params_get(const QueryParams* query_params, const char* key)
-{
-    size_t key_len = strlen(key);
-    for (size_t i = 0; i < query_params->vec.size; ++i) {
-        const QueryParamEntry* entry = &query_params->vec.data[i];
-        if (key_len == entry->key.len && strcmp(key, entry->key.ptr)) {
-            return str_slice_copy(&entry->value);
-        }
-    }
-    return NULL;
-}
-
 void route_get_receipts_one(HttpCtx* ctx)
 {
     Cx* cx = http_ctx_user_ctx(ctx);
@@ -60,9 +12,9 @@ void route_get_receipts_one(HttpCtx* ctx)
         return;
 
     const char* query = http_ctx_req_query(ctx);
-    QueryParams params = parse_query_params(query);
-    char* receipt_id_str = query_params_get(&params, "receipt_id");
-    query_params_destroy(&params);
+    HttpQueryParams* params = http_parse_query_params(query);
+    char* receipt_id_str = http_query_params_get(params, "receipt_id");
+    http_query_params_free(params);
     if (!receipt_id_str) {
         RESPOND_BAD_REQUEST(ctx, "no receipt_id parameter");
         return;
