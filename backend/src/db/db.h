@@ -18,6 +18,10 @@ typedef struct Db Db;
 
 /// `user.id` field is ignored.
 DbRes db_user_insert(Db* db, const User* user);
+
+/// Uses `user.id` to find model.
+DbRes db_user_update(Db* db, const User* user);
+
 /// `user` field is an out parameter.
 DbRes db_user_with_id(Db* db, User* user, int64_t id);
 

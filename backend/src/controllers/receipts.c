@@ -40,7 +40,7 @@ void query_params_destroy(QueryParams* query_params)
     query_param_vec_destroy(&query_params->vec);
 }
 
-const char* query_params_get(const QueryParams* query_params, const char* key)
+char* query_params_get(const QueryParams* query_params, const char* key)
 {
     size_t key_len = strlen(key);
     for (size_t i = 0; i < query_params->vec.size; ++i) {
@@ -52,7 +52,7 @@ const char* query_params_get(const QueryParams* query_params, const char* key)
     return NULL;
 }
 
-void route_get_receipt(HttpCtx* ctx)
+void route_get_receipts_one(HttpCtx* ctx)
 {
     Cx* cx = http_ctx_user_ctx(ctx);
     const Session* session = middleware_session(ctx);
@@ -61,7 +61,7 @@ void route_get_receipt(HttpCtx* ctx)
 
     const char* query = http_ctx_req_query(ctx);
     QueryParams params = parse_query_params(query);
-    const char* receipt_id_str = query_params_get(&params, "receipt_id");
+    char* receipt_id_str = query_params_get(&params, "receipt_id");
     query_params_destroy(&params);
     if (!receipt_id_str) {
         RESPOND_BAD_REQUEST(ctx, "no receipt_id parameter");
@@ -69,6 +69,7 @@ void route_get_receipt(HttpCtx* ctx)
     }
 
     int64_t receipt_id = strtol(receipt_id_str, NULL, 10);
+    free(receipt_id_str);
 
     Receipt receipt;
     DbRes db_rizz = db_receipt_with_id(cx->db, &receipt, receipt_id);

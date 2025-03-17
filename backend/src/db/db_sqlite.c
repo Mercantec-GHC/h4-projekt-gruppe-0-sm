@@ -48,7 +48,10 @@ void db_sqlite_free(Db* db)
 
 static inline DbRes connect(sqlite3** connection)
 {
-    int res = sqlite3_open("database.db", connection);
+    int res = sqlite3_open_v2("database.db",
+        connection,
+        SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX,
+        NULL);
     if (res != SQLITE_OK) {
         fprintf(stderr,
             "error: could not open sqlite 'database.db'\n    %s\n",
@@ -84,17 +87,64 @@ DbRes db_user_insert(Db* db, const User* user)
     DbRes res;
 
     sqlite3_stmt* stmt;
-    sqlite3_prepare_v2(connection,
+    int prepare_res = sqlite3_prepare_v2(connection,
         "INSERT INTO users (name, email, password_hash, balance_dkk_cent) "
         "VALUES (?, ?, ?, ?)",
         -1,
         &stmt,
         NULL);
+    if (prepare_res != SQLITE_OK) {
+        REPORT_SQLITE3_ERROR();
+        res = DbRes_Error;
+        goto l0_return;
+    }
 
     sqlite3_bind_text(stmt, 1, user->name, -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 2, user->email, -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 3, user->password_hash, -1, SQLITE_STATIC);
     sqlite3_bind_int64(stmt, 4, user->balance_dkk_cent);
+
+    int step_res = sqlite3_step(stmt);
+    if (step_res != SQLITE_DONE) {
+        REPORT_SQLITE3_ERROR();
+        res = DbRes_Error;
+        goto l0_return;
+    }
+
+    res = DbRes_Ok;
+l0_return:
+    if (stmt)
+        sqlite3_finalize(stmt);
+    DISCONNECT;
+    return res;
+}
+
+DbRes db_user_update(Db* db, const User* user)
+{
+    static_assert(sizeof(User) == 40, "model has changed");
+
+    sqlite3* connection;
+    CONNECT;
+    DbRes res;
+
+    sqlite3_stmt* stmt;
+    int prepare_res = sqlite3_prepare_v2(connection,
+        "UPDATE users SET name = ?, email = ?, password_hash= ?, "
+        "balance_dkk_cent= ? WHERE id = ?",
+        -1,
+        &stmt,
+        NULL);
+    if (prepare_res != SQLITE_OK) {
+        REPORT_SQLITE3_ERROR();
+        res = DbRes_Error;
+        goto l0_return;
+    }
+
+    sqlite3_bind_text(stmt, 1, user->name, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 2, user->email, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 3, user->password_hash, -1, SQLITE_STATIC);
+    sqlite3_bind_int64(stmt, 4, user->balance_dkk_cent);
+    sqlite3_bind_int64(stmt, 5, user->id);
 
     int step_res = sqlite3_step(stmt);
     if (step_res != SQLITE_DONE) {
@@ -120,12 +170,17 @@ DbRes db_user_with_id(Db* db, User* user, int64_t id)
     DbRes res;
 
     sqlite3_stmt* stmt;
-    sqlite3_prepare_v2(connection,
+    int prepare_res = sqlite3_prepare_v2(connection,
         "SELECT id, name, email, password_hash, balance_dkk_cent"
         " FROM users WHERE id = ?",
         -1,
         &stmt,
         NULL);
+    if (prepare_res != SQLITE_OK) {
+        REPORT_SQLITE3_ERROR();
+        res = DbRes_Error;
+        goto l0_return;
+    }
     sqlite3_bind_int64(stmt, 1, id);
 
     int step_res = sqlite3_step(stmt);
@@ -526,6 +581,7 @@ DbRes db_receipt_with_id(Db* db, Receipt* receipt, int64_t id)
 
     receipt_product_vec_construct(&receipt->products);
 
+    sqlite3_finalize(stmt);
     prepare_res = sqlite3_prepare_v2(connection,
         "SELECT id, receipt, product_price, amount FROM receipt_products"
         " WHERE receipt = ?",

@@ -12,7 +12,7 @@ typedef struct {
     size_t len;
 } StrSlice;
 
-const char* str_slice_copy(const StrSlice* slice);
+char* str_slice_copy(const StrSlice* slice);
 
 typedef struct {
     const char* text;

@@ -49,7 +49,18 @@ Deno.test("test backend", async (t) => {
         // console.log(sessionUserRes.user);
     });
 
-    await testCartsAndReceipts(t, token);
+    await t.step("test /api/users/balance/add", async () => {
+        const sessionUserRes = await post<{ ok: boolean }>(
+            "/api/users/balance/add",
+            {},
+            { "Session-Token": token! },
+        );
+
+        // console.log(sessionUserRes);
+        assertEquals(sessionUserRes.ok, true);
+    });
+
+    await testCartsAndReceipts(t, token!);
 
     await t.step("test /api/sessions/logout", async () => {
         const logoutRes = await post<{ ok: boolean }>(
@@ -91,7 +102,7 @@ async function testCartsAndReceipts(t: Deno.TestContext, token: string) {
             { "Session-Token": token },
         );
 
-        console.log(res);
+        // console.log(res);
         assertEquals(res.ok, true);
     });
 }

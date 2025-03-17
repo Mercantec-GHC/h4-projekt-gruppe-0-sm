@@ -41,9 +41,12 @@ int main(void)
 
     http_server_post(server, "/api/carts/purchase", route_post_carts_purchase);
 
-    http_server_get(server, "/api/receipts/one", route_get_receipt);
+    http_server_get(server, "/api/receipts/one", route_get_receipts_one);
 
     http_server_post(server, "/api/users/register", route_post_users_register);
+    http_server_post(
+        server, "/api/users/balance/add", route_post_users_balance_add);
+
     http_server_post(server, "/api/sessions/login", route_post_sessions_login);
     http_server_post(
         server, "/api/sessions/logout", route_post_sessions_logout);

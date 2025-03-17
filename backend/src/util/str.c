@@ -14,7 +14,7 @@ char* str_dup(const char* str)
     return clone;
 }
 
-const char* str_slice_copy(const StrSlice* slice)
+char* str_slice_copy(const StrSlice* slice)
 {
     char* copy = malloc(slice->len + 1);
     strncpy(copy, slice->ptr, slice->len);

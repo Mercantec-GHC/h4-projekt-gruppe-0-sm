@@ -61,24 +61,27 @@ void route_post_users_register(HttpCtx* ctx)
     RESPOND_JSON(ctx, 200, "{\"ok\":true}");
 }
 
-void route_add_balance(HttpCtx* ctx)
+void route_post_users_balance_add(HttpCtx* ctx)
 {
     Cx* cx = http_ctx_user_ctx(ctx);
     const Session* session = middleware_session(ctx);
     if (!session)
         return;
-    printf("token: %s\n user_id: %ld\n", session->token, session->user_id);
 
-    const char* body_str = http_ctx_req_body(ctx);
-    JsonValue* body_json = json_parse(body_str, strlen(body_str));
-    if (!body_json) {
-        RESPOND_BAD_REQUEST(ctx, "bad request");
+    User user;
+    if (db_user_with_id(cx->db, &user, session->user_id) != DbRes_Ok) {
+        RESPOND_SERVER_ERROR(ctx);
         return;
     }
-    json_free(body_json);
 
+    user.balance_dkk_cent += 10000;
 
-    
+    DbRes db_res = db_user_update(cx->db, &user);
+    user_destroy(&user);
+    if (db_res != DbRes_Ok) {
+        RESPOND_SERVER_ERROR(ctx);
+        return;
+    }
+
+    RESPOND_JSON(ctx, 200, "{\"ok\":true}");
 }
-
-
