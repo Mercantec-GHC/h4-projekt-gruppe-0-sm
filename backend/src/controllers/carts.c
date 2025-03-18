@@ -42,7 +42,7 @@ void route_post_carts_purchase(HttpCtx* ctx)
             RESPOND_SERVER_ERROR(ctx);
             goto l0_return;
         }
-        total_dkk_cent += price.price_dkk_cent;
+        total_dkk_cent += price.price_dkk_cent * req.items.data[i].amount;
         product_price_vec_push(&prices, price);
     }
 

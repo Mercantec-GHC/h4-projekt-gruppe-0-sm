@@ -101,6 +101,10 @@ async function testCartsAndReceipts(t: Deno.TestContext, token: string) {
 
     const user2 = await sessionUser(token);
     assertNotEquals(user1.balance_dkk_cent, user2.balance_dkk_cent);
+    assertEquals(
+        user1.balance_dkk_cent - user2.balance_dkk_cent,
+        1195 * 2 + 1295 * 5,
+    );
 
     if (!receiptId) {
         return;
@@ -150,6 +154,7 @@ async function sessionUser(
     if (!res.ok) {
         throw new Error();
     }
+    // console.log(res.user);
     return res.user;
 }
 
