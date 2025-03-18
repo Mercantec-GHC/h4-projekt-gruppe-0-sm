@@ -59,7 +59,8 @@ class FinishShoppingPage extends StatelessWidget {
                           onPressed: () async {
                             payingStateRepo.next();
                             await Future.delayed(const Duration(seconds: 1));
-                            if (cartController.purchase() is Err) {
+                            if (await cartController.purchase()
+                                is Err<Null, String>) {
                               if (context.mounted) {
                                 showDialog<String>(
                                   context: context,
