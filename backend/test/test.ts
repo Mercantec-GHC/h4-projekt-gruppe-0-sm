@@ -49,6 +49,8 @@ Deno.test("test backend", async (t) => {
         assertEquals(sessionUserRes.ok, true);
     });
 
+    const user1 = await sessionUser(token);
+
     await t.step("test /api/users/balance/add", async () => {
         const sessionUserRes = await post<{ ok: boolean }>(
             "/api/users/balance/add",
@@ -59,6 +61,9 @@ Deno.test("test backend", async (t) => {
         // console.log(sessionUserRes);
         assertEquals(sessionUserRes.ok, true);
     });
+
+    const user2 = await sessionUser(token);
+    assertNotEquals(user1.balance_dkk_cent, user2.balance_dkk_cent);
 
     await testCartsAndReceipts(t, token!);
 
@@ -76,6 +81,8 @@ Deno.test("test backend", async (t) => {
 async function testCartsAndReceipts(t: Deno.TestContext, token: string) {
     let receiptId: number | undefined = undefined;
 
+    const user1 = await sessionUser(token);
+
     await t.step("test /api/carts/purchase", async () => {
         const res = await post<{ ok: boolean; receipt_id: number }>(
             "/api/carts/purchase",
@@ -91,6 +98,9 @@ async function testCartsAndReceipts(t: Deno.TestContext, token: string) {
         assertEquals(res.ok, true);
         receiptId = res.receipt_id;
     });
+
+    const user2 = await sessionUser(token);
+    assertNotEquals(user1.balance_dkk_cent, user2.balance_dkk_cent);
 
     if (!receiptId) {
         return;
@@ -123,6 +133,24 @@ async function testCartsAndReceipts(t: Deno.TestContext, token: string) {
             /\d{4}-[01]\d-[0-3]\d [0-2]\d:[0-5]\d:[0-5]\d/,
         );
     });
+}
+
+type SessionUser = { id: number; email: string; balance_dkk_cent: number };
+
+async function sessionUser(
+    token: string,
+): Promise<SessionUser> {
+    const res = await get<{
+        ok: boolean;
+        user: SessionUser;
+    }>(
+        "/api/sessions/user",
+        { "Session-Token": token! },
+    );
+    if (!res.ok) {
+        throw new Error();
+    }
+    return res.user;
 }
 
 function get<Res>(

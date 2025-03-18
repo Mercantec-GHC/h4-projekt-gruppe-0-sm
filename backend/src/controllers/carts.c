@@ -27,6 +27,10 @@ void route_post_carts_purchase(HttpCtx* ctx)
 
     size_t item_amount = req.items.size;
 
+    // accumulate product_prices and total
+
+    int64_t total_dkk_cent = 0;
+
     ProductPriceVec prices;
     product_price_vec_construct(&prices);
 
@@ -38,8 +42,33 @@ void route_post_carts_purchase(HttpCtx* ctx)
             RESPOND_SERVER_ERROR(ctx);
             goto l0_return;
         }
+        total_dkk_cent += price.price_dkk_cent;
         product_price_vec_push(&prices, price);
     }
+
+    // check and update user balance
+
+    User user;
+    DbRes db_res = db_user_with_id(cx->db, &user, session->user_id);
+    if (db_res != DbRes_Ok) {
+        RESPOND_SERVER_ERROR(ctx);
+        goto l0_return;
+    }
+
+    if (user.balance_dkk_cent < total_dkk_cent) {
+        RESPOND_JSON(
+            ctx, 200, "{\"ok\":false,\"message\":\"insufficient funds\"}");
+        goto l0_return;
+    }
+    user.balance_dkk_cent -= total_dkk_cent;
+
+    db_res = db_user_update(cx->db, &user);
+    if (db_res != DbRes_Ok) {
+        RESPOND_SERVER_ERROR(ctx);
+        goto l0_return;
+    }
+
+    // assemble receipt
 
     Receipt receipt = {
         .id = 0,
@@ -59,8 +88,10 @@ void route_post_carts_purchase(HttpCtx* ctx)
             });
     }
 
+    // insert receipt
+
     int64_t receipt_id;
-    DbRes db_res = db_receipt_insert(cx->db, &receipt, &receipt_id);
+    db_res = db_receipt_insert(cx->db, &receipt, &receipt_id);
     if (db_res != DbRes_Ok) {
         RESPOND_SERVER_ERROR(ctx);
         goto l0_return;
@@ -71,5 +102,6 @@ void route_post_carts_purchase(HttpCtx* ctx)
 l0_return:
     receipt_destroy(&receipt);
     product_price_vec_destroy(&prices);
+    user_destroy(&user);
     carts_purchase_req_destroy(&req);
 }
