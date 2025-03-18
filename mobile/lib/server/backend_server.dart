@@ -49,7 +49,7 @@ class BackendServer implements Server {
     ).then((res) => json.decode(res.body));
 
     if (res["ok"]) {
-      return Ok(null);
+      return const Ok(null);
     } else {
       return Err(res["msg"]);
     }
@@ -79,7 +79,7 @@ class BackendServer implements Server {
     ).then((res) => json.decode(res.body));
 
     if (res["ok"]) {
-      return Ok(null);
+      return const Ok(null);
     } else {
       return Err(res["msg"]);
     }
@@ -108,7 +108,7 @@ class BackendServer implements Server {
               {"product_id": cartItem.product.id, "amount": cartItem.amount})
           .toList()
     });
-    print(items);
+    (items);
     final res = await http
         .post(Uri.parse("$_apiUrl/carts/purchase"),
             headers: {
@@ -134,7 +134,6 @@ class BackendServer implements Server {
 
   @override
   Future<Result<Null, String>> addBalance(String token) async {
-    print("$_apiUrl/api/users/balance/add");
     final res = await http.post(
       Uri.parse("$_apiUrl/users/balance/add"),
       headers: {
@@ -145,7 +144,7 @@ class BackendServer implements Server {
     ).then((res) => json.decode(res.body));
 
     if (res["ok"]) {
-      return Ok(null);
+      return const Ok(null);
     } else {
       return Err(res["msg"]);
     }

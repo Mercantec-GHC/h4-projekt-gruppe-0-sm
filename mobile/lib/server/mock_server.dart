@@ -97,7 +97,7 @@ class MockServer implements Server {
     String email,
     String password,
   ) async {
-    return Ok(null);
+    return const Ok(null);
   }
 
   @override
@@ -105,12 +105,12 @@ class MockServer implements Server {
     String email,
     String password,
   ) async {
-    return Ok("asdsadasdsad");
+    return const Ok("aasffsa");
   }
 
   @override
   Future<Result<Null, String>> logout(String token) async {
-    return Ok(null);
+    return const Ok(null);
   }
 
   @override
@@ -125,11 +125,11 @@ class MockServer implements Server {
   @override
   Future<Result<Null, String>> purchaseCart(
       String token, List<CartItem> cartItems) async {
-    return Ok(null);
+    return const Ok(null);
   }
 
   @override
   Future<Result<Null, String>> addBalance(String token) async {
-    return Ok(null);
+    return const Ok(null);
   }
 }

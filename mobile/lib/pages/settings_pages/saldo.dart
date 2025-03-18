@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/controllers/session.dart';
 import 'package:mobile/results.dart';
-import 'package:mobile/utils/build_if_session_exists.dart';
 import 'package:mobile/utils/price.dart';
 import 'package:provider/provider.dart';
 
