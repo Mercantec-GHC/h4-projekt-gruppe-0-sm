@@ -56,8 +56,7 @@ void route_post_carts_purchase(HttpCtx* ctx)
     }
 
     if (user.balance_dkk_cent < total_dkk_cent) {
-        RESPOND_JSON(
-            ctx, 200, "{\"ok\":false,\"message\":\"insufficient funds\"}");
+        RESPOND_JSON(ctx, 200, "{\"ok\":false,\"msg\":\"insufficient funds\"}");
         goto l0_return;
     }
     user.balance_dkk_cent -= total_dkk_cent;
