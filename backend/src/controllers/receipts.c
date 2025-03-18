@@ -59,6 +59,7 @@ void route_get_receipts_one(HttpCtx* ctx)
                 .product_id = products.data[i].id,
                 .name = str_dup(products.data[i].name),
                 .price_dkk_cent = product_prices.data[i].price_dkk_cent,
+                .amount = receipt.products.data[i].amount,
             });
     }
 

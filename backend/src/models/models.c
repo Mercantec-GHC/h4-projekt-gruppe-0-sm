@@ -310,10 +310,10 @@ char* receipts_one_res_product_to_json_string(const ReceiptsOneResProduct* m)
     string_construct(&string);
     string_pushf(&string,
         "{"
-        "\"product_id\":\"%ld\","
+        "\"product_id\":%ld,"
         "\"name\":\"%s\","
-        "\"price_dkk_cent\":\"%ld\","
-        "\"price_dkk_cent\":\"%ld\""
+        "\"price_dkk_cent\":%ld,"
+        "\"amount\":%ld"
         "}",
         m->product_id,
         m->name,
@@ -333,9 +333,9 @@ char* receipts_one_res_to_json_string(const ReceiptsOneRes* m)
     string_construct(&string);
     string_pushf(&string,
         "{"
-        "\"receipt_id\":\"%ld\","
+        "\"receipt_id\":%ld,"
         "\"timestamp\":\"%s\","
-        "\"products:\":[",
+        "\"products\":[",
         m->receipt_id,
         m->timestamp);
 

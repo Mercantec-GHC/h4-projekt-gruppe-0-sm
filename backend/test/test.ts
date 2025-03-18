@@ -107,13 +107,21 @@ async function testCartsAndReceipts(t: Deno.TestContext, token: string) {
     });
 
     await t.step("test /api/receipts/all", async () => {
-        const res = await get<{ ok: boolean }>(
+        const res = await get<{
+            ok: boolean;
+            receipts: { timestamp: string }[];
+        }>(
             `/api/receipts/all`,
             { "Session-Token": token },
         );
 
-        console.log(res);
+        // console.log(res);
         assertEquals(res.ok, true);
+        assertEquals(res.receipts.length, 1);
+        assertMatch(
+            res.receipts[0].timestamp,
+            /\d{4}-[01]\d-[0-3]\d [0-2]\d:[0-5]\d:[0-5]\d/,
+        );
     });
 }
 
