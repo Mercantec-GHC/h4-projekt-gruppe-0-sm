@@ -57,42 +57,40 @@ class FinishShoppingPage extends StatelessWidget {
                   child: Center(
                       child: PrimaryButton(
                           onPressed: () async {
-                            // final session = context.read<SessionController>();
-                            // payingStateRepo.next();
-                            // await Future.delayed(const Duration(seconds: 1));
-                            // if (cartController.purchase(session.sessionToken!)
-                            //     is Err) {
-                            //   if (context.mounted) {
-                            //     showDialog<String>(
-                            //       context: context,
-                            //       builder: (BuildContext context) =>
-                            //           AlertDialog(
-                            //         content: const Text(
-                            //             'Du har desværre ikke råd til at købe dette'),
-                            //         actions: <Widget>[
-                            //           TextButton(
-                            //             onPressed: () =>
-                            //                 Navigator.pop(context, 'OK'),
-                            //             child: const Text('OK'),
-                            //           ),
-                            //         ],
-                            //       ),
-                            //     );
-                            //   }
-                            //   payingStateRepo.reset();
-                            //   return;
-                            // }
-                            // receiptRepo.createReceipt(cart);
-                            // payingStateRepo.next();
-                            // await Future.delayed(const Duration(seconds: 1));
-                            // cartController.clearCart();
-                            // payingStateRepo.reset();
-                            // if (context.mounted) {
-                            //   Navigator.pop(context);
-                            //   final RoutingController routing =
-                            //       context.read<RoutingController>();
-                            //   routing.routeTo(PageSelector.homePage);
-                            // }
+                            payingStateRepo.next();
+                            await Future.delayed(const Duration(seconds: 1));
+                            if (cartController.purchase() is Err) {
+                              if (context.mounted) {
+                                showDialog<String>(
+                                  context: context,
+                                  builder: (BuildContext context) =>
+                                      AlertDialog(
+                                    content: const Text(
+                                        'Du har desværre ikke råd til at købe dette'),
+                                    actions: <Widget>[
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, 'OK'),
+                                        child: const Text('OK'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+                              payingStateRepo.reset();
+                              return;
+                            }
+                            receiptRepo.createReceipt(cart);
+                            payingStateRepo.next();
+                            await Future.delayed(const Duration(seconds: 1));
+                            cartController.clearCart();
+                            payingStateRepo.reset();
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                              final RoutingController routing =
+                                  context.read<RoutingController>();
+                              routing.routeTo(PageSelector.homePage);
+                            }
                           },
                           child: const Text("Betal"))),
                 ),

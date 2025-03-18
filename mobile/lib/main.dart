@@ -21,7 +21,7 @@ void main() {
   final usersController = UsersController(server: server);
   final sessionController = SessionController(server: server);
 
-  sessionController.loadUser();
+  sessionController.loadCachedUser();
 
   runApp(MyApp(
     usersController: usersController,
@@ -54,7 +54,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
             create: (_) => ProductController(server: server)),
         ChangeNotifierProvider(
-            create: (_) => CartControllerCache(server: server)),
+            create: (_) => CartControllerCache(
+                server: server, sessionController: sessionController)),
         ChangeNotifierProvider(create: (_) => ReceiptController()),
         ChangeNotifierProvider(create: (_) => PayingStateController()),
         ChangeNotifierProvider(create: (_) => AddToCartStateController()),
@@ -71,13 +72,13 @@ class MyApp extends StatelessWidget {
                 GoogleFonts.merriweatherTextTheme(Theme.of(context).textTheme),
             useMaterial3: true,
           ),
-          home: Consumer<SessionProvider>(
-            builder: (_, provider, ___) {
-              if (provider.controller.hasUser) {
+          home: Consumer2<SessionProvider, CurrentUserProvider>(
+            builder: (_, provider1, provider2, ___) {
+              if (provider1.controller.hasUser) {
                 return Dashboard();
               }
               return FutureBuilder(
-                  future: provider.controller.loadUser(),
+                  future: provider1.controller.loadCachedUser(),
                   builder: (_, snapshot) {
                     final error = snapshot.error;
                     if (error != null) {

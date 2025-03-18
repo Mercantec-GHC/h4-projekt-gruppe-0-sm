@@ -26,24 +26,22 @@ class SessionController {
     }
   }
 
-  Future<Result<Null, Null>> loadUser() async {
+  Future<Result<Null, Null>> loadCachedUser() async {
     // TODO: retrieve session from cache, if exists
     return _loadCurrentUser();
   }
 
+  Future<Result<Null, Null>> loadUpdatedUser() async {
+    return _loadCurrentUser();
+  }
+
   Future<Result<Null, Null>> _loadCurrentUser() async {
-    final sessionUserResult = await _requestWithSession<User>(
+    final sessionUserResult = await requestWithSession<User>(
         (server, sessionToken) => server.sessionUser(sessionToken));
     switch (sessionUserResult) {
       case Ok<User, String>(value: final sessionUser):
         _sessionUser = sessionUser;
         notifyUserChangeListeners();
-
-        // The mechanism for checking that a user is logged in, only listens on
-        // the session provider. There we also notify sessions listeners, to
-        // account for this one specific case. Is this smart? idk.
-        notifySessionChangeListeners();
-
         return const Ok(null);
       case Err<User, String>():
         return const Err(null);
@@ -73,7 +71,7 @@ class SessionController {
   }
 
   Future<Result<Null, String>> addBalance() async {
-    final addBalanceResult = await _requestWithSession(
+    final addBalanceResult = await requestWithSession(
         (server, sessionToken) => server.addBalance(sessionToken));
     if (addBalanceResult case Err<Null, String>(value: final message)) {
       return Err(message);
@@ -85,7 +83,7 @@ class SessionController {
   }
 
   /// Package private.
-  Future<Result<T, String>> _requestWithSession<T>(
+  Future<Result<T, String>> requestWithSession<T>(
       Future<Result<T, String>> Function(Server server, String sessionToken)
           func) async {
     final sessionToken = _sessionToken;
@@ -105,28 +103,24 @@ class SessionController {
     return result;
   }
 
-  /// Package private.
-  void _addSessionChangeListener(_ChangeListener listener) {
-    _sessionChangeListeners.add(listener);
-  }
-
-  /// Package private.
-  void _addUserChangeListener(_ChangeListener listener) {
-    _userChangeListeners.add(listener);
-  }
-
-  /// Class private.
   void notifySessionChangeListeners() {
     for (final listener in _sessionChangeListeners) {
       listener.notify();
     }
   }
 
-  /// Class private.
   void notifyUserChangeListeners() {
     for (final listener in _userChangeListeners) {
       listener.notify();
     }
+  }
+
+  void _addSessionChangeListener(_ChangeListener listener) {
+    _sessionChangeListeners.add(listener);
+  }
+
+  void _addUserChangeListener(_ChangeListener listener) {
+    _userChangeListeners.add(listener);
   }
 }
 

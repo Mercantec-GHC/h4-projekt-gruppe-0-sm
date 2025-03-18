@@ -102,15 +102,21 @@ class BackendServer implements Server {
   @override
   Future<Result<Null, String>> purchaseCart(
       String token, List<CartItem> cartItems) async {
-    final res = await http.post(Uri.parse("$_apiUrl/carts/purchase"), headers: {
-      "Content-Type": "application/json",
-      "Session-Token": token
-    }, body: {
-      "cart_items": cartItems
-          .map((cartItem) =>
-              {"product_id": cartItem.product.id, "amount": cartItem.amount})
-          .toList()
-    }).then((res) => json.decode(res.body));
+    final res = await http
+        .post(Uri.parse("$_apiUrl/carts/purchase"),
+            headers: {
+              "Content-Type": "application/json",
+              "Session-Token": token
+            },
+            body: json.encode({
+              "cart_items": cartItems
+                  .map((cartItem) => {
+                        "product_id": cartItem.product.id,
+                        "amount": cartItem.amount
+                      })
+                  .toList()
+            }))
+        .then((res) => json.decode(res.body));
 
     if (res["ok"]) {
       return Ok(null);

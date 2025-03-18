@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:mobile/controllers/session.dart';
 import 'package:mobile/models/cart_item.dart';
 import 'package:mobile/models/product.dart';
 import 'package:mobile/results.dart';
@@ -27,7 +28,9 @@ class CartControllerMemory extends CartController {
   final Server server;
   final List<CartItem> cart = [];
 
-  CartControllerMemory({required this.server});
+  final SessionController sessionController;
+
+  CartControllerMemory({required this.server, required this.sessionController});
 
   @override
   List<CartItem> allCartItems() {
@@ -116,10 +119,12 @@ class CartControllerMemory extends CartController {
     notifyListeners();
   }
 
-  Future<Result<Null, String>> purchase(String token) async {
-    final res = await server.purchaseCart(token, cart);
+  Future<Result<Null, String>> purchase() async {
+    final res = await sessionController.requestWithSession(
+        (server, sessionToken) => server.purchaseCart(sessionToken, cart));
     switch (res) {
       case Ok<Null, String>():
+        await sessionController.loadUpdatedUser();
         return const Ok(null);
       case Err<Null, String>(value: final message):
         return Err(message);
@@ -133,7 +138,8 @@ class CartControllerCache extends CartControllerMemory {
     return File("${directory.path}/cart.json").create();
   }
 
-  CartControllerCache({required super.server}) {
+  CartControllerCache(
+      {required super.server, required super.sessionController}) {
     load();
   }
 
