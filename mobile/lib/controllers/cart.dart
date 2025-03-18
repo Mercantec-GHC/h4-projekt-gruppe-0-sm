@@ -119,9 +119,9 @@ class CartControllerMemory extends CartController {
   Future<Result<Null, String>> purchase(String token) async {
     final res = await server.purchaseCart(token, cart);
     switch (res) {
-      case Success<Null>():
+      case Ok<Null, String>():
         return const Ok(null);
-      case Error<Null>(message: final message):
+      case Err<Null, String>(value: final message):
         return Err(message);
     }
   }

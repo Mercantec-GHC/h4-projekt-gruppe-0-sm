@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:mobile/models/cart_item.dart';
 import 'package:mobile/models/product.dart';
 import 'package:mobile/models/user.dart';
+import 'package:mobile/results.dart';
 import 'package:mobile/server/server.dart';
 
 class BackendServer implements Server {
@@ -21,24 +22,23 @@ class BackendServer implements Server {
   }
 
   @override
-  Future<Response<List<Product>>> allProducts() async {
+  Future<Result<List<Product>, String>> allProducts() async {
     final res = await http
         .get(
           Uri.parse("$_apiUrl/products/all"),
         )
         .then((res) => json.decode(res.body));
     if (res["ok"]) {
-      return Success(
-          data: (res["products"] as List<dynamic>)
-              .map(((product) => Product.fromJson(product)))
-              .toList());
+      return Ok((res["products"] as List<dynamic>)
+          .map(((product) => Product.fromJson(product)))
+          .toList());
     } else {
-      return Error(message: res["msg"]);
+      return Err(res["msg"]);
     }
   }
 
   @override
-  Future<Response<Null>> register(
+  Future<Result<Null, String>> register(
     String name,
     String email,
     String password,
@@ -49,14 +49,14 @@ class BackendServer implements Server {
     ).then((res) => json.decode(res.body));
 
     if (res["ok"]) {
-      return Success(data: null);
+      return Ok(null);
     } else {
-      return Error(message: res["msg"]);
+      return Err(res["msg"]);
     }
   }
 
   @override
-  Future<Response<String>> login(
+  Future<Result<String, String>> login(
     String email,
     String password,
   ) async {
@@ -66,41 +66,41 @@ class BackendServer implements Server {
     ).then((res) => json.decode(res.body));
 
     if (res["ok"]) {
-      return Success(data: res["token"]);
+      return Ok(res["token"]);
     } else {
-      return Error(message: res["msg"]);
+      return Err(res["msg"]);
     }
   }
 
   @override
-  Future<Response<Null>> logout(String token) async {
+  Future<Result<Null, String>> logout(String token) async {
     final res = await _post(
       endpoint: "sessions/logout",
     ).then((res) => json.decode(res.body));
 
     if (res["ok"]) {
-      return Success(data: null);
+      return Ok(null);
     } else {
-      return Error(message: res["msg"]);
+      return Err(res["msg"]);
     }
   }
 
   @override
-  Future<Response<User>> sessionUser(String token) async {
+  Future<Result<User, String>> sessionUser(String token) async {
     ("sending request fr with token $token");
     final res = await http.get(
       Uri.parse("$_apiUrl/sessions/user"),
       headers: {"Session-Token": token},
     ).then((res) => json.decode(res.body));
     if (res["ok"]) {
-      return Success(data: User.fromJson(res["user"]));
+      return Ok(User.fromJson(res["user"]));
     } else {
-      return Error(message: res["msg"]);
+      return Err(res["msg"]);
     }
   }
 
   @override
-  Future<Response<Null>> purchaseCart(
+  Future<Result<Null, String>> purchaseCart(
       String token, List<CartItem> cartItems) async {
     final res = await http.post(Uri.parse("$_apiUrl/carts/purchase"), headers: {
       "Content-Type": "application/json",
@@ -113,14 +113,14 @@ class BackendServer implements Server {
     }).then((res) => json.decode(res.body));
 
     if (res["ok"]) {
-      return Success(data: null);
+      return Ok(null);
     } else {
-      return Error(message: res["msg"]);
+      return Err(res["msg"]);
     }
   }
 
   @override
-  Future<Response<Null>> addBalance(String token) async {
+  Future<Result<Null, String>> addBalance(String token) async {
     print("$_apiUrl/api/users/balance/add");
     final res = await http.post(
       Uri.parse("$_apiUrl/users/balance/add"),
@@ -132,9 +132,9 @@ class BackendServer implements Server {
     ).then((res) => json.decode(res.body));
 
     if (res["ok"]) {
-      return Success(data: null);
+      return Ok(null);
     } else {
-      return Error(message: res["msg"]);
+      return Err(res["msg"]);
     }
   }
 }

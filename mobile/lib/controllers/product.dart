@@ -15,10 +15,10 @@ class ProductController extends ChangeNotifier {
   Future<void> fetchProductsFromServer() async {
     final res = await server.allProducts();
     switch (res) {
-      case Success<List<Product>>(data: final data):
+      case Ok<List<Product>, String>(value: final data):
         products = data;
         notifyListeners();
-      case Error<List<Product>>():
+      case Err<List<Product>, String>():
         return;
     }
   }

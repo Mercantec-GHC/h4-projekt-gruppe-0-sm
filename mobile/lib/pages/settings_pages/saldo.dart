@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/controllers/user.dart';
+import 'package:mobile/controllers/session.dart';
 import 'package:mobile/results.dart';
 import 'package:mobile/utils/build_if_session_exists.dart';
 import 'package:mobile/utils/price.dart';
@@ -10,7 +10,6 @@ class SaldoSettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sessionController = context.watch<UserController>();
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -26,22 +25,30 @@ class SaldoSettingsPage extends StatelessWidget {
                 ),
               ],
             ),
-            BuildIfSessionUserExists(
-                sessionController: sessionController,
-                placeholder: const CircularProgressIndicator(),
-                builder: (context, user) {
-                  return Text(
-                      "Nuværende saldo: ${formatDkkCents(user.balanceDkkCents)}",
-                      style: Theme.of(context).textTheme.bodyLarge);
-                }),
+            Consumer<CurrentUserProvider>(builder: (_, provider, ___) {
+              final user = provider.controller.user;
+              return Text(
+                  "Nuværende saldo: ${formatDkkCents(user.balanceDkkCents)}",
+                  style: Theme.of(context).textTheme.bodyLarge);
+            }),
             ElevatedButton.icon(
               onPressed: () async {
-                final res = await sessionController.addBalance();
-                switch (res) {
-                  case Ok<Null, String>():
-                    print("yay");
-                  case Err<Null, String>(value: final message):
-                    print("Womp womp fejled er: $message");
+                final currentUserProvider = context.read<CurrentUserProvider>();
+                final res = await currentUserProvider.controller.addBalance();
+                if (res case Err<Null, String>(value: final message)) {
+                  if (context.mounted) {
+                    showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                              content: Text('Serverfejl: $message'),
+                              actions: <Widget>[
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, 'OK'),
+                                  child: const Text('OK'),
+                                ),
+                              ],
+                            ));
+                  }
                 }
               },
               icon: const Icon(Icons.add),

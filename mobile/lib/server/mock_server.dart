@@ -2,13 +2,14 @@ import 'package:mobile/models/cart_item.dart';
 import 'package:mobile/models/coordinate.dart';
 import 'package:mobile/models/product.dart';
 import 'package:mobile/models/user.dart';
+import 'package:mobile/results.dart';
 import 'package:mobile/server/server.dart';
 
 class MockServer implements Server {
   @override
-  Future<Response<List<Product>>> allProducts() async {
+  Future<Result<List<Product>, String>> allProducts() async {
     var nextId = 0;
-    return Success(data: <Product>[
+    return Ok(<Product>[
       Product(
           id: nextId++,
           name: "Minimælk",
@@ -91,45 +92,44 @@ class MockServer implements Server {
   }
 
   @override
-  Future<Response<Null>> register(
+  Future<Result<Null, String>> register(
     String name,
     String email,
     String password,
   ) async {
-    return Success(data: null);
+    return Ok(null);
   }
 
   @override
-  Future<Response<String>> login(
+  Future<Result<String, String>> login(
     String email,
     String password,
   ) async {
-    return Success(data: "asdsadasdsad");
+    return Ok("asdsadasdsad");
   }
 
   @override
-  Future<Response<Null>> logout(String token) async {
-    return Success(data: null);
+  Future<Result<Null, String>> logout(String token) async {
+    return Ok(null);
   }
 
   @override
-  Future<Response<User>> sessionUser(String token) async {
-    return Success(
-        data: User(
-            id: 0,
-            email: "test@test.com",
-            name: "testuser",
-            balanceDkkCents: 10000));
+  Future<Result<User, String>> sessionUser(String token) async {
+    return Ok(User(
+        id: 0,
+        email: "test@test.com",
+        name: "testuser",
+        balanceDkkCents: 10000));
   }
 
   @override
-  Future<Response<Null>> purchaseCart(
+  Future<Result<Null, String>> purchaseCart(
       String token, List<CartItem> cartItems) async {
-    return Success(data: null);
+    return Ok(null);
   }
 
   @override
-  Future<Response<Null>> addBalance(String token) async {
-    return Success(data: null);
+  Future<Result<Null, String>> addBalance(String token) async {
+    return Ok(null);
   }
 }

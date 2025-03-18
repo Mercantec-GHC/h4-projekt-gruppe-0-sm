@@ -1,37 +1,27 @@
 import 'package:mobile/models/cart_item.dart';
 import 'package:mobile/models/product.dart';
 import 'package:mobile/models/user.dart';
+import 'package:mobile/results.dart';
 
 abstract class Server {
-  Future<Response<List<Product>>> allProducts();
+  Future<Result<List<Product>, String>> allProducts();
 
-  Future<Response<Null>> register(
+  Future<Result<Null, String>> register(
     String name,
     String email,
     String password,
   );
 
-  Future<Response<String>> login(
+  Future<Result<String, String>> login(
     String email,
     String password,
   );
-  Future<Response<Null>> logout(String token);
+  Future<Result<Null, String>> logout(String token);
 
-  Future<Response<User>> sessionUser(String token);
+  Future<Result<User, String>> sessionUser(String token);
 
-  Future<Response<Null>> purchaseCart(String token, List<CartItem> cartItems);
+  Future<Result<Null, String>> purchaseCart(
+      String token, List<CartItem> cartItems);
 
-  Future<Response<Null>> addBalance(String token);
-}
-
-sealed class Response<Data> {}
-
-class Success<Data> extends Response<Data> {
-  Data data;
-  Success({required this.data});
-}
-
-class Error<Data> extends Response<Data> {
-  String message;
-  Error({required this.message});
+  Future<Result<Null, String>> addBalance(String token);
 }

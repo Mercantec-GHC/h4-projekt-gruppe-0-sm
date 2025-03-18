@@ -10,9 +10,9 @@ class UsersController {
       String name, String email, String password) async {
     final res = await server.register(name, email, password);
     switch (res) {
-      case Success<Null>():
+      case Ok<Null, String>():
         return const Ok(null);
-      case Error<Null>(message: final message):
+      case Err<Null, String>(value: final message):
         return Err(message);
     }
   }

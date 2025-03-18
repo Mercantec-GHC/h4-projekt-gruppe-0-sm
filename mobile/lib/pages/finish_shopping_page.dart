@@ -3,7 +3,7 @@ import 'package:mobile/controllers/routing.dart';
 import 'package:mobile/controllers/cart.dart';
 import 'package:mobile/controllers/paying_state.dart';
 import 'package:mobile/controllers/receipt.dart';
-import 'package:mobile/controllers/user.dart';
+import 'package:mobile/controllers/session.dart';
 import 'package:mobile/results.dart';
 import 'package:mobile/utils/price.dart';
 import 'package:mobile/widgets/primary_button.dart';
@@ -57,42 +57,42 @@ class FinishShoppingPage extends StatelessWidget {
                   child: Center(
                       child: PrimaryButton(
                           onPressed: () async {
-                            final session = context.read<UserController>();
-                            payingStateRepo.next();
-                            await Future.delayed(const Duration(seconds: 1));
-                            if (cartController.purchase(session.sessionToken!)
-                                is Err) {
-                              if (context.mounted) {
-                                showDialog<String>(
-                                  context: context,
-                                  builder: (BuildContext context) =>
-                                      AlertDialog(
-                                    content: const Text(
-                                        'Du har desværre ikke råd til at købe dette'),
-                                    actions: <Widget>[
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.pop(context, 'OK'),
-                                        child: const Text('OK'),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }
-                              payingStateRepo.reset();
-                              return;
-                            }
-                            receiptRepo.createReceipt(cart);
-                            payingStateRepo.next();
-                            await Future.delayed(const Duration(seconds: 1));
-                            cartController.clearCart();
-                            payingStateRepo.reset();
-                            if (context.mounted) {
-                              Navigator.pop(context);
-                              final RoutingController routing =
-                                  context.read<RoutingController>();
-                              routing.routeTo(PageSelector.homePage);
-                            }
+                            // final session = context.read<SessionController>();
+                            // payingStateRepo.next();
+                            // await Future.delayed(const Duration(seconds: 1));
+                            // if (cartController.purchase(session.sessionToken!)
+                            //     is Err) {
+                            //   if (context.mounted) {
+                            //     showDialog<String>(
+                            //       context: context,
+                            //       builder: (BuildContext context) =>
+                            //           AlertDialog(
+                            //         content: const Text(
+                            //             'Du har desværre ikke råd til at købe dette'),
+                            //         actions: <Widget>[
+                            //           TextButton(
+                            //             onPressed: () =>
+                            //                 Navigator.pop(context, 'OK'),
+                            //             child: const Text('OK'),
+                            //           ),
+                            //         ],
+                            //       ),
+                            //     );
+                            //   }
+                            //   payingStateRepo.reset();
+                            //   return;
+                            // }
+                            // receiptRepo.createReceipt(cart);
+                            // payingStateRepo.next();
+                            // await Future.delayed(const Duration(seconds: 1));
+                            // cartController.clearCart();
+                            // payingStateRepo.reset();
+                            // if (context.mounted) {
+                            //   Navigator.pop(context);
+                            //   final RoutingController routing =
+                            //       context.read<RoutingController>();
+                            //   routing.routeTo(PageSelector.homePage);
+                            // }
                           },
                           child: const Text("Betal"))),
                 ),

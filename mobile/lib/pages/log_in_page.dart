@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/controllers/user.dart';
+import 'package:mobile/controllers/session.dart';
 import 'package:mobile/pages/register_page.dart';
 import 'package:mobile/results.dart';
 import 'package:mobile/widgets/error_box.dart';
@@ -7,30 +7,30 @@ import 'package:mobile/widgets/primary_button.dart';
 import 'package:mobile/widgets/primary_input.dart';
 import 'package:provider/provider.dart';
 
-class LogInPage extends StatelessWidget {
-  const LogInPage({super.key});
+class LoginPage extends StatelessWidget {
+  const LoginPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
         body: Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [LogInForm()]));
+            children: [LoginForm()]));
   }
 }
 
-class LogInForm extends StatefulWidget {
-  const LogInForm({super.key});
+class LoginForm extends StatefulWidget {
+  const LoginForm({super.key});
 
   @override
-  State<StatefulWidget> createState() => LogInFormState();
+  State<StatefulWidget> createState() => LoginFormState();
 }
 
-class LogInFormState extends State<LogInForm> {
+class LoginFormState extends State<LoginForm> {
   bool loginError = false;
   @override
   Widget build(BuildContext context) {
-    final userController = context.read<UserController>();
+    final sessionProvider = context.read<SessionProvider>();
 
     final mailController = TextEditingController();
     final passwordController = TextEditingController();
@@ -63,8 +63,8 @@ class LogInFormState extends State<LogInForm> {
         ),
         PrimaryButton(
             onPressed: () async {
-              final loginResult = await userController.login(
-                  mailController.text, passwordController.text);
+              final loginResult = await sessionProvider.controller
+                  .loginUser(mailController.text, passwordController.text);
               switch (loginResult) {
                 case Ok<Null, String>():
                   setState(() => loginError = false);
