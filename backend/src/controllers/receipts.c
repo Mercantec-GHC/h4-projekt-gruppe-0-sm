@@ -97,6 +97,7 @@ void route_get_receipts_all(HttpCtx* ctx)
 
     String receipts_str;
     string_construct(&receipts_str);
+    string_push_str(&receipts_str, "");
     for (size_t i = 0; i < receipts.size; ++i) {
         if (i != 0) {
             string_pushf(&receipts_str, ",");
