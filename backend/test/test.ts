@@ -45,7 +45,7 @@ Deno.test("test backend", async (t) => {
             { "Session-Token": token! },
         );
 
-        // console.log(sessionUserRes.user);
+        //console.log(sessionUserRes.user);
         assertEquals(sessionUserRes.ok, true);
     });
 
@@ -58,7 +58,7 @@ Deno.test("test backend", async (t) => {
             { "Session-Token": token! },
         );
 
-        // console.log(sessionUserRes);
+        //console.log(sessionUserRes);
         assertEquals(sessionUserRes.ok, true);
     });
 
@@ -81,6 +81,20 @@ Deno.test("test backend", async (t) => {
 async function testCartsAndReceipts(t: Deno.TestContext, token: string) {
     let receiptId: number | undefined = undefined;
 
+    await t.step("test /api/receipts/all", async () => {
+        const res = await get<{
+            ok: boolean;
+            receipts: { timestamp: string }[];
+        }>(
+            `/api/receipts/all`,
+            { "Session-Token": token },
+        );
+
+        // console.log(res);
+        assertEquals(res.ok, true);
+        assertEquals(res.receipts.length, 0);
+    });
+
     const user1 = await sessionUser(token);
 
     await t.step("test /api/carts/purchase", async () => {
@@ -88,13 +102,14 @@ async function testCartsAndReceipts(t: Deno.TestContext, token: string) {
             "/api/carts/purchase",
             {
                 items: [
-                    { product_id: 1, amount: 2 },
-                    { product_id: 2, amount: 5 },
+                    { product_id: 1, amount: 5 },
+                    { product_id: 2, amount: 2 },
                 ],
             },
             { "Session-Token": token },
         );
 
+        //console.log(res);
         assertEquals(res.ok, true);
         receiptId = res.receipt_id;
     });
@@ -103,7 +118,7 @@ async function testCartsAndReceipts(t: Deno.TestContext, token: string) {
     assertNotEquals(user1.balance_dkk_cent, user2.balance_dkk_cent);
     assertEquals(
         user1.balance_dkk_cent - user2.balance_dkk_cent,
-        1195 * 2 + 1295 * 5,
+        1195 * 5 + 1295 * 2,
     );
 
     if (!receiptId) {

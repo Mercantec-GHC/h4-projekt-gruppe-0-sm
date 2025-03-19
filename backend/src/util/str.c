@@ -52,27 +52,64 @@ StrSlice str_split_next(StrSplitter* splitter)
     return slice;
 }
 
-void string_push_str(String* string, const char* str)
+int string_construct(String* string)
 {
-    for (size_t i = 0; i < strlen(str); ++i) {
-        string_data_push(string, str[i]);
+    int res = string_data_construct(string);
+    if (res != 0) {
+        return res;
     }
-
-    string_data_push(string, '\0');
-    string->size -= 1;
+    // NOTE: Vec is assumed to be initialized with atleast 1 allocated byte.
+    string->data[0] = '\0';
+    return 0;
 }
 
-void string_push_fmt_va(String* string, const char* fmt, ...)
+void string_destroy(String* string)
+{
+    string_data_destroy(string);
+}
+
+int string_push(String* string, char value)
+{
+    int res = string_data_push(string, value);
+    if (res != 0)
+        return res;
+    res = string_data_push(string, '\0');
+    if (res != 0)
+        return res;
+    string->size -= 1;
+    return 0;
+}
+
+int string_push_str(String* string, const char* str)
+{
+    for (size_t i = 0; i < strlen(str); ++i) {
+        int res = string_data_push(string, str[i]);
+        if (res != 0)
+            return res;
+    }
+
+    int res = string_data_push(string, '\0');
+    if (res != 0)
+        return res;
+    string->size -= 1;
+    return 0;
+}
+
+int string_push_fmt_va(String* string, const char* fmt, ...)
 {
     va_list args1;
     va_start(args1, fmt);
     va_list args2;
     va_copy(args2, args1);
-    char buf[1 + vsnprintf(NULL, 0, fmt, args1)];
+
+    size_t buffer_size = (size_t)vsnprintf(NULL, 0, fmt, args1) + 1;
+    char* buf = malloc(buffer_size);
     va_end(args1);
-    vsnprintf(buf, sizeof buf, fmt, args2);
+
+    vsnprintf(buf, buffer_size, fmt, args2);
     va_end(args2);
-    string_push_str(string, buf);
+
+    return string_push_str(string, buf);
 }
 
 char* string_copy(const String* string)

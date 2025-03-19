@@ -27,8 +27,11 @@ StrSlice str_split_next(StrSplitter* splitter);
 
 DEFINE_VEC(char, String, string_data)
 
-void string_push_str(String* string, const char* str);
-void string_push_fmt_va(String* string, const char* fmt, ...);
+int string_construct(String* string);
+void string_destroy(String* string);
+int string_push(String* string, char value);
+int string_push_str(String* string, const char* str);
+int string_push_fmt_va(String* string, const char* fmt, ...);
 char* string_copy(const String* string);
 
 #define string_pushf(STRING, ...) string_push_fmt_va(STRING, __VA_ARGS__)
