@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../collections/collection.h"
+#include "../collections/vec.h"
 #include <stdint.h>
 
 typedef struct {

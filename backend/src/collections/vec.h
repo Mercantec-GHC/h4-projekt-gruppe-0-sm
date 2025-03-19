@@ -1,9 +1,8 @@
 #pragma once
 
+#include "../util/attrs.h"
 #include <stddef.h>
 #include <stdlib.h>
-
-#define MAYBE_UNUSED __attribute__((unused))
 
 #define DECLARE_VEC_TYPE(TYPE, VEC_TYPE, FN_PREFIX, FN_SPECIFIER)              \
     typedef TYPE VEC_TYPE##T;                                                  \

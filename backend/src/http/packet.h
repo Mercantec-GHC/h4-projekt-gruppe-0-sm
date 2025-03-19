@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../collections/collection.h"
+#include "../collections/vec.h"
 #include <stdbool.h>
 
 #define MAX_HEADER_BUFFER_SIZE 65536
