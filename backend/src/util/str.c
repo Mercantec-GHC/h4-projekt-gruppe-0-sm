@@ -55,10 +55,10 @@ StrSlice str_split_next(StrSplitter* splitter)
 void string_push_str(String* string, const char* str)
 {
     for (size_t i = 0; i < strlen(str); ++i) {
-        string_push(string, str[i]);
+        string_data_push(string, str[i]);
     }
 
-    string_push(string, '\0');
+    string_data_push(string, '\0');
     string->size -= 1;
 }
 

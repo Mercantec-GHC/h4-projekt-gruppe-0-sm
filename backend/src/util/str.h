@@ -25,7 +25,7 @@ typedef struct {
 StrSplitter str_splitter(const char* text, size_t text_len, const char* split);
 StrSlice str_split_next(StrSplitter* splitter);
 
-DEFINE_VEC(char, String, string)
+DEFINE_VEC(char, String, string_data)
 
 void string_push_str(String* string, const char* str);
 void string_push_fmt_va(String* string, const char* fmt, ...);
