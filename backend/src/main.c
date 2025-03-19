@@ -42,7 +42,7 @@ int main(void)
         server, "/product_editor/index.html", route_get_product_editor_html);
     http_server_get(server,
         "/product_editor/product_editor.js",
-        route_get_product_editor_js);
+        route_get_product_editor_html);
 
     http_server_post(server, "/api/carts/purchase", route_post_carts_purchase);
 

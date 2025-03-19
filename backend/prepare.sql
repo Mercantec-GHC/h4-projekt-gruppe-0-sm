@@ -35,7 +35,8 @@ CREATE TABLE IF NOT EXISTS product_prices (
 CREATE TABLE IF NOT EXISTS receipts (
     id INTEGER PRIMARY KEY,
     user INTEGER NOT NULL,
-    datetime INTEGER NOT NULL,
+    total_dkk_cent INTEGER NOT NULL,
+    timestamp INTEGER NOT NULL,
 
     FOREIGN KEY(user) REFERENCES users(id)
 );

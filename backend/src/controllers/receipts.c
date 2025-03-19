@@ -49,6 +49,7 @@ void route_get_receipts_one(HttpCtx* ctx)
 
     ReceiptsOneRes res = {
         .receipt_id = receipt.id,
+        .total_dkk_cent = receipt.total_dkk_cent,
         .timestamp = str_dup(receipt.timestamp),
         .products = (ReceiptsOneResProductVec) { 0 },
     };

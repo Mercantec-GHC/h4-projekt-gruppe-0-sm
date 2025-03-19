@@ -73,6 +73,7 @@ void route_post_carts_purchase(HttpCtx* ctx)
         .id = 0,
         .user_id = session->user_id,
         .timestamp = NULL,
+        .total_dkk_cent = total_dkk_cent,
         .products = (ReceiptProductVec) { 0 },
     };
     receipt_product_vec_construct(&receipt.products);

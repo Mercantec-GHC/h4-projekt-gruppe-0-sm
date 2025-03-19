@@ -517,7 +517,7 @@ l0_return:
 
 DbRes db_receipt_insert(Db* db, const Receipt* receipt, int64_t* id)
 {
-    static_assert(sizeof(Receipt) == 48, "model has changed");
+    static_assert(sizeof(Receipt) == 56, "model has changed");
     static_assert(sizeof(ReceiptProduct) == 32, "model has changed");
 
     sqlite3* connection;
@@ -526,8 +526,8 @@ DbRes db_receipt_insert(Db* db, const Receipt* receipt, int64_t* id)
 
     sqlite3_stmt* stmt;
     int prepare_res = sqlite3_prepare_v2(connection,
-        "INSERT INTO receipts (user, datetime) "
-        "VALUES (?, unixepoch('now'))",
+        "INSERT INTO receipts (user, total_dkk_cent, timestamp) "
+        "VALUES (?, ?, unixepoch('now'))",
         -1,
         &stmt,
         NULL);
@@ -539,10 +539,11 @@ DbRes db_receipt_insert(Db* db, const Receipt* receipt, int64_t* id)
     }
 
     sqlite3_bind_int64(stmt, 1, receipt->user_id);
+    sqlite3_bind_int64(stmt, 2, receipt->total_dkk_cent);
 
     int step_res = sqlite3_step(stmt);
     if (step_res != SQLITE_DONE) {
-        fprintf(stderr, "error: %s\n", sqlite3_errmsg(connection));
+        REPORT_SQLITE3_ERROR();
         res = DbRes_Error;
         goto l0_return;
     }
@@ -574,7 +575,7 @@ DbRes db_receipt_insert(Db* db, const Receipt* receipt, int64_t* id)
 
         int step_res = sqlite3_step(stmt);
         if (step_res != SQLITE_DONE) {
-            fprintf(stderr, "error: %s\n", sqlite3_errmsg(connection));
+            REPORT_SQLITE3_ERROR();
             res = DbRes_Error;
             goto l0_return;
         }
@@ -591,7 +592,7 @@ l0_return:
 DbRes db_receipt_with_id_and_user_id(
     Db* db, Receipt* receipt, int64_t id, int64_t user_id)
 {
-    static_assert(sizeof(Receipt) == 48, "model has changed");
+    static_assert(sizeof(Receipt) == 56, "model has changed");
 
     sqlite3* connection;
     CONNECT;
@@ -599,7 +600,9 @@ DbRes db_receipt_with_id_and_user_id(
     sqlite3_stmt* stmt = NULL;
 
     int prepare_res = sqlite3_prepare_v2(connection,
-        "SELECT id, user, datetime(datetime, 'unixepoch') FROM receipts"
+        "SELECT id, user, total_dkk_cent, datetime(timestamp, 'unixepoch') "
+        "FROM "
+        "receipts"
         " WHERE id = ? AND user = ?",
         -1,
         &stmt,
@@ -627,7 +630,8 @@ DbRes db_receipt_with_id_and_user_id(
     *receipt = (Receipt) {
         .id = GET_INT(0),
         .user_id = GET_INT(1),
-        .timestamp = GET_STR(2),
+        .total_dkk_cent = GET_INT(2),
+        .timestamp = GET_STR(3),
         .products = (ReceiptProductVec) { 0 },
     };
 
@@ -674,7 +678,8 @@ l0_return:
 DbRes db_receipt_all_headers_with_user_id(
     Db* db, ReceiptHeaderVec* receipts, int64_t user_id)
 {
-    static_assert(sizeof(Receipt) == 48, "model has changed");
+    static_assert(sizeof(Receipt) == 56, "model has changed");
+    static_assert(sizeof(ReceiptHeader) == 32, "model has changed");
 
     sqlite3* connection;
     CONNECT;
@@ -683,8 +688,10 @@ DbRes db_receipt_all_headers_with_user_id(
 
     sqlite3_stmt* stmt;
     sqlite_res = sqlite3_prepare_v2(connection,
-        "SELECT id, user, datetime(datetime, 'unixepoch') FROM receipts WHERE "
-        "user = ?",
+        "SELECT id, user, total_dkk_cent, datetime(timestamp, 'unixepoch')"
+        " FROM"
+        " receipts WHERE"
+        " user = ?",
         -1,
         &stmt,
         NULL);
@@ -700,7 +707,8 @@ DbRes db_receipt_all_headers_with_user_id(
         ReceiptHeader receipt = {
             .id = GET_INT(0),
             .user_id = GET_INT(1),
-            .timestamp = GET_STR(2),
+            .total_dkk_cent = GET_INT(2),
+            .timestamp = GET_STR(3),
         };
         receipt_header_vec_push(receipts, receipt);
     }

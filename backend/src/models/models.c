@@ -48,7 +48,7 @@ void receipt_product_destroy(ReceiptProduct* m)
 
 void receipt_destroy(Receipt* m)
 {
-    static_assert(sizeof(Receipt) == 48, "model has changed");
+    static_assert(sizeof(Receipt) == 56, "model has changed");
 
     free(m->timestamp);
     for (size_t i = 0; i < m->products.size; ++i)
@@ -58,7 +58,7 @@ void receipt_destroy(Receipt* m)
 
 void receipt_header_destroy(ReceiptHeader* m)
 {
-    static_assert(sizeof(ReceiptHeader) == 24, "model has changed");
+    static_assert(sizeof(ReceiptHeader) == 32, "model has changed");
 
     free(m->timestamp);
 }
@@ -96,7 +96,7 @@ void receipts_one_res_product_destroy(ReceiptsOneResProduct* m)
 
 void receipts_one_res_destroy(ReceiptsOneRes* m)
 {
-    static_assert(sizeof(ReceiptsOneRes) == 40, "model has changed");
+    static_assert(sizeof(ReceiptsOneRes) == 48, "model has changed");
 
     free(m->timestamp);
     for (size_t i = 0; i < m->products.size; ++i)
@@ -200,7 +200,7 @@ char* product_price_to_json_string(const ProductPrice* m)
 
 char* receipt_to_json_string(const Receipt* m)
 {
-    static_assert(sizeof(Receipt) == 48, "model has changed");
+    static_assert(sizeof(Receipt) == 56, "model has changed");
 
     String string;
     string_construct(&string);
@@ -208,10 +208,12 @@ char* receipt_to_json_string(const Receipt* m)
         "{"
         "\"id\":%ld,"
         "\"user_id\":%ld,"
+        "\"total_dkk_cent\":%ld,"
         "\"timestamp\":\"%s\","
         "\"products\":[",
         m->id,
         m->user_id,
+        m->total_dkk_cent,
         m->timestamp);
 
     for (size_t i = 0; i < m->products.size; ++i) {
@@ -238,7 +240,7 @@ char* receipt_to_json_string(const Receipt* m)
 
 char* receipt_header_to_json_string(const ReceiptHeader* m)
 {
-    static_assert(sizeof(ReceiptHeader) == 24, "model has changed");
+    static_assert(sizeof(ReceiptHeader) == 32, "model has changed");
 
     String string;
     string_construct(&string);
@@ -246,9 +248,12 @@ char* receipt_header_to_json_string(const ReceiptHeader* m)
         "{"
         "\"id\":%ld,"
         "\"user_id\":%ld,"
-        "\"timestamp\":\"%s\"}",
+        "\"total_dkk_cent\":%ld,"
+        "\"timestamp\":\"%s\""
+        "}",
         m->id,
         m->user_id,
+        m->total_dkk_cent,
         m->timestamp);
     char* result = string_copy(&string);
     string_destroy(&string);
@@ -327,16 +332,18 @@ char* receipts_one_res_product_to_json_string(const ReceiptsOneResProduct* m)
 
 char* receipts_one_res_to_json_string(const ReceiptsOneRes* m)
 {
-    static_assert(sizeof(ReceiptsOneRes) == 40, "model has changed");
+    static_assert(sizeof(ReceiptsOneRes) == 48, "model has changed");
 
     String string;
     string_construct(&string);
     string_pushf(&string,
         "{"
         "\"receipt_id\":%ld,"
+        "\"total_dkk_cent\":%ld,"
         "\"timestamp\":\"%s\","
         "\"products\":[",
         m->receipt_id,
+        m->total_dkk_cent,
         m->timestamp);
 
     for (size_t i = 0; i < m->products.size; ++i) {
@@ -475,13 +482,13 @@ int product_price_from_json(ProductPrice* m, const JsonValue* json)
 
 int receipt_from_json(Receipt* m, const JsonValue* json)
 {
-    static_assert(sizeof(Receipt) == 48, "model has changed");
+    static_assert(sizeof(Receipt) == 56, "model has changed");
 
     PANIC("not implemented");
 }
 int receipt_header_from_json(ReceiptHeader* m, const JsonValue* json)
 {
-    static_assert(sizeof(ReceiptHeader) == 24, "model has changed");
+    static_assert(sizeof(ReceiptHeader) == 32, "model has changed");
 
     PANIC("not implemented");
 }
@@ -571,7 +578,7 @@ int receipts_one_res_product_from_json(
 
 int receipts_one_res_from_json(ReceiptsOneRes* m, const JsonValue* json)
 {
-    static_assert(sizeof(ReceiptsOneRes) == 40, "model has changed");
+    static_assert(sizeof(ReceiptsOneRes) == 48, "model has changed");
 
     PANIC("not implemented");
 }

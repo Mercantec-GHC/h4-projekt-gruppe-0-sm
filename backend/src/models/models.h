@@ -46,6 +46,7 @@ DECLARE_VEC_TYPE(ReceiptProduct, ReceiptProductVec, receipt_product_vec, )
 typedef struct {
     int64_t id;
     int64_t user_id;
+    int64_t total_dkk_cent;
     char* timestamp;
     ReceiptProductVec products;
 } Receipt;
@@ -55,6 +56,7 @@ DECLARE_VEC_TYPE(Receipt, ReceiptVec, receipt_vec, )
 typedef struct {
     int64_t id;
     int64_t user_id;
+    int64_t total_dkk_cent;
     char* timestamp;
 } ReceiptHeader;
 
@@ -113,6 +115,7 @@ DECLARE_VEC_TYPE(ReceiptsOneResProduct,
 
 typedef struct {
     int64_t receipt_id;
+    int64_t total_dkk_cent;
     char* timestamp;
     ReceiptsOneResProductVec products;
 } ReceiptsOneRes;
