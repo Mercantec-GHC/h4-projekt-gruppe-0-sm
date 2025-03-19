@@ -104,6 +104,15 @@ void receipts_one_res_destroy(ReceiptsOneRes* m)
     receipts_one_res_product_vec_destroy(&m->products);
 }
 
+void products_create_req_destroy(ProductsCreateReq* m)
+{
+    static_assert(sizeof(ProductsCreateReq) == 40, "model has changed");
+
+    free(m->name);
+    free(m->description);
+    free(m->barcode);
+}
+
 char* user_to_json_string(const User* m)
 {
     static_assert(sizeof(User) == 40, "model has changed");
@@ -363,6 +372,31 @@ char* receipts_one_res_to_json_string(const ReceiptsOneRes* m)
     return result;
 }
 
+char* products_create_req_to_json_string(const ProductsCreateReq* m)
+{
+    static_assert(sizeof(ProductsCreateReq) == 40, "model has changed");
+
+    String string;
+    string_construct(&string);
+    string_pushf(&string,
+        "{"
+        "\"name\":\"%s\","
+        "\"description\":\"%s\","
+        "\"price_dkk_cent\":%ld,"
+        "\"coord_id\":%ld,"
+        "\"barcode\":\"%s\""
+        "}",
+        m->name,
+        m->description,
+        m->price_dkk_cent,
+        m->coord_id,
+        m->barcode);
+
+    char* result = string_copy(&string);
+    string_destroy(&string);
+    return result;
+}
+
 typedef struct {
     const char* key;
     JsonType type;
@@ -456,7 +490,7 @@ int product_from_json(Product* m, const JsonValue* json)
         .description = GET_STR("description"),
         .price_dkk_cent = GET_INT("price_dkk_cent"),
         .coord_id = GET_INT("coord_id"),
-        .barcode = GET_STR("y"),
+        .barcode = GET_STR("barcode"),
     };
     return 0;
 }
@@ -581,6 +615,29 @@ int receipts_one_res_from_json(ReceiptsOneRes* m, const JsonValue* json)
     static_assert(sizeof(ReceiptsOneRes) == 48, "model has changed");
 
     PANIC("not implemented");
+}
+
+int products_create_req_from_json(ProductsCreateReq* m, const JsonValue* json)
+{
+    static_assert(sizeof(ProductsCreateReq) == 40, "model has changed");
+
+    ObjField fields[] = {
+        { "name", JsonType_String },
+        { "description", JsonType_String },
+        { "price_dkk_cent", JsonType_Number },
+        { "coord_id", JsonType_Number },
+        { "barcode", JsonType_String },
+    };
+    if (!OBJ_CONFORMS(json, fields))
+        return -1;
+    *m = (ProductsCreateReq) {
+        .name = GET_STR("name"),
+        .description = GET_STR("description"),
+        .price_dkk_cent = GET_INT("price_dkk_cent"),
+        .coord_id = GET_INT("coord_id"),
+        .barcode = GET_STR("barcode"),
+    };
+    return 0;
 }
 
 DEFINE_VEC_IMPL(ProductPrice, ProductPriceVec, product_price_vec, )

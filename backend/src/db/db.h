@@ -30,6 +30,12 @@ DbRes db_user_with_email_exists(Db* db, bool* exists, const char* email);
 /// `user` is an out parameter.
 DbRes db_user_with_email(Db* db, User* user, const char* email);
 
+/// `product.id` are ignored.
+DbRes db_product_insert(Db* db, const Product* product);
+
+/// Uses `user.id` to find model.
+DbRes db_product_update(Db* db, const Product* product);
+
 /// `product` is an out parameter.
 DbRes db_product_with_id(Db* db, Product* product, int64_t id);
 

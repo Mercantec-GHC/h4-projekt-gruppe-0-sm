@@ -38,11 +38,16 @@ int main(void)
     http_server_set_user_ctx(server, &cx);
 
     http_server_get(server, "/api/products/all", route_get_products_all);
+    http_server_post(
+        server, "/api/products/create", route_post_products_create);
+    http_server_post(
+        server, "/api/products/update", route_post_products_update);
+
     http_server_get(
         server, "/product_editor/index.html", route_get_product_editor_html);
     http_server_get(server,
         "/product_editor/product_editor.js",
-        route_get_product_editor_html);
+        route_get_product_editor_js);
 
     http_server_post(server, "/api/carts/purchase", route_post_carts_purchase);
 

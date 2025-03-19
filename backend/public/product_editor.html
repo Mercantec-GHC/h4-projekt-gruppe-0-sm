@@ -3,8 +3,107 @@
     <head>
         <meta charset="utf-8">
         <script src="product_editor.js" type="module" defer></script>
+        <style>
+            body {
+                text-align: center;
+                margin: auto;
+                max-width: 1600px;
+            }
+            #product-list {
+                border-spacing: 0;
+                border: 1px solid black;
+            }
+            #product-list th {
+                text-align: left;
+                padding: 5px 10px;
+                background-color: #eee;
+                border-right: 1px solid lightgray;
+                border-bottom: 1px solid black;
+            }
+            #product-list th:last-child {
+                border-right: 0;
+            }
+            #product-list td {
+                border-top: 1px solid black;
+                border-right: 1px solid lightgray;
+                padding: 5px 10px;
+            }
+            #product-list td:last-child {
+                border-right: 0;
+            }
+            #product-list tr:nth-child(2n) td {
+                background-color: #eee;
+            }
+
+            fieldset {
+                background-color: #F9F9F9;
+                text-align: left;
+                margin-top: 1rem;
+                display: inline-block;
+            }
+            legend {
+                font-weight: bold;
+                font-size: 1.6rem;
+            }
+            #editor table {
+                margin-top: 0.5rem;
+            }
+            #editor td {
+                padding: 0.25rem;
+                vertical-align: top;
+            }
+            textarea {
+                font-family: inherit;
+                resize: vertical;
+            }
+            #editor input, #editor textarea {
+                width: 250px;
+            }
+        </style>
     </head>
     <body>
-        <h1>Product editor</h1>
+        <h2>Products</h2>
+        <table id="product-list">
+        </table>
+        <fieldset>
+            <legend>Editor</legend>
+
+            <form id="editor">
+                <center>
+                    <button id="load">Load</button>
+                    <button id="save">Save</button>
+                    <button id="new">New</button>
+                </center>
+
+                <table>
+                    <tr>
+                        <td><label for="product-id">id: </label></td>
+                        <td>
+                            <input id="product-id" type="text">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><label for="product-name">name: </label></td>
+                        <td><input id="product-name" type="text"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="product-price">price (dkk): </label></td>
+                        <td><input id="product-price" type="number" step="0.01"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="product-description">description: </label></td>
+                        <td><textarea id="product-description"></textarea></td>
+                    </tr>
+                    <tr>
+                        <td><label for="product-coord">coord_id: </label></td>
+                        <td><input  id="product-coord" type="text"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="product-barcode">barcode: </label></td>
+                        <td><input  id="product-barcode" type="text"></td>
+                    </tr>
+                </table>
+            </form>
+        </fieldset>
     </body>
 </html>

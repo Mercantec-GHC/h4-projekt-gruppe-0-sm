@@ -148,6 +148,23 @@ void json_parser_destroy(JsonParser* p)
     (void)p;
 }
 
+static inline void free_unused_arr(Arr* arr)
+{
+    for (size_t i = 0; i < arr->size; ++i) {
+        json_free(arr->data[i]);
+    }
+    arr_destroy(arr);
+}
+
+static inline void free_unused_obj(Obj* obj)
+{
+    for (size_t i = 0; i < obj->size; ++i) {
+        free(obj->data[i].key);
+        json_free(obj->data[i].val);
+    }
+    obj_destroy(obj);
+}
+
 JsonValue* json_parser_parse(JsonParser* p)
 {
     switch (p->curr_tok) {
@@ -188,23 +205,29 @@ JsonValue* json_parser_parse(JsonParser* p)
         arr_construct(&arr);
         {
             JsonValue* value = json_parser_parse(p);
-            if (!value)
+            if (!value) {
+                free_unused_arr(&arr);
                 return NULL;
+            }
             arr_push(&arr, value);
         }
         while (p->curr_tok != TOK_EOF && p->curr_tok != ']') {
             if (p->curr_tok != ',') {
                 fprintf(stderr, "error: json: expected ',' in array\n");
+                free_unused_arr(&arr);
                 return NULL;
             }
             lex(p);
             JsonValue* value = json_parser_parse(p);
-            if (!value)
+            if (!value) {
+                free_unused_arr(&arr);
                 return NULL;
+            }
             arr_push(&arr, value);
         }
         if (p->curr_tok != ']') {
             fprintf(stderr, "error: json: expected ']' after array\n");
+            free_unused_arr(&arr);
             return NULL;
         }
         lex(p);
@@ -218,52 +241,62 @@ JsonValue* json_parser_parse(JsonParser* p)
         {
             if (p->curr_tok != '"') {
                 fprintf(stderr, "error: json: expected '\"' in kv\n");
+                free_unused_obj(&obj);
                 return NULL;
             }
             char* key = p->curr_val;
             lex(p);
             if (p->curr_tok != ':') {
                 fprintf(stderr, "error: json: expected ':' in kv\n");
+                free_unused_obj(&obj);
                 return NULL;
             }
             lex(p);
             JsonValue* value = json_parser_parse(p);
-            if (!value)
+            if (!value) {
+                free_unused_obj(&obj);
                 return NULL;
+            }
             obj_push(&obj, (KV) { key, value });
         }
         while (p->curr_tok != TOK_EOF && p->curr_tok != '}') {
             if (p->curr_tok != ',') {
                 fprintf(stderr, "error: json: expected ',' in object\n");
+                free_unused_obj(&obj);
                 return NULL;
             }
             lex(p);
 
             if (p->curr_tok != '"') {
                 fprintf(stderr, "error: json: expected '\"' in kv\n");
+                free_unused_obj(&obj);
                 return NULL;
             }
             char* key = p->curr_val;
             lex(p);
             if (p->curr_tok != ':') {
                 fprintf(stderr, "error: json: expected ':' in kv\n");
+                free_unused_obj(&obj);
                 return NULL;
             }
             lex(p);
             JsonValue* value = json_parser_parse(p);
-            if (!value)
+            if (!value) {
+                free_unused_obj(&obj);
                 return NULL;
+            }
             obj_push(&obj, (KV) { key, value });
         }
         if (p->curr_tok != '}') {
             fprintf(stderr, "error: json: expected '}' after object\n");
+            free_unused_obj(&obj);
             return NULL;
         }
         lex(p);
         return alloc((JsonValue) { .type = JsonType_Object, .obj_val = obj });
     }
 
-    fprintf(stderr, "error: json: unexpeted tok\n");
+    fprintf(stderr, "error: json: unexpeted token\n");
     return NULL;
 }
 
@@ -300,6 +333,7 @@ static inline void lex(JsonParser* p)
         case '0':
             lstep(p);
             p->curr_tok = TOK_NUMBER;
+            p->curr_val = str_dup("0");
             return;
     }
     if ((p->ch >= '1' && p->ch <= '9') || p->ch == '.') {
@@ -315,12 +349,34 @@ static inline void lex(JsonParser* p)
             string_push(&value, p->ch);
             lstep(p);
         }
-        // should be interned
         char* copy = string_copy(&value);
-
         string_destroy(&value);
+
         p->curr_tok = TOK_NUMBER;
         p->curr_val = copy;
+        return;
+    }
+    if ((p->ch >= 'a' && p->ch <= 'z') || (p->ch >= 'A' && p->ch <= 'Z')) {
+        String value;
+        string_construct(&value);
+        while (p->i < p->text_len
+            && ((p->ch >= 'a' && p->ch <= 'z')
+                || (p->ch >= 'A' && p->ch <= 'Z'))) {
+            string_push(&value, p->ch);
+            lstep(p);
+        }
+        if (strcmp(value.data, "null")) {
+            p->curr_tok = TOK_NULL;
+        } else if (strcmp(value.data, "false")) {
+            p->curr_tok = TOK_FALSE;
+        } else if (strcmp(value.data, "true")) {
+            p->curr_tok = TOK_TRUE;
+        } else {
+            fprintf(
+                stderr, "error: json: illegal keyword \"%s\"\n", value.data);
+            p->curr_tok = TOK_ERROR;
+        }
+        string_destroy(&value);
         return;
     }
     if (p->ch == '"') {
@@ -364,10 +420,9 @@ static inline void lex(JsonParser* p)
         }
         lstep(p);
 
-        // should be interned
         char* copy = string_copy(&value);
-
         string_destroy(&value);
+
         p->curr_tok = '"';
         p->curr_val = copy;
         return;

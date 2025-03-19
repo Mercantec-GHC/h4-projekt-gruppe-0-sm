@@ -36,6 +36,83 @@ void route_get_products_all(HttpCtx* ctx)
     string_destroy(&res);
 }
 
+void route_post_products_create(HttpCtx* ctx)
+{
+    Cx* cx = http_ctx_user_ctx(ctx);
+
+    const char* body_str = http_ctx_req_body(ctx);
+    JsonValue* body_json = json_parse(body_str, strlen(body_str));
+    if (!body_json) {
+        RESPOND_BAD_REQUEST(ctx, "bad request");
+        return;
+    }
+
+    ProductsCreateReq req;
+    int parse_result = products_create_req_from_json(&req, body_json);
+    json_free(body_json);
+    if (parse_result != 0) {
+        RESPOND_BAD_REQUEST(ctx, "bad request");
+        return;
+    }
+
+    Product product = {
+        .id = 0,
+        .name = str_dup(req.name),
+        .price_dkk_cent = req.price_dkk_cent,
+        .description = str_dup(req.description),
+        .coord_id = req.coord_id,
+        .barcode = str_dup(req.barcode),
+    };
+    products_create_req_destroy(&req);
+
+    DbRes db_res = db_product_insert(cx->db, &product);
+    if (db_res != DbRes_Ok) {
+        RESPOND_SERVER_ERROR(ctx);
+        goto l0_return;
+    }
+
+    RESPOND_JSON(ctx, 200, "{\"ok\":true}");
+
+l0_return:
+    product_destroy(&product);
+}
+
+void route_post_products_update(HttpCtx* ctx)
+{
+    Cx* cx = http_ctx_user_ctx(ctx);
+
+    const char* body_str = http_ctx_req_body(ctx);
+    printf("body_str = '%s'\n", body_str);
+
+    JsonValue* body_json = json_parse(body_str, strlen(body_str));
+    printf("body_json = %p\n", (void*)body_json);
+
+    if (!body_json) {
+        RESPOND_BAD_REQUEST(ctx, "bad request");
+        return;
+    }
+
+    Product product;
+    int parse_result = product_from_json(&product, body_json);
+    printf("parse_result = %d\n", parse_result);
+    json_free(body_json);
+    if (parse_result != 0) {
+        RESPOND_BAD_REQUEST(ctx, "bad request");
+        return;
+    }
+
+    DbRes db_res = db_product_update(cx->db, &product);
+    if (db_res != DbRes_Ok) {
+        RESPOND_SERVER_ERROR(ctx);
+        goto l0_return;
+    }
+
+    RESPOND_JSON(ctx, 200, "{\"ok\":true}");
+
+l0_return:
+    product_destroy(&product);
+}
+
 static inline int read_and_send_file(HttpCtx* ctx,
     const char* filepath,
     size_t max_file_size,

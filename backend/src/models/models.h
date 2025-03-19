@@ -121,3 +121,13 @@ typedef struct {
 } ReceiptsOneRes;
 
 void receipts_one_res_destroy(ReceiptsOneRes* model);
+
+typedef struct {
+    char* name;
+    char* description;
+    int64_t price_dkk_cent;
+    int64_t coord_id;
+    char* barcode;
+} ProductsCreateReq;
+
+void products_create_req_destroy(ProductsCreateReq* model);

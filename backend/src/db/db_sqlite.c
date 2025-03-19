@@ -285,7 +285,97 @@ l0_return:
     return res;
 }
 
-/// `product` is an out parameter.
+DbRes db_product_insert(Db* db, const Product* product)
+{
+    static_assert(sizeof(Product) == 48, "model has changed");
+
+    sqlite3* connection;
+    CONNECT;
+    DbRes res;
+
+    sqlite3_stmt* stmt;
+    int prepare_res = sqlite3_prepare_v2(connection,
+        "INSERT INTO products"
+        " (name, price_dkk_cent, description, coord, barcode)"
+        " VALUES (?, ?, ?, ?, ?)",
+        -1,
+        &stmt,
+        NULL);
+    if (prepare_res != SQLITE_OK) {
+        REPORT_SQLITE3_ERROR();
+        res = DbRes_Error;
+        goto l0_return;
+    }
+
+    sqlite3_bind_text(stmt, 1, product->name, -1, SQLITE_STATIC);
+    sqlite3_bind_int64(stmt, 2, product->price_dkk_cent);
+    sqlite3_bind_text(stmt, 3, product->description, -1, SQLITE_STATIC);
+    sqlite3_bind_int64(stmt, 4, product->coord_id);
+    sqlite3_bind_text(stmt, 5, product->barcode, -1, SQLITE_STATIC);
+
+    int step_res = sqlite3_step(stmt);
+    if (step_res != SQLITE_DONE) {
+        REPORT_SQLITE3_ERROR();
+        res = DbRes_Error;
+        goto l0_return;
+    }
+
+    res = DbRes_Ok;
+l0_return:
+    if (stmt)
+        sqlite3_finalize(stmt);
+    DISCONNECT;
+    return res;
+}
+
+DbRes db_product_update(Db* db, const Product* product)
+{
+    static_assert(sizeof(Product) == 48, "model has changed");
+
+    sqlite3* connection;
+    CONNECT;
+    DbRes res;
+
+    sqlite3_stmt* stmt;
+    int prepare_res = sqlite3_prepare_v2(connection,
+        "UPDATE products SET"
+        "  name = ?,"
+        "  price_dkk_cent = ?,"
+        "  description = ?,"
+        "  coord = ?,"
+        "  barcode = ?"
+        " WHERE id = ?",
+        -1,
+        &stmt,
+        NULL);
+    if (prepare_res != SQLITE_OK) {
+        REPORT_SQLITE3_ERROR();
+        res = DbRes_Error;
+        goto l0_return;
+    }
+
+    sqlite3_bind_text(stmt, 1, product->name, -1, SQLITE_STATIC);
+    sqlite3_bind_int64(stmt, 2, product->price_dkk_cent);
+    sqlite3_bind_text(stmt, 3, product->description, -1, SQLITE_STATIC);
+    sqlite3_bind_int64(stmt, 4, product->coord_id);
+    sqlite3_bind_text(stmt, 5, product->barcode, -1, SQLITE_STATIC);
+    sqlite3_bind_int64(stmt, 6, product->id);
+
+    int step_res = sqlite3_step(stmt);
+    if (step_res != SQLITE_DONE) {
+        fprintf(stderr, "error: %s\n", sqlite3_errmsg(connection));
+        res = DbRes_Error;
+        goto l0_return;
+    }
+
+    res = DbRes_Ok;
+l0_return:
+    if (stmt)
+        sqlite3_finalize(stmt);
+    DISCONNECT;
+    return res;
+}
+
 DbRes db_product_with_id(Db* db, Product* product, int64_t id)
 {
     static_assert(sizeof(Product) == 48, "model has changed");
