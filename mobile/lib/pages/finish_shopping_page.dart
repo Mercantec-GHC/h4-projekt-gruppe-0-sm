@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:mobile/controllers/routing.dart';
 import 'package:mobile/controllers/cart.dart';
 import 'package:mobile/controllers/paying_state.dart';
-import 'package:mobile/controllers/receipt.dart';
 import 'package:mobile/results.dart';
 import 'package:mobile/utils/price.dart';
 import 'package:mobile/widgets/primary_button.dart';
@@ -16,7 +15,6 @@ class FinishShoppingPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final CartControllerCache cartController =
         context.read<CartControllerCache>();
-    final ReceiptController receiptRepo = context.read<ReceiptController>();
     final PayingStateController payingStateRepo =
         context.watch<PayingStateController>();
     final cart = cartController.allCartItems();
@@ -70,8 +68,8 @@ class FinishShoppingPage extends StatelessWidget {
                                     actions: <Widget>[
                                       TextButton(
                                         onPressed: () =>
-                                            Navigator.pop(context, 'OK'),
-                                        child: const Text('OK'),
+                                            Navigator.pop(context, 'Ok'),
+                                        child: const Text('Ok'),
                                       ),
                                     ],
                                   ),
@@ -80,7 +78,6 @@ class FinishShoppingPage extends StatelessWidget {
                               payingStateRepo.reset();
                               return;
                             }
-                            receiptRepo.createReceipt(cart);
                             payingStateRepo.next();
                             await Future.delayed(const Duration(seconds: 1));
                             cartController.clearCart();

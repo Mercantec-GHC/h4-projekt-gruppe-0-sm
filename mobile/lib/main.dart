@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mobile/controllers/receipt_header.dart';
 import 'package:mobile/controllers/session.dart';
 import 'package:mobile/pages/dashboard.dart';
 import 'package:mobile/pages/log_in_page.dart';
@@ -56,7 +57,12 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
             create: (_) => CartControllerCache(
                 server: server, sessionController: sessionController)),
-        ChangeNotifierProvider(create: (_) => ReceiptController()),
+        Provider(
+            create: (_) => ReceiptController(
+                server: server, sessionController: sessionController)),
+        ChangeNotifierProvider(
+            create: (_) => ReceiptHeaderController(
+                server: server, sessionController: sessionController)),
         ChangeNotifierProvider(create: (_) => PayingStateController()),
         ChangeNotifierProvider(create: (_) => AddToCartStateController()),
         ChangeNotifierProvider(create: (_) => LocationImageController()),

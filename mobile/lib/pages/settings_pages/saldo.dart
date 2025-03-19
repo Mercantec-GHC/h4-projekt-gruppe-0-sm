@@ -42,8 +42,8 @@ class SaldoSettingsPage extends StatelessWidget {
                               content: Text('Serverfejl: $message'),
                               actions: <Widget>[
                                 TextButton(
-                                  onPressed: () => Navigator.pop(context, 'OK'),
-                                  child: const Text('OK'),
+                                  onPressed: () => Navigator.pop(context, 'Ok'),
+                                  child: const Text('Ok'),
                                 ),
                               ],
                             ));

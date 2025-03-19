@@ -1,6 +1,7 @@
 import 'package:mobile/models/cart_item.dart';
 import 'package:mobile/models/coordinate.dart';
 import 'package:mobile/models/product.dart';
+import 'package:mobile/models/receipt.dart';
 import 'package:mobile/models/user.dart';
 import 'package:mobile/results.dart';
 import 'package:mobile/server/server.dart';
@@ -131,5 +132,18 @@ class MockServer implements Server {
   @override
   Future<Result<Null, String>> addBalance(String token) async {
     return const Ok(null);
+  }
+
+  @override
+  Future<Result<List<ReceiptHeader>, String>> allReceipts(String token) async {
+    return Ok([
+      ReceiptHeader(timestamp: DateTime.now(), id: 0, totalDkkCent: 1242431)
+    ]);
+  }
+
+  @override
+  Future<Result<Receipt, String>> oneReceipt(String token, int id) async {
+    return Ok(Receipt(
+        timestamp: DateTime.now(), id: id, receiptItems: <ReceiptItem>[]));
   }
 }

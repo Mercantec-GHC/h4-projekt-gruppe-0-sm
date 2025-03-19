@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:mobile/models/cart_item.dart';
 import 'package:mobile/models/product.dart';
+import 'package:mobile/models/receipt.dart';
 import 'package:mobile/models/user.dart';
 import 'package:mobile/results.dart';
 import 'package:mobile/server/server.dart';
@@ -30,7 +31,7 @@ class BackendServer implements Server {
         .then((res) => json.decode(res.body));
     if (res["ok"]) {
       return Ok((res["products"] as List<dynamic>)
-          .map(((product) => Product.fromJson(product)))
+          .map(((productJson) => Product.fromJson(productJson)))
           .toList());
     } else {
       return Err(res["msg"]);
@@ -145,6 +146,45 @@ class BackendServer implements Server {
 
     if (res["ok"]) {
       return const Ok(null);
+    } else {
+      return Err(res["msg"]);
+    }
+  }
+
+  @override
+  Future<Result<List<ReceiptHeader>, String>> allReceipts(String token) async {
+    final res = await http.get(
+      Uri.parse("$_apiUrl/receipts/all"),
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Session-Token": token
+      },
+    ).then((res) => json.decode(res.body));
+
+    if (res["ok"]) {
+      return Ok((res["receipts"] as List<dynamic>)
+          .map(((receiptHeaderJson) =>
+              ReceiptHeader.fromJson(receiptHeaderJson)))
+          .toList());
+    } else {
+      return Err(res["msg"]);
+    }
+  }
+
+  @override
+  Future<Result<Receipt, String>> oneReceipt(String token, int id) async {
+    final res = await http.get(
+      Uri.parse("$_apiUrl/receipts/one?receipt_id=$id"),
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Session-Token": token
+      },
+    ).then((res) => json.decode(res.body));
+
+    if (res["ok"]) {
+      return Ok((Receipt.fromJson(res["receipt"] as Map<String, dynamic>)));
     } else {
       return Err(res["msg"]);
     }

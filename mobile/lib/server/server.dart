@@ -1,5 +1,6 @@
 import 'package:mobile/models/cart_item.dart';
 import 'package:mobile/models/product.dart';
+import 'package:mobile/models/receipt.dart';
 import 'package:mobile/models/user.dart';
 import 'package:mobile/results.dart';
 
@@ -24,4 +25,7 @@ abstract class Server {
       String token, List<CartItem> cartItems);
 
   Future<Result<Null, String>> addBalance(String token);
+
+  Future<Result<List<ReceiptHeader>, String>> allReceipts(String token);
+  Future<Result<Receipt, String>> oneReceipt(String token, int id);
 }
