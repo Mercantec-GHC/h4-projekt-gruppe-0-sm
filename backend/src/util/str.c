@@ -52,14 +52,17 @@ StrSlice str_split_next(StrSplitter* splitter)
     return slice;
 }
 
+DEFINE_VEC_IMPL(char, String, string_data, )
+
 int string_construct(String* string)
 {
     int res = string_data_construct(string);
-    if (res != 0) {
+    if (res != 0)
         return res;
-    }
-    // NOTE: Vec is assumed to be initialized with atleast 1 allocated byte.
-    string->data[0] = '\0';
+    res = string_data_push(string, '\0');
+    if (res != 0)
+        return res;
+    string->size -= 1;
     return 0;
 }
 
@@ -82,7 +85,8 @@ int string_push(String* string, char value)
 
 int string_push_str(String* string, const char* str)
 {
-    for (size_t i = 0; i < strlen(str); ++i) {
+    size_t len = strlen(str);
+    for (size_t i = 0; i < len; ++i) {
         int res = string_data_push(string, str[i]);
         if (res != 0)
             return res;
@@ -119,6 +123,8 @@ char* string_copy(const String* string)
     copy[string->size] = '\0';
     return copy;
 }
+
+DEFINE_VEC_IMPL(char*, RawStrVec, rawstr_vec, )
 
 #define STR_HASH_SALT_SIZE 32
 #define STR_HASH_HASH_SIZE 32
