@@ -1,5 +1,5 @@
 #include "../models/models_json.h"
-#include "../util/str.h"
+#include "../utils/str.h"
 #include "controllers.h"
 #include <stdlib.h>
 #include <string.h>

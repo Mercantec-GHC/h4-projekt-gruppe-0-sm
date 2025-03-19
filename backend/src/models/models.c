@@ -1,7 +1,7 @@
 #include "models.h"
 #include "../json/json.h"
-#include "../util/panic.h"
-#include "../util/str.h"
+#include "../utils/panic.h"
+#include "../utils/str.h"
 #include "models_json.h"
 #include <assert.h>
 #include <stdlib.h>

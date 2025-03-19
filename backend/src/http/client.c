@@ -1,5 +1,5 @@
 #include "client.h"
-#include "../util/str.h"
+#include "../utils/str.h"
 #include "packet.h"
 #include <ctype.h>
 #include <errno.h>

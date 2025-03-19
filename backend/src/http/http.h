@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../util/str.h"
+#include "../utils/str.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../util/attrs.h"
+#include "../utils/attrs.h"
 #include <stddef.h>
 #include <stdlib.h>
 

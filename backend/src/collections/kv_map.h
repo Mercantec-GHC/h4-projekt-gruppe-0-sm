@@ -107,7 +107,7 @@
     }
 
 #ifdef RUN_TESTS
-#include "../util/panic.h"
+#include "../utils/panic.h"
 
 DEFINE_KV_MAP(int, int, IntMap, int_map)
 
