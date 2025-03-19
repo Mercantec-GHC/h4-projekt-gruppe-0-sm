@@ -1,12 +1,40 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:mobile/models/user.dart';
 import 'package:mobile/results.dart';
 import 'package:mobile/server/server.dart';
+import 'package:path_provider/path_provider.dart';
+
+class CookieController {
+  CookieController();
+
+  static Future<File> get _cacheFile async {
+    final directory = await getApplicationCacheDirectory();
+    return File("${directory.path}/cookies.txt").create();
+  }
+
+  Future<void> clear() async {
+    (await _cacheFile).writeAsString("", mode: FileMode.write);
+  }
+
+  Future<void> save(String token) async {
+    (await _cacheFile).writeAsString(token, mode: FileMode.write);
+  }
+
+  Future<Result<String, Null>> load() async {
+    final token = await (await _cacheFile).readAsString();
+    if (token.isEmpty) {
+      return const Err(null);
+    }
+    return Ok(token);
+  }
+}
 
 class SessionController {
   final Server server;
+  final CookieController cookieController = CookieController();
 
-  String? _sessionToken;
   User? _sessionUser;
 
   final List<_ChangeListener> _sessionChangeListeners = [];
@@ -18,7 +46,7 @@ class SessionController {
     final loginResult = await server.login(email, password);
     switch (loginResult) {
       case Ok<String, String>(value: final sessionToken):
-        _sessionToken = sessionToken;
+        await cookieController.save(sessionToken);
         notifySessionChangeListeners();
         return const Ok(null);
       case Err<String, String>(value: final message):
@@ -27,8 +55,13 @@ class SessionController {
   }
 
   Future<Result<Null, Null>> loadCachedUser() async {
-    // TODO: retrieve session from cache, if exists
-    return _loadCurrentUser();
+    switch (await cookieController.load()) {
+      case Ok<String, Null>():
+        return _loadCurrentUser();
+      case Err<String, Null>():
+        notifyUserChangeListeners();
+        return const Err(null);
+    }
   }
 
   Future<Result<Null, Null>> loadUpdatedUser() async {
@@ -49,13 +82,16 @@ class SessionController {
   }
 
   Future<Null> logout() async {
-    final sessionToken = _sessionToken;
-    if (sessionToken == null) {
-      return;
+    switch (await cookieController.load()) {
+      case Ok<String, Null>(value: final sessionToken):
+        await server.logout(sessionToken);
+        await cookieController.clear();
+        _sessionUser = null;
+        notifySessionChangeListeners();
+      case Err<String, Null>():
+        notifySessionChangeListeners();
+        return;
     }
-    await server.logout(sessionToken);
-    _sessionToken = null;
-    notifySessionChangeListeners();
   }
 
   User get user {
@@ -86,21 +122,22 @@ class SessionController {
   Future<Result<T, String>> requestWithSession<T>(
       Future<Result<T, String>> Function(Server server, String sessionToken)
           func) async {
-    final sessionToken = _sessionToken;
-    if (sessionToken == null) {
-      return const Err("unathorized");
-    }
-    final result = await func(server, sessionToken);
-    if (result case Err<T, String>(value: final message)) {
-      if (message == "unauthorized") {
-        _sessionToken = null;
-        _sessionUser = null;
-        notifySessionChangeListeners();
-        notifyUserChangeListeners();
+    switch (await cookieController.load()) {
+      case Err<String, Null>():
         return const Err("unathorized");
-      }
+      case Ok<String, Null>(value: final sessionToken):
+        final result = await func(server, sessionToken);
+        if (result case Err<T, String>(value: final message)) {
+          if (message == "unauthorized") {
+            cookieController.clear();
+            _sessionUser = null;
+            notifySessionChangeListeners();
+            notifyUserChangeListeners();
+            return const Err("unathorized");
+          }
+        }
+        return result;
     }
-    return result;
   }
 
   void notifySessionChangeListeners() {

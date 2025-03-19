@@ -18,6 +18,7 @@ import 'package:provider/provider.dart';
 import 'package:mobile/controllers/routing.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   final server = BackendServer();
   final usersController = UsersController(server: server);
   final sessionController = SessionController(server: server);
@@ -47,6 +48,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        Provider(create: (_) => CookieController()),
         ChangeNotifierProvider(
             create: (_) => SessionProvider(controller: sessionController)),
         ChangeNotifierProvider(
@@ -79,12 +81,12 @@ class MyApp extends StatelessWidget {
             useMaterial3: true,
           ),
           home: Consumer2<SessionProvider, CurrentUserProvider>(
-            builder: (_, provider1, provider2, ___) {
-              if (provider1.controller.hasUser) {
+            builder: (_, sessionProvider, currentUserProvider, ___) {
+              if (sessionProvider.controller.hasUser) {
                 return Dashboard();
               }
               return FutureBuilder(
-                  future: provider1.controller.loadCachedUser(),
+                  future: sessionProvider.controller.loadCachedUser(),
                   builder: (_, snapshot) {
                     final error = snapshot.error;
                     if (error != null) {

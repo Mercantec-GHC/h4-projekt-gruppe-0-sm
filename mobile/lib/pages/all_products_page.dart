@@ -102,12 +102,12 @@ class AllProductsPage extends StatefulWidget {
 }
 
 class _AllProductsPageState extends State<AllProductsPage> {
-  final seawchContwowwew = TextEditingController();
+  final searchController = TextEditingController();
 
   @override
   void initState() {
-    final contwowwew = context.read<ProductController>();
-    seawchContwowwew.text = contwowwew.query;
+    final controller = context.read<ProductController>();
+    searchController.text = controller.query;
     super.initState();
   }
 
@@ -128,7 +128,7 @@ class _AllProductsPageState extends State<AllProductsPage> {
                         onChanged: (query) {
                           productRepo.searchProducts(query);
                         },
-                        controller: seawchContwowwew,
+                        controller: searchController,
                         decoration: const InputDecoration(
                             label: Text("Search"),
                             contentPadding: EdgeInsets.only(top: 20))),
