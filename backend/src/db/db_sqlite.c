@@ -6,6 +6,8 @@
 #include <sqlite3.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define REPORT_SQLITE3_ERROR()                                                 \
     fprintf(stderr,                                                            \
@@ -917,6 +919,89 @@ DbRes db_receipt_products(Db* db, ProductVec* products, int64_t receipt_id)
         res = DbRes_Error;
         goto l0_return;
     }
+
+    res = DbRes_Ok;
+l0_return:
+    if (stmt)
+        sqlite3_finalize(stmt);
+    DISCONNECT;
+    return res;
+}
+
+DbRes db_product_image_insert(
+    Db* db, int64_t product_id, const uint8_t* data, size_t data_size)
+{
+    sqlite3* connection;
+    CONNECT;
+    DbRes res;
+
+    sqlite3_stmt* stmt;
+    int prepare_res = sqlite3_prepare_v2(connection,
+        "INSERT INTO product_images (product, data) "
+        "VALUES (?, ?)",
+        -1,
+        &stmt,
+        NULL);
+    if (prepare_res != SQLITE_OK) {
+        REPORT_SQLITE3_ERROR();
+        res = DbRes_Error;
+        goto l0_return;
+    }
+
+    sqlite3_bind_int64(stmt, 1, product_id);
+    sqlite3_bind_blob64(stmt, 2, data, data_size, NULL);
+
+    int step_res = sqlite3_step(stmt);
+    if (step_res != SQLITE_DONE) {
+        REPORT_SQLITE3_ERROR();
+        res = DbRes_Error;
+        goto l0_return;
+    }
+
+    res = DbRes_Ok;
+l0_return:
+    if (stmt)
+        sqlite3_finalize(stmt);
+    DISCONNECT;
+    return res;
+}
+
+DbRes db_product_image_with_product_id(
+    Db* db, uint8_t** data, size_t* data_size, int64_t product_id)
+{
+
+    sqlite3* connection;
+    CONNECT;
+    DbRes res;
+
+    sqlite3_stmt* stmt;
+    int prepare_res = sqlite3_prepare_v2(connection,
+        "SELECT data"
+        " FROM product_images WHERE product = ?",
+        -1,
+        &stmt,
+        NULL);
+    if (prepare_res != SQLITE_OK) {
+        REPORT_SQLITE3_ERROR();
+        res = DbRes_Error;
+        goto l0_return;
+    }
+    sqlite3_bind_int64(stmt, 1, product_id);
+
+    int step_res = sqlite3_step(stmt);
+    if (step_res == SQLITE_DONE) {
+        res = DbRes_NotFound;
+        goto l0_return;
+    } else if (step_res != SQLITE_ROW) {
+        REPORT_SQLITE3_ERROR();
+        res = DbRes_Error;
+        goto l0_return;
+    }
+
+    *data_size = (size_t)sqlite3_column_bytes(stmt, 0);
+    *data = malloc(*data_size);
+    const void* db_data = sqlite3_column_blob(stmt, 0);
+    memcpy(*data, db_data, *data_size);
 
     res = DbRes_Ok;
 l0_return:

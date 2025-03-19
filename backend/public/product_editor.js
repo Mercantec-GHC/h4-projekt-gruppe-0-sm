@@ -1,16 +1,22 @@
-
 const productList = document.querySelector("#product-list");
 const editor = {
     form: document.querySelector("#editor"),
     loadButton: document.querySelector("#editor #load"),
     saveButton: document.querySelector("#editor #save"),
-    newButton:  document.querySelector("#editor #new"),
-    idInput:      document.querySelector("#editor #product-id"),
-    nameInput:    document.querySelector("#editor #product-name"),
-    priceInput:   document.querySelector("#editor #product-price"),
-    descriptionTextarea: document.querySelector("#editor #product-description"),
-    coordInput:   document.querySelector("#editor #product-coord"),
+    newButton: document.querySelector("#editor #new"),
+    idInput: document.querySelector("#editor #product-id"),
+    nameInput: document.querySelector("#editor #product-name"),
+    priceInput: document.querySelector("#editor #product-price"),
+    coordInput: document.querySelector("#editor #product-coord"),
     barcodeInput: document.querySelector("#editor #product-barcode"),
+    descriptionTextarea: document.querySelector("#editor #product-description"),
+};
+const imageUploader = {
+    form: document.querySelector("#image-uploader"),
+    idInput: document.querySelector("#image-uploader #product-id"),
+    saveButton: document.querySelector("#image-uploader #save"),
+    preview: document.querySelector("#image-uploader #preview"),
+    fileInput: document.querySelector("#image-uploader #file"),
 };
 
 let products = [];
@@ -28,11 +34,13 @@ function selectProduct(product) {
     editor.barcodeInput.value = product.barcode.toString();
 }
 
-async function loadProduct() {
+function loadProduct() {
     selectedProductId = parseInt(editor.idInput.value);
 
-    const product = products.find(product => product.id === selectedProductId);
-    if (!product){
+    const product = products.find((product) =>
+        product.id === selectedProductId
+    );
+    if (!product) {
         alert(`no product with id ${selectedProductId}`);
         return;
     }
@@ -48,35 +56,34 @@ function productFromForm() {
         price_dkk_cent: Math.floor(parseFloat(editor.priceInput.value) * 100),
         coord_id: parseInt(editor.coordInput.value),
         barcode: editor.barcodeInput.value,
-    }
+    };
 }
 
 async function saveProduct() {
     const product = productFromForm();
     await fetch("/api/products/update", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(product),
-    }).then(res => res.json());
+    }).then((res) => res.json());
 
     await updateProductList();
-
 }
 
 async function newProduct() {
     const product = productFromForm();
     await fetch("/api/products/create", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(product),
-    }).then(res => res.json());
+    }).then((res) => res.json());
 
     await updateProductList();
 }
 
 async function updateProductList() {
     const res = await fetch("/api/products/all")
-        .then(res => res.json());
+        .then((res) => res.json());
 
     products = res.products;
 
@@ -92,7 +99,7 @@ async function updateProductList() {
         </tr>
     `;
     productList.innerHTML += products
-        .map(product => `
+        .map((product) => `
             <tr>
                 <td><code>${product.id}</code></td>
                 <td><strong>${product.name}</strong></td>
@@ -121,15 +128,45 @@ editor.form
         e.preventDefault();
     });
 editor.loadButton
-    .addEventListener("click", (e) => {
+    .addEventListener("click", (_e) => {
         loadProduct();
     });
 editor.saveButton
-    .addEventListener("click", (e) => {
+    .addEventListener("click", (_e) => {
         saveProduct();
     });
 editor.newButton
-    .addEventListener("click", (e) => {
+    .addEventListener("click", (_e) => {
         newProduct();
     });
 
+imageUploader.form
+    .addEventListener("submit", (e) => {
+        e.preventDefault();
+    });
+imageUploader.fileInput
+    .addEventListener("input", (e) => {
+        console.log(e);
+        const image = imageUploader.fileInput.files[0];
+        const data = URL.createObjectURL(image);
+        imageUploader.preview.src = data;
+    });
+imageUploader.saveButton
+    .addEventListener("click", async (_e) => {
+        const id = parseInt(imageUploader.idInput.value);
+        const image = imageUploader.fileInput.files[0];
+
+        const buffer = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.addEventListener("loadend", () => {
+                resolve(reader.result);
+            });
+            reader.readAsArrayBuffer(image);
+        });
+
+        await fetch(`/api/products/set-image?product_id=${id}`, {
+            method: "post",
+            headers: { "Content-Type": image.type },
+            body: buffer,
+        }).then((res) => res.json());
+    });

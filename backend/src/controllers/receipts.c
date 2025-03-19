@@ -12,6 +12,10 @@ void route_get_receipts_one(HttpCtx* ctx)
         return;
 
     const char* query = http_ctx_req_query(ctx);
+    if (!query) {
+        RESPOND_BAD_REQUEST(ctx, "no receipt_id parameter");
+        return;
+    }
     HttpQueryParams* params = http_parse_query_params(query);
     char* receipt_id_str = http_query_params_get(params, "receipt_id");
     http_query_params_free(params);

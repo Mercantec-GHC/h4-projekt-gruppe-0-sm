@@ -96,7 +96,8 @@ void http_worker_handle_connection(Worker* worker, ClientConnection connection)
     HttpCtx handler_ctx = {
         .client = &client->connection,
         .req = &request,
-        .req_body = (char*)request.body,
+        .req_body = request.body,
+        .req_body_size = request.body_size,
         .res_headers = { 0 },
         .user_ctx = worker->ctx->server->user_ctx,
     };

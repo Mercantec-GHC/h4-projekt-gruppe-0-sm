@@ -59,51 +59,97 @@
             #editor input, #editor textarea {
                 width: 250px;
             }
+            #wrapper {
+                display: flex;
+                justify-content: center;
+                gap: 2rem;
+            }
+            #wrapper form {
+                min-width: 500px;
+            }
+            #image-uploader {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: space-between;
+                height: 100%;
+            }
+            #image-uploader #preview {
+                height: 150px;
+                background-color: #fff;
+            }
         </style>
     </head>
     <body>
         <h2>Products</h2>
         <table id="product-list">
         </table>
-        <fieldset>
-            <legend>Editor</legend>
+        <div id="wrapper">
+            <fieldset>
+                <legend>Editor</legend>
 
-            <form id="editor">
-                <center>
-                    <button id="load">Load</button>
+                <form id="editor">
+                    <table>
+                        <tr>
+                            <td><label for="product-id">id: </label></td>
+                            <td>
+                                <input id="product-id" type="text">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><label for="product-name">name: </label></td>
+                            <td><input id="product-name" type="text"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="product-price">price (dkk): </label></td>
+                            <td><input id="product-price" type="number" step="0.01"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="product-description">description: </label></td>
+                            <td><textarea id="product-description"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td><label for="product-coord">coord_id: </label></td>
+                            <td><input  id="product-coord" type="text"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="product-barcode">barcode: </label></td>
+                            <td><input  id="product-barcode" type="text"></td>
+                        </tr>
+                    </table>
+
+                    <center>
+                        <button id="load">Load</button>
+                        <button id="save">Save</button>
+                        <button id="new">New</button>
+                    </center>
+                </form>
+            </fieldset>
+            <fieldset>
+                <legend>Image uploader</legend>
+
+                <form id="image-uploader">
+                    <table>
+                        <tr>
+                            <td><label for="product-id">id: </label></td>
+                            <td>
+                                <input id="product-id" type="text">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><label for="image-file">image: </label></td>
+                            <td>
+                                <input
+                                    id="file"
+                                    type="file"
+                                    accept="image/png" />
+                            </td>
+                        </tr>
+                    </table>
+                    <div><img id="preview" src="" alt=""></div>
                     <button id="save">Save</button>
-                    <button id="new">New</button>
-                </center>
-
-                <table>
-                    <tr>
-                        <td><label for="product-id">id: </label></td>
-                        <td>
-                            <input id="product-id" type="text">
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><label for="product-name">name: </label></td>
-                        <td><input id="product-name" type="text"></td>
-                    </tr>
-                    <tr>
-                        <td><label for="product-price">price (dkk): </label></td>
-                        <td><input id="product-price" type="number" step="0.01"></td>
-                    </tr>
-                    <tr>
-                        <td><label for="product-description">description: </label></td>
-                        <td><textarea id="product-description"></textarea></td>
-                    </tr>
-                    <tr>
-                        <td><label for="product-coord">coord_id: </label></td>
-                        <td><input  id="product-coord" type="text"></td>
-                    </tr>
-                    <tr>
-                        <td><label for="product-barcode">barcode: </label></td>
-                        <td><input  id="product-barcode" type="text"></td>
-                    </tr>
-                </table>
-            </form>
-        </fieldset>
+                </form>
+            </fieldset>
+        </div>
     </body>
 </html>

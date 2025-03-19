@@ -34,9 +34,13 @@ const char* http_ctx_req_path(HttpCtx* ctx);
 bool http_ctx_req_headers_has(HttpCtx* ctx, const char* key);
 const char* http_ctx_req_headers_get(HttpCtx* ctx, const char* key);
 const char* http_ctx_req_query(HttpCtx* ctx);
-const char* http_ctx_req_body(HttpCtx* ctx);
+const char* http_ctx_req_body_str(HttpCtx* ctx);
+const uint8_t* http_ctx_req_body(HttpCtx* ctx);
+size_t http_ctx_req_body_size(HttpCtx* ctx);
 void http_ctx_res_headers_set(HttpCtx* ctx, const char* key, const char* value);
-void http_ctx_respond(HttpCtx* ctx, int status, const char* body);
+void http_ctx_respond_str(HttpCtx* ctx, int status, const char* body);
+void http_ctx_respond(
+    HttpCtx* ctx, int status, const uint8_t* body, size_t body_size);
 
 typedef struct HttpQueryParams HttpQueryParams;
 

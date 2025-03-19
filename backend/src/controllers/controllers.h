@@ -38,6 +38,8 @@ void route_get_not_found(HttpCtx* ctx);
 void route_get_products_all(HttpCtx* ctx);
 void route_post_products_create(HttpCtx* ctx);
 void route_post_products_update(HttpCtx* ctx);
+void route_post_products_set_image(HttpCtx* ctx);
+void route_get_products_image_png(HttpCtx* ctx);
 
 void route_get_product_editor_html(HttpCtx* ctx);
 void route_get_product_editor_js(HttpCtx* ctx);
@@ -68,9 +70,8 @@ const Session* middleware_session(HttpCtx* ctx);
         snprintf(content_length, 24 - 1, "%ld", strlen(_body));                \
                                                                                \
         http_ctx_res_headers_set(_ctx, "Content-Type", MIME_TYPE);             \
-        http_ctx_res_headers_set(_ctx, "Content-Length", content_length);      \
                                                                                \
-        http_ctx_respond(_ctx, (STATUS), _body);                               \
+        http_ctx_respond_str(_ctx, (STATUS), _body);                           \
         free(_body);                                                           \
     }
 
@@ -83,6 +84,14 @@ const Session* middleware_session(HttpCtx* ctx);
     RESPOND_JSON(HTTP_CTX, 400, "{\"ok\":false,\"msg\":\"%s\"}", (MSG))
 #define RESPOND_SERVER_ERROR(HTTP_CTX)                                         \
     RESPOND_JSON(HTTP_CTX, 500, "{\"ok\":false,\"msg\":\"server error\"}")
+
+#define RESPOND_HTML_BAD_REQUEST(CTX, ...)                                     \
+    RESPOND_HTML(CTX,                                                          \
+        500,                                                                   \
+        "<!DOCTYPE html><html><head><meta "                                    \
+        "charset=\"utf-8\"></head><body><center><h1>400 Bad "                  \
+        "Request</h1><p>%s</p></body></html>",                                 \
+        __VA_ARGS__);
 
 #define RESPOND_HTML_SERVER_ERROR(CTX)                                         \
     RESPOND_HTML(CTX,                                                          \

@@ -8,7 +8,7 @@ void route_post_sessions_login(HttpCtx* ctx)
 {
     Cx* cx = http_ctx_user_ctx(ctx);
 
-    const char* body_str = http_ctx_req_body(ctx);
+    const char* body_str = http_ctx_req_body_str(ctx);
 
     JsonValue* body_json = json_parse(body_str, strlen(body_str));
 

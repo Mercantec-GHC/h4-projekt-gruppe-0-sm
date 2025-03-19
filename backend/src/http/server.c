@@ -160,9 +160,19 @@ const char* http_ctx_req_query(HttpCtx* ctx)
     return ctx->req->query;
 }
 
-const char* http_ctx_req_body(HttpCtx* ctx)
+const char* http_ctx_req_body_str(HttpCtx* ctx)
+{
+    return (char*)ctx->req_body;
+}
+
+const uint8_t* http_ctx_req_body(HttpCtx* ctx)
 {
     return ctx->req_body;
+}
+
+size_t http_ctx_req_body_size(HttpCtx* ctx)
+{
+    return ctx->req_body_size;
 }
 
 void http_ctx_res_headers_set(HttpCtx* ctx, const char* key, const char* value)
@@ -175,10 +185,20 @@ void http_ctx_res_headers_set(HttpCtx* ctx, const char* key, const char* value)
     header_vec_push(&ctx->res_headers, (Header) { key_copy, value_copy });
 }
 
-void http_ctx_respond(HttpCtx* ctx, int status, const char* body)
+void http_ctx_respond_str(HttpCtx* ctx, int status, const char* body)
+{
+    http_ctx_respond(ctx, status, (const uint8_t*)body, strlen(body));
+}
+
+void http_ctx_respond(
+    HttpCtx* ctx, int status, const uint8_t* body, size_t body_size)
 {
     // https://httpwg.org/specs/rfc9112.html#persistent.tear-down
     http_ctx_res_headers_set(ctx, "Connection", "close");
+
+    char content_length[24] = { 0 };
+    snprintf(content_length, 24 - 1, "%ld", body_size);
+    http_ctx_res_headers_set(ctx, "Content-Length", content_length);
 
     String res;
     string_construct(&res);
@@ -199,12 +219,14 @@ void http_ctx_respond(HttpCtx* ctx, int status, const char* body)
     }
     string_push_str(&res, "\r\n");
 
-    string_push_str(&res, body);
-
     ssize_t bytes_written = write(ctx->client->file, res.data, res.size);
     if (bytes_written != (ssize_t)res.size) {
-        fprintf(stderr, "error: could not send response\n");
+        fprintf(stderr, "error: could not send response header\n");
     }
-
     string_destroy(&res);
+
+    bytes_written = write(ctx->client->file, body, body_size);
+    if (bytes_written != (ssize_t)body_size) {
+        fprintf(stderr, "error: could not send response body\n");
+    }
 }

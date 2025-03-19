@@ -18,7 +18,7 @@ void route_post_set_number(HttpCtx* ctx)
 {
     Cx* cx = http_ctx_user_ctx(ctx);
 
-    const char* body_text = http_ctx_req_body(ctx);
+    const char* body_text = http_ctx_req_body_str(ctx);
     JsonParser parser;
     json_parser_construct(&parser, body_text, strlen(body_text));
     JsonValue* body = json_parser_parse(&parser);

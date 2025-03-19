@@ -10,7 +10,7 @@ void route_post_carts_purchase(HttpCtx* ctx)
     if (!session)
         return;
 
-    const char* body_str = http_ctx_req_body(ctx);
+    const char* body_str = http_ctx_req_body_str(ctx);
     JsonValue* body_json = json_parse(body_str, strlen(body_str));
     if (!body_json) {
         RESPOND_BAD_REQUEST(ctx, "bad request");

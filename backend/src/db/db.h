@@ -67,3 +67,10 @@ DbRes db_receipt_prices(
 /// `products` field is an out parameter.
 /// Expects `products` to be constructed.
 DbRes db_receipt_products(Db* db, ProductVec* products, int64_t receipt_id);
+
+DbRes db_product_image_insert(
+    Db* db, int64_t product_id, const uint8_t* data, size_t data_size);
+/// `data` and `data_size` are out parameters.
+/// `*data` should be freed.
+DbRes db_product_image_with_product_id(
+    Db* db, uint8_t** data, size_t* data_size, int64_t product_id);

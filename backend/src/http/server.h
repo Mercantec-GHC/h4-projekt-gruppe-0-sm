@@ -37,7 +37,8 @@ struct HttpServer {
 struct HttpCtx {
     ClientConnection* client;
     const Request* req;
-    const char* req_body;
+    const uint8_t* req_body;
+    size_t req_body_size;
     HeaderVec res_headers;
     void* user_ctx;
 };
