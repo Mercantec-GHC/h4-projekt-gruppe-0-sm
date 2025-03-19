@@ -40,6 +40,8 @@ ifeq ($(RUN_TESTS),1)
 	C_FLAGS += -DRUN_TESTS
 endif
 
+PUBLIC_DIR_PATH=$(shell readlink -f ./public)
+C_FLAGS += -DPUBLIC_DIR_PATH='"$(PUBLIC_DIR_PATH)"'
 
 HEADERS = $(shell find src/ -name *.h)
 C_FILES = $(shell find src/ -name *.c)

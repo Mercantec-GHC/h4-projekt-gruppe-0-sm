@@ -36,6 +36,8 @@ void route_post_set_number(HttpCtx* ctx);
 void route_get_not_found(HttpCtx* ctx);
 
 void route_get_products_all(HttpCtx* ctx);
+void route_get_product_editor_html(HttpCtx* ctx);
+void route_get_product_editor_js(HttpCtx* ctx);
 
 void route_post_carts_purchase(HttpCtx* ctx);
 
@@ -78,6 +80,15 @@ const Session* middleware_session(HttpCtx* ctx);
     RESPOND_JSON(HTTP_CTX, 400, "{\"ok\":false,\"msg\":\"%s\"}", (MSG))
 #define RESPOND_SERVER_ERROR(HTTP_CTX)                                         \
     RESPOND_JSON(HTTP_CTX, 500, "{\"ok\":false,\"msg\":\"server error\"}")
+
+#define RESPOND_HTML_SERVER_ERROR(CTX)                                         \
+    RESPOND_HTML(CTX,                                                          \
+        500,                                                                   \
+        "<!DOCTYPE html><html><head><meta "                                    \
+        "charset=\"utf-8\"></head><body><center><h1>500 Server "               \
+        "Error</h1><code style=\"font-size: 1rem;\">GET "                      \
+        "%s</code></center></body></html>",                                    \
+        http_ctx_req_path(CTX));
 
 __attribute__((unused)) static inline void ___controllers_include_user(void)
 {

@@ -8,4 +8,5 @@
 -pedantic-errors
 -Wno-unused-parameter
 -Wno-unused-function
+-DPUBLIC_DIR_PATH="./public"
 
