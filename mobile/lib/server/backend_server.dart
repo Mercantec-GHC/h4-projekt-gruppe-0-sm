@@ -13,30 +13,72 @@ class BackendServer implements Server {
   final _apiUrl = "http://192.168.1.128:8080/api";
   // final _apiUrl = "http://127.0.0.1:8080/api";
 
-  Future<http.Response> _post(
-      {required String endpoint, Map<String, dynamic>? body}) async {
+  Future<Result<dynamic, String>> _postJson<Body>({
+    required String endpoint,
+    required Body body,
+    Map<String, String>? headers,
+  }) async {
     final encoded = json.encode(body);
-    return await http.post(
-      Uri.parse("$_apiUrl/$endpoint"),
-      body: encoded,
-      headers: {"Content-Type": "application/json"},
-    );
+    return Future<Result<dynamic, String>>.sync(() {
+      return http.post(
+        Uri.parse("$_apiUrl/$endpoint"),
+        body: encoded,
+        headers: {
+          "Content-Type": "application/json",
+          ...?headers,
+        },
+      ).then((res) {
+        return Ok(json.decode(res.body));
+      });
+    }).catchError((e) {
+      switch (e) {
+        case http.ClientException(message: _):
+          return const Err("connection refused");
+        default:
+          throw e;
+      }
+    });
+  }
+
+  Future<Result<dynamic, String>> _getJson<Body>({
+    required String endpoint,
+    Map<String, String>? headers,
+  }) async {
+    return Future<Result<dynamic, String>>.sync(() {
+      return http.get(
+        Uri.parse("$_apiUrl/$endpoint"),
+        headers: {
+          "Content-Type": "application/json",
+          ...?headers,
+        },
+      ).then((res) {
+        return Ok(json.decode(res.body));
+      });
+    }).catchError((e) {
+      switch (e) {
+        case http.ClientException(message: _):
+          return const Err("connection refused");
+        default:
+          throw e;
+      }
+    });
   }
 
   @override
   Future<Result<List<Product>, String>> allProducts() async {
-    final res = await http
-        .get(
-          Uri.parse("$_apiUrl/products/all"),
-        )
-        .then((res) => json.decode(res.body));
-    if (res["ok"]) {
-      return Ok((res["products"] as List<dynamic>)
-          .map(((productJson) => Product.fromJson(productJson)))
-          .toList());
-    } else {
-      return Err(res["msg"]);
-    }
+    final res = await _getJson(
+      endpoint: "$_apiUrl/products/all",
+    );
+
+    return res.flatMap((body) {
+      if (body["ok"]) {
+        return Ok((body["products"] as List<dynamic>)
+            .map(((productJson) => Product.fromJson(productJson)))
+            .toList());
+      } else {
+        return Err(body["msg"]);
+      }
+    });
   }
 
   @override
@@ -45,16 +87,18 @@ class BackendServer implements Server {
     String email,
     String password,
   ) async {
-    final res = await _post(
+    final res = await _postJson(
       endpoint: "users/register",
       body: {"name": name, "email": email, "password": password},
-    ).then((res) => json.decode(res.body));
+    );
 
-    if (res["ok"]) {
-      return const Ok(null);
-    } else {
-      return Err(res["msg"]);
-    }
+    return res.flatMap((body) {
+      if (body["ok"]) {
+        return const Ok(null);
+      } else {
+        return Err(body["msg"]);
+      }
+    });
   }
 
   @override
@@ -62,133 +106,130 @@ class BackendServer implements Server {
     String email,
     String password,
   ) async {
-    final res = await _post(
+    final res = (await _postJson(
       endpoint: "sessions/login",
       body: {"email": email, "password": password},
-    ).then((res) => json.decode(res.body));
+    ));
 
-    if (res["ok"]) {
-      return Ok(res["token"]);
-    } else {
-      return Err(res["msg"]);
-    }
+    return res.flatMap((body) {
+      if (body["ok"]) {
+        return Ok(body["token"]);
+      } else {
+        return Err(body["msg"]);
+      }
+    });
   }
 
   @override
   Future<Result<Null, String>> logout(String token) async {
-    final res = await _post(
-      endpoint: "sessions/logout",
-    ).then((res) => json.decode(res.body));
+    final res = await _postJson(endpoint: "sessions/logout", body: {});
 
-    if (res["ok"]) {
-      return const Ok(null);
-    } else {
-      return Err(res["msg"]);
-    }
+    return res.flatMap((body) {
+      if (body["ok"]) {
+        return const Ok(null);
+      } else {
+        return Err(body["msg"]);
+      }
+    });
   }
 
   @override
   Future<Result<User, String>> sessionUser(String token) async {
-    ("sending request fr with token $token");
-    final res = await http.get(
-      Uri.parse("$_apiUrl/sessions/user"),
+    final res = await _getJson(
+      endpoint: "$_apiUrl/sessions/user",
       headers: {"Session-Token": token},
-    ).then((res) => json.decode(res.body));
-    if (res["ok"]) {
-      return Ok(User.fromJson(res["user"]));
-    } else {
-      return Err(res["msg"]);
-    }
+    );
+    return res.flatMap((body) {
+      if (body["ok"]) {
+        return Ok(User.fromJson(body["user"]));
+      } else {
+        return Err(body["msg"]);
+      }
+    });
   }
 
   @override
   Future<Result<Null, String>> purchaseCart(
       String token, List<CartItem> cartItems) async {
-    final items = json.encode({
-      "items": cartItems
-          .map((cartItem) =>
-              {"product_id": cartItem.product.id, "amount": cartItem.amount})
-          .toList()
-    });
-    (items);
-    final res = await http
-        .post(Uri.parse("$_apiUrl/carts/purchase"),
-            headers: {
-              "Content-Type": "application/json",
-              "Session-Token": token
-            },
-            body: json.encode({
-              "items": cartItems
-                  .map((cartItem) => {
-                        "product_id": cartItem.product.id,
-                        "amount": cartItem.amount
-                      })
-                  .toList()
-            }))
-        .then((res) => json.decode(res.body));
+    final res = await _postJson(
+        endpoint: "$_apiUrl/carts/purchase",
+        headers: {"Content-Type": "application/json", "Session-Token": token},
+        body: json.encode({
+          "items": cartItems
+              .map((cartItem) => {
+                    "product_id": cartItem.product.id,
+                    "amount": cartItem.amount
+                  })
+              .toList()
+        }));
 
-    if (res["ok"]) {
-      return const Ok(null);
-    } else {
-      return Err(res["msg"]);
-    }
+    return res.flatMap((body) {
+      if (body["ok"]) {
+        return const Ok(null);
+      } else {
+        return Err(body["msg"]);
+      }
+    });
   }
 
   @override
   Future<Result<Null, String>> addBalance(String token) async {
-    final res = await http.post(
-      Uri.parse("$_apiUrl/users/balance/add"),
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        "Session-Token": token
-      },
-    ).then((res) => json.decode(res.body));
+    final res =
+        await _postJson(endpoint: "$_apiUrl/users/balance/add", headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "Session-Token": token
+    }, body: {});
 
-    if (res["ok"]) {
-      return const Ok(null);
-    } else {
-      return Err(res["msg"]);
-    }
+    return res.flatMap((body) {
+      if (body["ok"]) {
+        return const Ok(null);
+      } else {
+        return Err(body["msg"]);
+      }
+    });
   }
 
   @override
   Future<Result<List<ReceiptHeader>, String>> allReceipts(String token) async {
-    final res = await http.get(
-      Uri.parse("$_apiUrl/receipts/all"),
+    final res = await _getJson(
+      endpoint: "$_apiUrl/receipts/all",
       headers: {
         "Content-Type": "application/json",
         "Accept": "application/json",
         "Session-Token": token
       },
-    ).then((res) => json.decode(res.body));
+    );
 
-    if (res["ok"]) {
-      return Ok((res["receipts"] as List<dynamic>)
-          .map(((receiptHeaderJson) =>
-              ReceiptHeader.fromJson(receiptHeaderJson)))
-          .toList());
-    } else {
-      return Err(res["msg"]);
-    }
+    return res.flatMap((body) {
+      if (body["ok"]) {
+        return Ok((body["receipts"] as List<dynamic>)
+            .map(((receiptHeaderJson) =>
+                ReceiptHeader.fromJson(receiptHeaderJson)))
+            .toList());
+      } else {
+        return Err(body["msg"]);
+      }
+    });
   }
 
   @override
   Future<Result<Receipt, String>> oneReceipt(String token, int id) async {
-    final res = await http.get(
-      Uri.parse("$_apiUrl/receipts/one?receipt_id=$id"),
+    final res = await _getJson(
+      endpoint: "$_apiUrl/receipts/one?receipt_id=$id",
       headers: {
         "Content-Type": "application/json",
         "Accept": "application/json",
         "Session-Token": token
       },
-    ).then((res) => json.decode(res.body));
-
-    if (res["ok"]) {
-      return Ok((Receipt.fromJson(res["receipt"] as Map<String, dynamic>)));
-    } else {
-      return Err(res["msg"]);
-    }
+    );
+    return res.flatMap((body) {
+      if (body["ok"]) {
+        return Ok((Receipt.fromJson(body["receipt"] as Map<String, dynamic>)));
+      } else {
+        return Err(body["msg"]);
+      }
+    });
   }
 
   @override
