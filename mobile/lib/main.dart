@@ -19,6 +19,9 @@ import 'package:mobile/controllers/routing.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+
+  ErrorMessages.init("danish");
+
   final server = BackendServer();
   final usersController = UsersController(server: server);
   final sessionController = SessionController(server: server);

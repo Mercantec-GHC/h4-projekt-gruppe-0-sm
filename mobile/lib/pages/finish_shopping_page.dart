@@ -3,6 +3,7 @@ import 'package:mobile/controllers/routing.dart';
 import 'package:mobile/controllers/cart.dart';
 import 'package:mobile/controllers/paying_state.dart';
 import 'package:mobile/results.dart';
+import 'package:mobile/server/server.dart';
 import 'package:mobile/utils/price.dart';
 import 'package:mobile/widgets/primary_button.dart';
 import 'package:mobile/widgets/receipt_item.dart';
@@ -20,10 +21,10 @@ class FinishShoppingPage extends StatelessWidget {
     final cart = cartController.allCartItems();
 
     return Scaffold(
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Column(
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const BackButton(),
@@ -57,14 +58,13 @@ class FinishShoppingPage extends StatelessWidget {
                             payingStateRepo.next();
                             await Future.delayed(const Duration(seconds: 1));
                             if (await cartController.purchase()
-                                is Err<Null, String>) {
+                                case Err<Null, String>(value: final message)) {
                               if (context.mounted) {
                                 showDialog<String>(
                                   context: context,
                                   builder: (BuildContext context) =>
                                       AlertDialog(
-                                    content: const Text(
-                                        'Du har desværre ikke råd til at købe dette'),
+                                    content: Text(ErrorMessages.fancy(message)),
                                     actions: <Widget>[
                                       TextButton(
                                         onPressed: () =>
@@ -93,55 +93,55 @@ class FinishShoppingPage extends StatelessWidget {
                 ),
               ],
             ),
-            if (payingStateRepo.state != PayingState.unset) ...[
-              Container(
-                color: Colors.black.withValues(alpha: 0.5),
-              ),
-            ],
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ...switch (payingStateRepo.state) {
-                    PayingState.unset => [],
-                    PayingState.loading => [
-                        Container(
-                          decoration: const BoxDecoration(
-                            borderRadius: BorderRadius.all(Radius.circular(10)),
-                            color: Colors.white,
-                          ),
-                          padding: const EdgeInsets.all(20),
-                          child: SizedBox(
-                            width: 50,
-                            height: 50,
-                            child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  Theme.of(context).primaryColor),
-                              strokeWidth: 6.0,
-                            ),
+          ),
+          if (payingStateRepo.state != PayingState.unset) ...[
+            Container(
+              color: Colors.black.withValues(alpha: 0.5),
+            ),
+          ],
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ...switch (payingStateRepo.state) {
+                  PayingState.unset => [],
+                  PayingState.loading => [
+                      Container(
+                        decoration: const BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                          color: Colors.white,
+                        ),
+                        padding: const EdgeInsets.all(20),
+                        child: SizedBox(
+                          width: 50,
+                          height: 50,
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                Theme.of(context).primaryColor),
+                            strokeWidth: 6.0,
                           ),
                         ),
-                      ],
-                    PayingState.done => [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: const BoxDecoration(
-                            borderRadius: BorderRadius.all(Radius.circular(10)),
-                            color: Colors.white,
-                          ),
-                          child: Icon(
-                            Icons.check_rounded,
-                            color: Theme.of(context).primaryColor,
-                            size: 70,
-                          ),
-                        )
-                      ]
-                  },
-                ],
-              ),
-            )
-          ],
-        ),
+                      ),
+                    ],
+                  PayingState.done => [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: const BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                          color: Colors.white,
+                        ),
+                        child: Icon(
+                          Icons.check_rounded,
+                          color: Theme.of(context).primaryColor,
+                          size: 70,
+                        ),
+                      )
+                    ]
+                },
+              ],
+            ),
+          )
+        ],
       ),
     );
   }
