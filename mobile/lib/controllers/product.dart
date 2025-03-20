@@ -23,6 +23,10 @@ class ProductController extends ChangeNotifier {
     }
   }
 
+  Image productImage(int productId) {
+    return server.productImage(productId);
+  }
+
   List<Product> get filteredProducts {
     if (query.trim().isEmpty) {
       return products;

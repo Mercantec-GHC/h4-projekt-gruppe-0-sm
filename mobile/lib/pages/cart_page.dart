@@ -15,6 +15,7 @@ import 'package:provider/provider.dart';
 class CartItemView extends StatelessWidget {
   final CartControllerCache cartRepo;
   final int productId;
+  final Image image;
   final String name;
   final int price;
   final int amount;
@@ -25,7 +26,8 @@ class CartItemView extends StatelessWidget {
       required this.productId,
       required this.name,
       required this.price,
-      required this.amount});
+      required this.amount,
+      required this.image});
 
   @override
   Widget build(BuildContext context) {
@@ -87,14 +89,7 @@ class CartItemView extends StatelessWidget {
           IconButton(
               onPressed: () => removeCartItemDialog(context),
               icon: const Icon(Icons.delete_outline)),
-          Image(
-            width: 100,
-            image: AssetImage("assets/products/$name.png"),
-            errorBuilder: (_, __, ___) => const Image(
-              image: AssetImage("assets/placeholder.png"),
-              width: 100,
-            ),
-          )
+          image
         ],
       ),
     );
@@ -147,6 +142,7 @@ class CartPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final productController = context.read<ProductController>();
     return Column(
       children: [
         Expanded(
@@ -159,6 +155,7 @@ class CartPage extends StatelessWidget {
                     cartRepo: cartRepo,
                     productId: cart[idx].product.id,
                     name: cart[idx].product.name,
+                    image: productController.productImage(cart[idx].product.id),
                     price: cart[idx].product.priceDkkCent,
                     amount: cart[idx].amount),
                 itemCount: cart.length,

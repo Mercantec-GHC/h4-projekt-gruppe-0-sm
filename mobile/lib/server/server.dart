@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:mobile/models/cart_item.dart';
 import 'package:mobile/models/product.dart';
 import 'package:mobile/models/receipt.dart';
@@ -28,4 +29,6 @@ abstract class Server {
 
   Future<Result<List<ReceiptHeader>, String>> allReceipts(String token);
   Future<Result<Receipt, String>> oneReceipt(String token, int id);
+
+  Image productImage(int productId);
 }

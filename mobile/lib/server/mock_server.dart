@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:mobile/models/cart_item.dart';
 import 'package:mobile/models/coordinate.dart';
 import 'package:mobile/models/product.dart';
@@ -145,5 +146,10 @@ class MockServer implements Server {
   Future<Result<Receipt, String>> oneReceipt(String token, int id) async {
     return Ok(Receipt(
         timestamp: DateTime.now(), id: id, receiptItems: <ReceiptItem>[]));
+  }
+
+  @override
+  Image productImage(int productId) {
+    return Image.asset("assets/placeholder.png");
   }
 }

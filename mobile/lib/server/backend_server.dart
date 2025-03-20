@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:mobile/models/cart_item.dart';
 import 'package:mobile/models/product.dart';
@@ -188,5 +189,10 @@ class BackendServer implements Server {
     } else {
       return Err(res["msg"]);
     }
+  }
+
+  @override
+  Image productImage(int productId) {
+    return Image.network("$_apiUrl/products/image.png?product_id=$productId");
   }
 }

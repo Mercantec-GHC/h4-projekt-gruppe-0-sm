@@ -9,8 +9,9 @@ import 'package:provider/provider.dart';
 
 class ProductPage extends StatelessWidget {
   final Product product;
+  final Image image;
 
-  const ProductPage({super.key, required this.product});
+  const ProductPage({super.key, required this.product, required this.image});
 
   @override
   Widget build(BuildContext context) {
@@ -54,13 +55,7 @@ class ProductPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Image(
-                      image: AssetImage("assets/products/${product.name}.png"),
-                      errorBuilder: (_, __, ___) => const Image(
-                          image: AssetImage("assets/placeholder.png")),
-                      height: 250,
-                      fit: BoxFit.fitHeight,
-                    ),
+                    image,
                     Text(
                       product.name,
                       style: Theme.of(context).textTheme.bodyLarge,

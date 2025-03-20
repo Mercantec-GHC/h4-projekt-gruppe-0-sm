@@ -47,6 +47,7 @@ class ProductListItem extends StatelessWidget {
   final int productId;
   final String name;
   final int price;
+  final Image image;
   final ProductPage productPage;
 
   final Product product;
@@ -56,6 +57,7 @@ class ProductListItem extends StatelessWidget {
     required this.productId,
     required this.name,
     required this.price,
+    required this.image,
     required this.productPage,
     required this.product,
   });
@@ -87,7 +89,7 @@ class ProductListItem extends StatelessWidget {
                   borderRadius: const BorderRadius.only(
                       topRight: Radius.circular(10),
                       bottomRight: Radius.circular(10)),
-                  child: ProductImage(name)),
+                  child: image),
             ],
           )),
     );
@@ -146,7 +148,10 @@ class _AllProductsPageState extends State<AllProductsPage> {
                     productId: products[idx].id,
                     name: products[idx].name,
                     price: products[idx].priceDkkCent,
-                    productPage: ProductPage(product: products[idx]),
+                    productPage: ProductPage(
+                        product: products[idx],
+                        image: productRepo.productImage(products[idx].id)),
+                    image: productRepo.productImage(products[idx].id),
                     product: products[idx],
                   ),
                   itemCount: products.length,
