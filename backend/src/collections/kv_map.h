@@ -106,19 +106,19 @@
         return &found->value;                                                  \
     }
 
-#ifdef RUN_TESTS
+#ifdef INCLUDE_TESTS
 #include "../utils/panic.h"
 
-DEFINE_KV_MAP(int, int, IntMap, int_map)
+DEFINE_KV_MAP(int, int, TestIntMap, test_int_map)
 
 static inline void test_collections_kv_map(void)
 {
-    IntMap map;
-    int_map_construct(&map);
+    TestIntMap map;
+    test_int_map_construct(&map);
 
-    int_map_set(&map, 1, 10);
-    int_map_set(&map, 3, 30);
-    int_map_set(&map, 5, 50);
+    test_int_map_set(&map, 1, 10);
+    test_int_map_set(&map, 3, 30);
+    test_int_map_set(&map, 5, 50);
 
     int data[][2] = {
         { 0, 0 },
@@ -131,28 +131,28 @@ static inline void test_collections_kv_map(void)
     };
 
     for (size_t i = 0; i < sizeof(data) / sizeof(data[0]); ++i) {
-        int idx
-            = (int)int_map_internal_insert_idx(&map, 0, map.size, data[i][0]);
+        int idx = (int)test_int_map_internal_insert_idx(
+            &map, 0, map.size, data[i][0]);
         if (idx != data[i][1]) {
             PANIC("wrong insert index, expected %d, got %d", data[i][1], idx);
         }
     }
 
-    int* val = int_map_get(&map, 3);
+    int* val = test_int_map_get(&map, 3);
     if (!val || *val != 30) {
         PANIC("failed to find value");
     }
 
-    val = int_map_get(&map, 4);
+    val = test_int_map_get(&map, 4);
     if (val != NULL) {
         PANIC("found wrong value");
     }
 
-    const int* const_val = int_map_get_const(&map, 5);
+    const int* const_val = test_int_map_get_const(&map, 5);
     if (!const_val || *const_val != 50) {
         PANIC("failed to find value");
     }
 
-    int_map_destroy(&map);
+    test_int_map_destroy(&map);
 }
 #endif

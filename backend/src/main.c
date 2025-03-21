@@ -1,3 +1,4 @@
+#include "collections/kv_map.h"
 #include "controllers/controllers.h"
 #include "db/db_sqlite.h"
 #include "http/http.h"
@@ -8,17 +9,24 @@
 #include <string.h>
 #include <time.h>
 
-void test(void);
+typedef struct {
+    bool run_tests;
+} Args;
+
+static inline Args parse_args(int argc, char** argv);
+static inline void run_tests(void);
 
 HttpServer* server;
 
-int main(void)
+int main(int argc, char** argv)
 {
     srand((unsigned int)time(NULL));
 
-#ifdef RUN_TESTS
-    test();
-#endif
+    Args args = parse_args(argc, argv);
+
+    if (args.run_tests) {
+        run_tests();
+    }
 
     Db* db = db_sqlite_new();
 
@@ -81,13 +89,30 @@ int main(void)
     db_sqlite_free(db);
 }
 
-#ifdef RUN_TESTS
-void test(void)
+static inline Args parse_args(int argc, char** argv)
 {
+    Args args = {
+        .run_tests = false,
+    };
+    for (int i = 1; i < argc; ++i) {
+        if (strcmp(argv[i], "--run-tests") == 0) {
+            args.run_tests = true;
+        }
+    }
+    return args;
+}
+
+static inline void run_tests(void)
+{
+#ifdef INCLUDE_TESTS
     test_util_str();
     test_collections_kv_map();
     printf("\n\x1b[1;97m ALL TESTS \x1b[1;92mPASSED"
            " \x1b[1;97mSUCCESSFULLY 💅\x1b[0m\n\n");
     exit(0);
-}
+#else
+    fprintf(stderr,
+        "warning: tests not build."
+        " '--run-tests' passed without building with INCLUDE_TESTS=1\n");
 #endif
+}

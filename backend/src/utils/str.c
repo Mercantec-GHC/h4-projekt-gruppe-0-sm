@@ -313,7 +313,7 @@ char* str_random(size_t length)
     return string;
 }
 
-#ifdef RUN_TESTS
+#ifdef INCLUDE_TESTS
 void test_util_str(void)
 {
     {

@@ -36,12 +36,15 @@ else
 endif
 
 
-ifeq ($(RUN_TESTS),1)
-	C_FLAGS += -DRUN_TESTS
+ifeq ($(INCLUDE_TESTS),1)
+	C_FLAGS += -DINCLUDE_TESTS
 endif
 
 PUBLIC_DIR_PATH=$(shell readlink -f ./public)
 C_FLAGS += -DPUBLIC_DIR_PATH='"$(PUBLIC_DIR_PATH)"'
+
+DB_FILEPATH=database.db
+C_FLAGS += -DDB_FILEPATH='"$(DB_FILEPATH)"'
 
 HEADERS = $(shell find src/ -name *.h)
 C_FILES = $(shell find src/ -name *.c)
@@ -64,5 +67,5 @@ clean:
 	rm -rf build/
 
 drop_database:
-	rm -rf database.db && sqlite3 database.db < prepare.sql
+	rm -rf $(DB_FILEPATH) && sqlite3 $(DB_FILEPATH) < prepare.sql
 

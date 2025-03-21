@@ -47,6 +47,6 @@ uint64_t str_fast_hash(const char* input);
 
 char* str_random(size_t length);
 
-#ifdef RUN_TESTS
+#ifdef INCLUDE_TESTS
 void test_util_str(void);
 #endif

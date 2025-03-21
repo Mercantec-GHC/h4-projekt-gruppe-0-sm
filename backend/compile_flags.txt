@@ -8,5 +8,7 @@
 -pedantic-errors
 -Wno-unused-parameter
 -Wno-unused-function
+-DINCLUDE_TESTS
 -DPUBLIC_DIR_PATH="./public"
+-DDB_FILEPATH="database.db"
 

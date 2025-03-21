@@ -27,36 +27,17 @@ static inline char* get_str_safe(sqlite3_stmt* stmt, int col)
 #define GET_INT(COL) sqlite3_column_int64(stmt, COL)
 #define GET_STR(COL) get_str_safe(stmt, COL)
 
-Db* db_sqlite_new(void)
-{
-    Db* db = malloc(sizeof(Db));
-
-    sqlite3* connection;
-    int res = sqlite3_open("database.db", &connection);
-    if (res != SQLITE_OK) {
-        fprintf(stderr, "error: could not open sqlite 'database.db'\n");
-        return NULL;
-    }
-    sqlite3_close(connection);
-
-    return db;
-}
-
-void db_sqlite_free(Db* db)
-{
-    // sqlite3_close(db->connection);
-    free(db);
-}
-
 static inline DbRes connect(sqlite3** connection)
 {
-    int res = sqlite3_open_v2("database.db",
+    const char* filepath = DB_FILEPATH;
+    int res = sqlite3_open_v2(filepath,
         connection,
         SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX,
         NULL);
     if (res != SQLITE_OK) {
         fprintf(stderr,
-            "error: could not open sqlite 'database.db'\n    %s\n",
+            "error: could not open sqlite '%s'\n    %s\n",
+            filepath,
             sqlite3_errmsg(*connection));
         return DbRes_Error;
     }
@@ -79,6 +60,26 @@ static inline void disconnect(sqlite3* connection)
     {                                                                          \
         disconnect(connection);                                                \
     }
+
+Db* db_sqlite_new(void)
+{
+    Db* db = malloc(sizeof(Db));
+
+    sqlite3* connection;
+    if (connect(&connection) != DbRes_Ok) {
+        return NULL;
+    }
+    disconnect(connection);
+
+    return db;
+}
+
+void db_sqlite_free(Db* db)
+{
+    // No need to disconnect.
+
+    free(db);
+}
 
 DbRes db_user_insert(Db* db, const User* user)
 {

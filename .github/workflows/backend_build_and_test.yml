@@ -1,0 +1,81 @@
+name: "Backend: Build and Test"
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  BACKEND_SERVER_HOSTNAME: 'http://localhost:8080'
+
+jobs:
+  build_debug:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+    - uses: actions/checkout@v4
+    - name: build release with tests
+      run: make -B INCLUDE_TESTS=1
+    - name: run tests
+      run: ./build/server --run-tests
+
+  build_release:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+    - uses: actions/checkout@v4
+    - name: build release with tests
+      run: make -B RELEASE=1 INCLUDE_TESTS=1
+    - name: run tests
+      run: ./build/server --run-tests
+
+  test_debug:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+    - uses: actions/checkout@v4
+    - uses: denoland/setup-deno@v2
+      with:
+        deno-version: v2.x
+    - name: cache dependencies
+      run: deno cache --check test/test.ts
+    - name: build release with tests
+      run: make -B
+    - name: setup database
+      run: make drop_database
+    - name: test
+      timeout-minutes: 1
+      run: |
+        ./build/server &
+        sleep 1
+        deno test --allow-env --allow-net test/test.ts
+
+  test_release:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+    - uses: actions/checkout@v4
+    - uses: denoland/setup-deno@v2
+      with:
+        deno-version: v2.x
+    - name: cache dependencies
+      run: deno cache --check test/test.ts
+    - name: build release with tests
+      run: make -B RELEASE=1
+    - name: setup database
+      run: make drop_database
+    - name: test
+      timeout-minutes: 1
+      run: |
+        ./build/server &
+        sleep 1
+        deno test --allow-env --allow-net test/test.ts
