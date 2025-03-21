@@ -38,6 +38,8 @@ void route_get_not_found(HttpCtx* ctx);
 void route_get_products_all(HttpCtx* ctx);
 void route_post_products_create(HttpCtx* ctx);
 void route_post_products_update(HttpCtx* ctx);
+void route_get_products_coords(HttpCtx* ctx);
+void route_post_products_set_coords(HttpCtx* ctx);
 void route_post_products_set_image(HttpCtx* ctx);
 void route_get_products_image_png(HttpCtx* ctx);
 

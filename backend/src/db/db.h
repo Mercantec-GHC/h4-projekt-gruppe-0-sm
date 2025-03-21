@@ -25,6 +25,7 @@ DbRes db_user_update(Db* db, const User* user);
 /// `user` field is an out parameter.
 DbRes db_user_with_id(Db* db, User* user, int64_t id);
 
+/// `exists` field is an out parameter.
 DbRes db_user_with_email_exists(Db* db, bool* exists, const char* email);
 
 /// `user` is an out parameter.
@@ -41,6 +42,12 @@ DbRes db_product_with_id(Db* db, Product* product, int64_t id);
 
 /// Expects `vec` to be constructed.
 DbRes db_product_all(Db* db, ProductVec* vec);
+
+/// `coord.id` are ignored.
+DbRes db_coord_insert(Db* db, const Coord* coord, int64_t* id);
+
+/// `coord` is an out parameter.
+DbRes db_coord_with_product_id(Db* db, Coord* coord, int64_t product_id);
 
 /// `product_price` is an out parameter.
 DbRes db_product_price_of_product(

@@ -113,6 +113,13 @@ void products_create_req_destroy(ProductsCreateReq* m)
     free(m->barcode);
 }
 
+void products_coords_set_req_destroy(ProductsCoordsSetReq* model)
+{
+    static_assert(sizeof(ProductsCoordsSetReq) == 24, "model has changed");
+
+    (void)model;
+}
+
 char* user_to_json_string(const User* m)
 {
     static_assert(sizeof(User) == 40, "model has changed");
@@ -397,6 +404,27 @@ char* products_create_req_to_json_string(const ProductsCreateReq* m)
     return result;
 }
 
+char* products_coords_set_req_to_json_string(const ProductsCoordsSetReq* m)
+{
+    static_assert(sizeof(ProductsCoordsSetReq) == 24, "model has changed");
+
+    String string;
+    string_construct(&string);
+    string_pushf(&string,
+        "{"
+        "\"product_id\":%ld,"
+        "\"x\":%ld,"
+        "\"y\":%ld"
+        "}",
+        m->product_id,
+        m->x,
+        m->y);
+
+    char* result = string_copy(&string);
+    string_destroy(&string);
+    return result;
+}
+
 typedef struct {
     const char* key;
     JsonType type;
@@ -636,6 +664,25 @@ int products_create_req_from_json(ProductsCreateReq* m, const JsonValue* json)
         .price_dkk_cent = GET_INT("price_dkk_cent"),
         .coord_id = GET_INT("coord_id"),
         .barcode = GET_STR("barcode"),
+    };
+    return 0;
+}
+int products_coords_set_req_from_json(
+    ProductsCoordsSetReq* m, const JsonValue* json)
+{
+    static_assert(sizeof(ProductsCoordsSetReq) == 24, "model has changed");
+
+    ObjField fields[] = {
+        { "product_id", JsonType_Number },
+        { "x", JsonType_Number },
+        { "y", JsonType_Number },
+    };
+    if (!OBJ_CONFORMS(json, fields))
+        return -1;
+    *m = (ProductsCoordsSetReq) {
+        .product_id = GET_INT("product_id"),
+        .x = GET_INT("x"),
+        .y = GET_INT("y"),
     };
     return 0;
 }

@@ -131,3 +131,11 @@ typedef struct {
 } ProductsCreateReq;
 
 void products_create_req_destroy(ProductsCreateReq* model);
+
+typedef struct {
+    int64_t product_id;
+    int64_t x;
+    int64_t y;
+} ProductsCoordsSetReq;
+
+void products_coords_set_req_destroy(ProductsCoordsSetReq* model);

@@ -2,6 +2,7 @@
 #include "../models/models_json.h"
 #include "../utils/str.h"
 #include "controllers.h"
+#include <stdint.h>
 #include <stdio.h>
 
 void route_get_products_all(HttpCtx* ctx)
@@ -82,10 +83,8 @@ void route_post_products_update(HttpCtx* ctx)
     Cx* cx = http_ctx_user_ctx(ctx);
 
     const char* body_str = http_ctx_req_body_str(ctx);
-    printf("body_str = '%s'\n", body_str);
 
     JsonValue* body_json = json_parse(body_str, strlen(body_str));
-    printf("body_json = %p\n", (void*)body_json);
 
     if (!body_json) {
         RESPOND_BAD_REQUEST(ctx, "bad request");
@@ -94,7 +93,6 @@ void route_post_products_update(HttpCtx* ctx)
 
     Product product;
     int parse_result = product_from_json(&product, body_json);
-    printf("parse_result = %d\n", parse_result);
     json_free(body_json);
     if (parse_result != 0) {
         RESPOND_BAD_REQUEST(ctx, "bad request");
@@ -109,6 +107,102 @@ void route_post_products_update(HttpCtx* ctx)
 
     RESPOND_JSON(ctx, 200, "{\"ok\":true}");
 
+l0_return:
+    product_destroy(&product);
+}
+
+void route_get_products_coords(HttpCtx* ctx)
+{
+    Cx* cx = http_ctx_user_ctx(ctx);
+
+    const char* query = http_ctx_req_query(ctx);
+    if (!query) {
+        RESPOND_BAD_REQUEST(ctx, "no product_id parameter");
+        return;
+    }
+    HttpQueryParams* params = http_parse_query_params(query);
+    char* product_id_str = http_query_params_get(params, "product_id");
+    http_query_params_free(params);
+    if (!product_id_str) {
+        RESPOND_BAD_REQUEST(ctx, "no product_id parameter");
+        return;
+    }
+
+    int64_t product_id = strtol(product_id_str, NULL, 10);
+    free(product_id_str);
+
+    Coord coord;
+    DbRes db_res = db_coord_with_product_id(cx->db, &coord, product_id);
+    if (db_res == DbRes_NotFound) {
+        RESPOND_JSON(ctx, 200, "{\"ok\":true,\"found\":false}");
+        return;
+    } else if (db_res != DbRes_Ok) {
+        RESPOND_SERVER_ERROR(ctx);
+        return;
+    }
+
+    char* coord_json = coord_to_json_string(&coord);
+
+    RESPOND_JSON(
+        ctx, 200, "{\"ok\":true,\"found\":true,\"coords\":%s}", coord_json);
+    free(coord_json);
+    coord_destroy(&coord);
+}
+
+void route_post_products_set_coords(HttpCtx* ctx)
+{
+    Cx* cx = http_ctx_user_ctx(ctx);
+
+    const char* body_str = http_ctx_req_body_str(ctx);
+    JsonValue* body_json = json_parse(body_str, strlen(body_str));
+    if (!body_json) {
+        RESPOND_BAD_REQUEST(ctx, "bad request");
+        return;
+    }
+
+    ProductsCoordsSetReq req;
+    int parse_result = products_coords_set_req_from_json(&req, body_json);
+    json_free(body_json);
+    if (parse_result != 0) {
+        RESPOND_BAD_REQUEST(ctx, "bad request");
+        return;
+    }
+
+    Product product;
+    DbRes db_res = db_product_with_id(cx->db, &product, req.product_id);
+    if (db_res == DbRes_NotFound) {
+        RESPOND_BAD_REQUEST(ctx, "not found");
+        goto l0_return;
+    } else if (db_res != DbRes_Ok) {
+        RESPOND_SERVER_ERROR(ctx);
+        goto l0_return;
+    }
+
+    Coord coord = {
+        .id = 0,
+        .x = req.x,
+        .y = req.y,
+    };
+
+    int64_t coord_id;
+    db_res = db_coord_insert(cx->db, &coord, &coord_id);
+    if (db_res != DbRes_Ok) {
+        RESPOND_SERVER_ERROR(ctx);
+        goto l1_return;
+    }
+
+    product.coord_id = coord_id;
+
+    db_res = db_product_update(cx->db, &product);
+    if (db_res != DbRes_Ok) {
+        RESPOND_SERVER_ERROR(ctx);
+        goto l1_return;
+    }
+
+    RESPOND_JSON(ctx, 200, "{\"ok\":true}");
+l1_return:
+    coord_destroy(&coord);
+    products_coords_set_req_destroy(&req);
 l0_return:
     product_destroy(&product);
 }

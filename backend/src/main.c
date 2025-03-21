@@ -40,6 +40,9 @@ int main(void)
         server, "/api/products/create", route_post_products_create);
     http_server_post(
         server, "/api/products/update", route_post_products_update);
+    http_server_get(server, "/api/products/coords", route_get_products_coords);
+    http_server_post(
+        server, "/api/products/set_coords", route_post_products_set_coords);
     http_server_post(
         server, "/api/products/set-image", route_post_products_set_image);
     http_server_get(

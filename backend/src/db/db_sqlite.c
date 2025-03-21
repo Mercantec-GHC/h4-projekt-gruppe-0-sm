@@ -472,6 +472,100 @@ l0_return:
     return res;
 }
 
+/// `coord.id` are ignored.
+DbRes db_coord_insert(Db* db, const Coord* coord, int64_t* id)
+{
+    static_assert(sizeof(Coord) == 24, "model has changed");
+
+    sqlite3* connection;
+    CONNECT;
+    DbRes res;
+
+    sqlite3_stmt* stmt;
+    int prepare_res = sqlite3_prepare_v2(connection,
+        "INSERT INTO coords"
+        " (x, y)"
+        " VALUES (?, ?)",
+        -1,
+        &stmt,
+        NULL);
+    if (prepare_res != SQLITE_OK) {
+        REPORT_SQLITE3_ERROR();
+        res = DbRes_Error;
+        goto l0_return;
+    }
+
+    sqlite3_bind_int64(stmt, 1, coord->x);
+    sqlite3_bind_int64(stmt, 2, coord->y);
+
+    int step_res = sqlite3_step(stmt);
+    if (step_res != SQLITE_DONE) {
+        REPORT_SQLITE3_ERROR();
+        res = DbRes_Error;
+        goto l0_return;
+    }
+
+    int64_t coord_id = sqlite3_last_insert_rowid(connection);
+
+    if (id) {
+        *id = coord_id;
+    }
+
+    res = DbRes_Ok;
+l0_return:
+    if (stmt)
+        sqlite3_finalize(stmt);
+    DISCONNECT;
+    return res;
+}
+
+DbRes db_coord_with_product_id(Db* db, Coord* coord, int64_t product_id)
+{
+    static_assert(sizeof(Coord) == 24, "model has changed");
+
+    sqlite3* connection;
+    CONNECT;
+    DbRes res;
+
+    sqlite3_stmt* stmt;
+    int prepare_res = sqlite3_prepare_v2(connection,
+        "SELECT coords.id, coords.x, coords.y"
+        " FROM coords"
+        " JOIN products ON products.coord = coords.id"
+        " WHERE products.id = ?",
+        -1,
+        &stmt,
+        NULL);
+    if (prepare_res != SQLITE_OK) {
+        REPORT_SQLITE3_ERROR();
+        res = DbRes_Error;
+        goto l0_return;
+    }
+    sqlite3_bind_int64(stmt, 1, product_id);
+
+    int step_res = sqlite3_step(stmt);
+    if (step_res == SQLITE_DONE) {
+        res = DbRes_NotFound;
+        goto l0_return;
+    } else if (step_res != SQLITE_ROW) {
+        REPORT_SQLITE3_ERROR();
+        res = DbRes_Error;
+        goto l0_return;
+    }
+    *coord = (Coord){
+        .id = GET_INT(0),
+        .x = GET_INT(1),
+        .y = GET_INT(2),
+    },
+
+    res = DbRes_Ok;
+l0_return:
+    if (stmt)
+        sqlite3_finalize(stmt);
+    DISCONNECT;
+    return res;
+}
+
 static inline DbRes get_product_price_from_product_id(
     sqlite3* connection, int64_t product_id, int64_t* price)
 {
