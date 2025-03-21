@@ -18,6 +18,13 @@ const imageUploader = {
     preview: document.querySelector("#image-uploader #preview"),
     fileInput: document.querySelector("#image-uploader #file"),
 };
+const coords = {
+    form: document.querySelector("#coords"),
+    idInput: document.querySelector("#coords #product-id"),
+    xInput: document.querySelector("#coords #coords-x"),
+    yInput: document.querySelector("#coords #coords-y"),
+    saveButton: document.querySelector("#coords #save"),
+};
 
 let products = [];
 
@@ -32,6 +39,9 @@ function selectProduct(product) {
     editor.descriptionTextarea.value = product.description;
     editor.coordInput.value = product.coord_id.toString();
     editor.barcodeInput.value = product.barcode.toString();
+
+    imageUploader.idInput.value = product.id;
+    coords.idInput.value = product.id;
 }
 
 function loadProduct() {
@@ -146,7 +156,7 @@ imageUploader.form
     });
 imageUploader.fileInput
     .addEventListener("input", (e) => {
-        console.log(e);
+        e.preventDefault();
         const image = imageUploader.fileInput.files[0];
         const data = URL.createObjectURL(image);
         imageUploader.preview.src = data;
@@ -168,5 +178,21 @@ imageUploader.saveButton
             method: "post",
             headers: { "Content-Type": image.type },
             body: buffer,
+        }).then((res) => res.json());
+    });
+coords.form
+    .addEventListener("submit", (e) => {
+        e.preventDefault();
+    });
+coords.saveButton
+    .addEventListener("click", async (_e) => {
+        const product_id = parseInt(coords.idInput.value);
+        const x = parseInt(coords.xInput.value);
+        const y = parseInt(coords.yInput.value);
+
+        await fetch(`/api/products/set_coords`, {
+            method: "post",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ product_id, x, y }),
         }).then((res) => res.json());
     });
