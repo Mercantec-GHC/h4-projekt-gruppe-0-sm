@@ -29,7 +29,7 @@ void route_post_sessions_login(HttpCtx* ctx)
     User user;
     DbRes db_res = db_user_with_email(cx->db, &user, req.email);
     if (db_res == DbRes_NotFound) {
-        RESPOND_BAD_REQUEST(ctx, "user with email not found");
+        RESPOND_BAD_REQUEST(ctx, "incorrect email or password");
         goto l0_return;
     } else if (db_res == DbRes_Error) {
         RESPOND_SERVER_ERROR(ctx);
@@ -37,7 +37,7 @@ void route_post_sessions_login(HttpCtx* ctx)
     }
 
     if (!str_hash_equal(user.password_hash, req.password)) {
-        RESPOND_BAD_REQUEST(ctx, "wrong password");
+        RESPOND_BAD_REQUEST(ctx, "incorrect email or password");
         goto l2_return;
     }
 

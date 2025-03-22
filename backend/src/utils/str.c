@@ -149,7 +149,7 @@ static inline HashData hashdata_from_str_and_salt(
     memcpy(data.salt, salt, STR_HASH_SALT_SIZE);
 
     size_t input_size = MAX_HASH_INPUT_LEN + str_length;
-    uint8_t* input_data = malloc(input_size);
+    uint8_t* input_data = calloc(input_size, 1);
     memcpy(input_data, data.salt, STR_HASH_SALT_SIZE);
     memcpy(&input_data[STR_HASH_SALT_SIZE], str, str_length);
 

@@ -26,6 +26,7 @@ Deno.test("test backend", async (t) => {
             { email, password },
         );
 
+        //console.log(loginRes);
         assertEquals(loginRes.ok, true);
         assertMatch(loginRes.token, /^[0-9a-zA-Z]+$/);
         token = loginRes.token;
