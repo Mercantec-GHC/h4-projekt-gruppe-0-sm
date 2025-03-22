@@ -1,10 +1,16 @@
 name: "Backend: Build and Test"
 
 on:
+  workflow_dispatch:
+
   push:
     branches: [ "main" ]
+    paths:
+      - 'backend/**'
   pull_request:
     branches: [ "main" ]
+    paths:
+      - 'backend/**'
 
 env:
   BACKEND_SERVER_HOSTNAME: 'http://localhost:8080'
@@ -17,9 +23,9 @@ jobs:
         working-directory: ./backend
     steps:
     - uses: actions/checkout@v4
-    - name: build release with tests
+    - name: Build debug with tests
       run: make -B INCLUDE_TESTS=1
-    - name: run tests
+    - name: Run tests
       run: ./build/server --run-tests
 
   build_release:
@@ -29,9 +35,9 @@ jobs:
         working-directory: ./backend
     steps:
     - uses: actions/checkout@v4
-    - name: build release with tests
+    - name: Build release with tests
       run: make -B RELEASE=1 INCLUDE_TESTS=1
-    - name: run tests
+    - name: Run tests
       run: ./build/server --run-tests
 
   test_debug:
@@ -44,13 +50,13 @@ jobs:
     - uses: denoland/setup-deno@v2
       with:
         deno-version: v2.x
-    - name: cache dependencies
+    - name: Cache dependencies
       run: deno cache --check test/test.ts
-    - name: build release with tests
+    - name: Build with tests
       run: make -B
-    - name: setup database
+    - name: Setup database
       run: make drop_database
-    - name: test
+    - name: Run tests
       timeout-minutes: 1
       run: |
         ./build/server &
@@ -67,13 +73,13 @@ jobs:
     - uses: denoland/setup-deno@v2
       with:
         deno-version: v2.x
-    - name: cache dependencies
+    - name: Cache dependencies
       run: deno cache --check test/test.ts
-    - name: build release with tests
+    - name: Build release with tests
       run: make -B RELEASE=1
-    - name: setup database
+    - name: Setup database
       run: make drop_database
-    - name: test
+    - name: Run tests
       timeout-minutes: 1
       run: |
         ./build/server &
