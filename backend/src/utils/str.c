@@ -138,33 +138,44 @@ typedef struct {
 static inline HashData hashdata_from_str_and_salt(
     const char* str, const uint8_t* salt)
 {
-    if (strlen(str) >= MAX_HASH_INPUT_LEN) {
+    size_t str_length = strlen(str);
+
+    if (str_length >= MAX_HASH_INPUT_LEN) {
         fprintf(stderr, "error: tried to hash too long input\n");
         exit(1);
     }
 
-    HashData hash;
-    memcpy(hash.salt, salt, STR_HASH_SALT_SIZE);
+    HashData data;
+    memcpy(data.salt, salt, STR_HASH_SALT_SIZE);
 
-    uint8_t input[MAX_HASH_INPUT_LEN + 1 + STR_HASH_SALT_SIZE] = { 0 };
-    memcpy(input, hash.salt, STR_HASH_SALT_SIZE);
-    memcpy(&input[STR_HASH_SALT_SIZE], str, strlen(str));
+    size_t input_size = MAX_HASH_INPUT_LEN + str_length;
+    uint8_t* input_data = malloc(input_size);
+    memcpy(input_data, data.salt, STR_HASH_SALT_SIZE);
+    memcpy(&input_data[STR_HASH_SALT_SIZE], str, str_length);
 
-    SHA256(input, strlen((char*)input), hash.hash);
-    return hash;
+    SHA256(input_data, input_size, data.hash);
+
+    free(input_data);
+    return data;
 }
 
 static inline HashData hashdata_from_str(const char* str)
 {
     uint8_t salt[STR_HASH_SALT_SIZE];
     RAND_bytes(salt, STR_HASH_SALT_SIZE);
+
+    const size_t salt_rounds = 1024;
+    for (size_t i = 0; i < salt_rounds; ++i) {
+        SHA256(salt, STR_HASH_SALT_SIZE, salt);
+    }
+
     return hashdata_from_str_and_salt(str, salt);
 }
 
-static inline bool hashdata_is_equal(HashData hash, const char* str)
+static inline bool hashdata_is_equal(HashData data, const char* str)
 {
-    HashData other = hashdata_from_str_and_salt(str, hash.salt);
-    return memcmp(hash.hash, other.hash, STR_HASH_HASH_SIZE) == 0;
+    HashData other = hashdata_from_str_and_salt(str, data.salt);
+    return memcmp(data.hash, other.hash, STR_HASH_HASH_SIZE) == 0;
 }
 
 static inline char* hashdata_to_string(HashData hash)
@@ -187,7 +198,7 @@ static inline char* hashdata_to_string(HashData hash)
 
 static inline HashData hashdata_from_hash_string(const char* str)
 {
-    uint8_t result[64] = { 0 };
+    uint8_t result[STR_HASH_SALT_SIZE + STR_HASH_HASH_SIZE] = { 0 };
     size_t result_i = 0;
     for (size_t i = 0; i < strlen(str) && result_i < 64; i += 2) {
         char bytestr[3] = { 0 };
