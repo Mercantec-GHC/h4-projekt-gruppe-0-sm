@@ -180,6 +180,8 @@ export class HirStringifyer {
                 }`;
             case "path":
                 return this.path(k.path);
+            case "bool":
+                return k.value ? "true" : "false";
             case "tuple":
                 return `${k.path && this.path(k.path) || ""}(${
                     k.elems.map((pat) => this.pat(pat, d)).join(", ")

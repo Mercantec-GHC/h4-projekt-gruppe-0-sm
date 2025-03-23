@@ -1222,6 +1222,14 @@ export class Parser {
             const ident = this.parseIdent();
             return this.pat({ tag: "bind", ident, mut: true }, begin);
         }
+        if (this.test("false")) {
+            this.step();
+            return this.pat({ tag: "bool", value: false }, begin);
+        }
+        if (this.test("true")) {
+            this.step();
+            return this.pat({ tag: "bool", value: true }, begin);
+        }
         this.report(`expected pattern, got '${this.current().type}'`, begin);
         this.step();
         return this.pat({ tag: "error" }, begin);

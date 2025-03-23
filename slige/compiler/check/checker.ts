@@ -91,6 +91,8 @@ export class Checker {
                 return Ok(undefined);
             case "path":
                 return todo();
+            case "bool":
+                return Ok(undefined);
             case "tuple": {
                 if (k.path) {
                     const re = this.re.pathRes(k.path.id);
@@ -126,6 +128,35 @@ export class Checker {
                             const res = this.assignPatTy(
                                 pat,
                                 variantTy.elems[i].ty,
+                            );
+                            if (!res.ok) {
+                                return res;
+                            }
+                        }
+                        return Res.Ok(undefined);
+                    }
+                    if (re.kind.tag === "struct") {
+                        const data = re.kind.kind.data;
+                        if (
+                            data.kind.tag !== "tuple" ||
+                            ty.kind.tag !== "struct" ||
+                            ty.kind.data.tag !== "tuple"
+                        ) {
+                            return Res.Err({
+                                msg: "type/pattern mismatch",
+                                span: pat.span,
+                            });
+                        }
+                        if (k.elems.length !== data.kind.elems.length) {
+                            return Res.Err({
+                                msg: `incorrect amount of elements, expected ${data.kind.elems.length} got ${k.elems.length}`,
+                                span: pat.span,
+                            });
+                        }
+                        for (const i of data.kind.elems.keys()) {
+                            const res = this.assignPatTy(
+                                k.elems[i],
+                                ty.kind.data.elems[i].ty,
                             );
                             if (!res.ok) {
                                 return res;
@@ -995,6 +1026,7 @@ export class Checker {
             case "int":
                 return Ty({ tag: "int" });
             case "bool":
+                return Ty({ tag: "bool" });
             case "str":
                 return todo(k.tag);
             case "path": {
@@ -1073,6 +1105,10 @@ export class Checker {
                 return todo();
             }
             case "path":
+                return todo();
+            case "bool": {
+                return this.patTy(pat);
+            }
             case "tuple":
             case "struct":
                 return todo();

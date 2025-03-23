@@ -222,11 +222,13 @@ export type PatKind =
     | { tag: "error" }
     | { tag: "bind" } & BindPat
     | { tag: "path" } & PathPat
+    | { tag: "bool" } & BoolPat
     | { tag: "tuple" } & TuplePat
     | { tag: "struct" } & StructPat;
 
 export type BindPat = { ident: Ident; mut: boolean };
 export type PathPat = { qty?: Ty; path: Path };
+export type BoolPat = { value: boolean };
 export type TuplePat = { path?: Path; elems: Pat[] };
 export type StructPat = { path?: Path; fields: PatField[] };
 

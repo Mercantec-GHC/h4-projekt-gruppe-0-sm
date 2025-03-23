@@ -2,14 +2,25 @@
 // #[builtin(Hello)]
 // fn c_hello() -> int {}
 
-fn main() {
-    let mut a = 2;
-    if true {
-        a = 3;
-    } else {
+struct A(bool, bool);
 
+fn main() {
+    //let mut a = 2;
+    //if true {
+    //    a = 3;
+    //} else {
+    //
+    //}
+    //let b = a;
+
+    let a = A(true, false);
+
+    match a {
+        A(false, false) => {}
+        A(false, true) => {}
+        A(true, false) => {}
+        A(true, true) => {}
     }
-    let b = a;
 }
 
 

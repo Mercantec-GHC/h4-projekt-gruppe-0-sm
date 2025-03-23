@@ -10,6 +10,7 @@ import {
     Block,
     BlockExpr,
     BoolExpr,
+    BoolPat,
     BreakStmt,
     CallExpr,
     CForExpr,
@@ -132,6 +133,7 @@ export interface Visitor<
     visitErrorPat?(pat: Pat, ...p: P): R;
     visitBindPat?(pat: Pat, kind: BindPat, ...p: P): R;
     visitPathPat?(pat: Pat, kind: PathPat, ...p: P): R;
+    visitBoolPat?(pat: Pat, kind: BoolPat, ...p: P): R;
     visitTuplePat?(pat: Pat, kind: TuplePat, ...p: P): R;
     visitStructPat?(pat: Pat, kind: StructPat, ...p: P): R;
 
@@ -531,6 +533,9 @@ export function visitPat<
         case "path":
             if (v.visitPathPat?.(pat, kind, ...p) === "stop") return;
             visitPath(v, kind.path, ...p);
+            return;
+        case "bool":
+            if (v.visitBoolPat?.(pat, kind, ...p) === "stop") return;
             return;
         case "tuple":
             if (v.visitTuplePat?.(pat, kind, ...p) === "stop") return;
