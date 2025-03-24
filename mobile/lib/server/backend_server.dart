@@ -10,8 +10,7 @@ import 'package:mobile/results.dart';
 import 'package:mobile/server/server.dart';
 
 class BackendServer implements Server {
-  final _apiUrl = "http://192.168.1.128:8080/api";
-  // final _apiUrl = "http://127.0.0.1:8080/api";
+  final _apiUrl = "https://h4-sm.mercantec.tech/api";
 
   Future<Result<dynamic, String>> _postJson<Body>({
     required String endpoint,
