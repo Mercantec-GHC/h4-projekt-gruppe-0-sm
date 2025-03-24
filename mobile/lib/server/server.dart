@@ -70,6 +70,8 @@ class ErrorMessages {
     switch (message) {
       case "insufficient funds":
         return "Du har desværre ikke nok penge på kontoen.";
+      case "bad request":
+        return "Fejl i kommunikation mellem app og server.";
 
       default:
         if (kDebugMode) {

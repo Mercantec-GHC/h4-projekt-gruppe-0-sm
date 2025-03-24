@@ -55,7 +55,10 @@ class ProductPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    image,
+                    SizedBox(
+                      height: 300,
+                      child: image,
+                    ),
                     Text(
                       product.name,
                       style: Theme.of(context).textTheme.bodyLarge,

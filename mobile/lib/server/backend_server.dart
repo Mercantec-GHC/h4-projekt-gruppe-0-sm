@@ -13,14 +13,14 @@ class BackendServer implements Server {
   final _apiUrl = "https://h4-sm.mercantec.tech/api";
 
   Future<Result<dynamic, String>> _postJson<Body>({
-    required String endpoint,
+    required String path,
     required Body body,
     Map<String, String>? headers,
   }) async {
     final encoded = json.encode(body);
     return Future<Result<dynamic, String>>.sync(() {
       return http.post(
-        Uri.parse("$_apiUrl/$endpoint"),
+        Uri.parse("$_apiUrl$path"),
         body: encoded,
         headers: {
           "Content-Type": "application/json",
@@ -40,12 +40,12 @@ class BackendServer implements Server {
   }
 
   Future<Result<dynamic, String>> _getJson<Body>({
-    required String endpoint,
+    required String path,
     Map<String, String>? headers,
   }) async {
     return Future<Result<dynamic, String>>.sync(() {
       return http.get(
-        Uri.parse("$_apiUrl/$endpoint"),
+        Uri.parse("$_apiUrl$path"),
         headers: {
           "Content-Type": "application/json",
           ...?headers,
@@ -66,7 +66,7 @@ class BackendServer implements Server {
   @override
   Future<Result<List<Product>, String>> allProducts() async {
     final res = await _getJson(
-      endpoint: "$_apiUrl/products/all",
+      path: "/products/all",
     );
 
     return res.flatMap((body) {
@@ -87,7 +87,7 @@ class BackendServer implements Server {
     String password,
   ) async {
     final res = await _postJson(
-      endpoint: "users/register",
+      path: "/users/register",
       body: {"name": name, "email": email, "password": password},
     );
 
@@ -106,7 +106,7 @@ class BackendServer implements Server {
     String password,
   ) async {
     final res = (await _postJson(
-      endpoint: "sessions/login",
+      path: "/sessions/login",
       body: {"email": email, "password": password},
     ));
 
@@ -121,7 +121,7 @@ class BackendServer implements Server {
 
   @override
   Future<Result<Null, String>> logout(String token) async {
-    final res = await _postJson(endpoint: "sessions/logout", body: {});
+    final res = await _postJson(path: "sessions/logout", body: {});
 
     return res.flatMap((body) {
       if (body["ok"]) {
@@ -135,7 +135,7 @@ class BackendServer implements Server {
   @override
   Future<Result<User, String>> sessionUser(String token) async {
     final res = await _getJson(
-      endpoint: "$_apiUrl/sessions/user",
+      path: "/sessions/user",
       headers: {"Session-Token": token},
     );
     return res.flatMap((body) {
@@ -150,17 +150,15 @@ class BackendServer implements Server {
   @override
   Future<Result<Null, String>> purchaseCart(
       String token, List<CartItem> cartItems) async {
-    final res = await _postJson(
-        endpoint: "$_apiUrl/carts/purchase",
-        headers: {"Content-Type": "application/json", "Session-Token": token},
-        body: json.encode({
-          "items": cartItems
-              .map((cartItem) => {
-                    "product_id": cartItem.product.id,
-                    "amount": cartItem.amount
-                  })
-              .toList()
-        }));
+    final res = await _postJson(path: "/carts/purchase", headers: {
+      "Content-Type": "application/json",
+      "Session-Token": token
+    }, body: {
+      "items": cartItems
+          .map((cartItem) =>
+              {"product_id": cartItem.product.id, "amount": cartItem.amount})
+          .toList()
+    });
 
     return res.flatMap((body) {
       if (body["ok"]) {
@@ -173,8 +171,7 @@ class BackendServer implements Server {
 
   @override
   Future<Result<Null, String>> addBalance(String token) async {
-    final res =
-        await _postJson(endpoint: "$_apiUrl/users/balance/add", headers: {
+    final res = await _postJson(path: "/users/balance/add", headers: {
       "Content-Type": "application/json",
       "Accept": "application/json",
       "Session-Token": token
@@ -192,7 +189,7 @@ class BackendServer implements Server {
   @override
   Future<Result<List<ReceiptHeader>, String>> allReceipts(String token) async {
     final res = await _getJson(
-      endpoint: "$_apiUrl/receipts/all",
+      path: "/receipts/all",
       headers: {
         "Content-Type": "application/json",
         "Accept": "application/json",
@@ -215,7 +212,7 @@ class BackendServer implements Server {
   @override
   Future<Result<Receipt, String>> oneReceipt(String token, int id) async {
     final res = await _getJson(
-      endpoint: "$_apiUrl/receipts/one?receipt_id=$id",
+      path: "/receipts/one?receipt_id=$id",
       headers: {
         "Content-Type": "application/json",
         "Accept": "application/json",
