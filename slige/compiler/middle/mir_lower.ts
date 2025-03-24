@@ -178,7 +178,10 @@ export class FnLowerer {
             case "binary":
             case "unary":
                 return todo();
-            case "adt":
+            case "adt": {
+                console.log(rval);
+                return todo();
+            }
             case "call":
             case "builtin":
                 return todo();

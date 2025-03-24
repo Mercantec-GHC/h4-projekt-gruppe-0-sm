@@ -675,10 +675,29 @@ export class FnLowerer {
                         });
                         condLocals.push(condLocal);
                     }
-                    const condRVal = condLocals
-                        .reduce((condRVal, condLocal) => {
+                    const condLocal = condLocals
+                        .slice(1)
+                        .reduce<LocalId>((rightLocal, leftLocal) => {
                             const local = this.local(Ty({ tag: "int" }));
-                        });
+                            this.addStmt({
+                                tag: "assign",
+                                place: { local, proj: [] },
+                                rval: {
+                                    tag: "binary",
+                                    binaryType: "and",
+                                    left: {
+                                        tag: "copy",
+                                        place: { local: leftLocal, proj: [] },
+                                    },
+                                    right: {
+                                        tag: "copy",
+                                        place: { local: rightLocal, proj: [] },
+                                    },
+                                },
+                            });
+                            return local;
+                        }, condLocals[0]);
+                    return this.copyOrMoveLocal(condLocal, Ty({ tag: "int" }));
                 }
                 return todo();
             }
@@ -710,8 +729,34 @@ export class FnLowerer {
                 return;
             case "bool":
                 return;
-            case "tuple":
+            case "tuple": {
+                const ty = this.ch.patTy(pat);
+                if (ty.kind.tag === "struct") {
+                    const discrLocal = this.local(ty);
+                    this.addStmt({
+                        tag: "assign",
+                        place: { local: discrLocal, proj: [] },
+                        rval: discr,
+                    });
+                    for (const [fieldIdx, pat] of k.elems.entries()) {
+                        if (ty.kind.data.tag !== "tuple") {
+                            throw new Error();
+                        }
+                        this.lowerMatchArmPatternBindings({
+                            tag: "use",
+                            operand: {
+                                tag: "move",
+                                place: {
+                                    local: discrLocal,
+                                    proj: [{ tag: "field", fieldIdx }],
+                                },
+                            },
+                        }, pat);
+                    }
+                    return;
+                }
                 return todo();
+            }
             case "struct":
                 return todo();
         }
