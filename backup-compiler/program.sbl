@@ -1,0 +1,15 @@
+
+#[c_function("print_int")]
+fn print_int(value) {}
+
+// #[c_function("println")]
+// fn println(value) {}
+
+fn main() {
+    // println("hello\ world");
+    let a = 4;
+    print_int(a + 2);
+}
+
+// vim: syntax=rust commentstring=//\ %s
+
