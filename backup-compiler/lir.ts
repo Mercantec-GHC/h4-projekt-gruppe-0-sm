@@ -11,6 +11,7 @@ export type Fn = {
     mir: mir.Fn;
     lines: Line[];
     frameSize: number;
+    localOffsets: Map<number, number>;
 };
 
 export type Line = {
@@ -27,9 +28,10 @@ export type Ins =
     | { tag: "push"; reg: Reg }
     | { tag: "pop"; reg: Reg }
     | { tag: "load"; reg: Reg; offset: number }
-    | { tag: "store"; offset: number; reg: Reg }
+    | { tag: "store_reg"; offset: number; reg: Reg }
+    | { tag: "store_imm"; offset: number; val: number }
     | { tag: "call_reg"; reg: Reg; args: number }
-    | { tag: "call_fn"; fn: Fn; args: number }
+    | { tag: "call_imm"; fn: Fn; args: number }
     | { tag: "jmp"; target: Label }
     | { tag: "jnz_reg"; reg: Reg; target: Label }
     | { tag: "ret" }
@@ -52,7 +54,7 @@ export class ProgramStringifyer {
                         .map((label) =>
                             `${
                                 label.labels
-                                    .map((label) => `.${label}:\n`)
+                                    .map((label) => `.L${label}:\n`)
                                     .join()
                             }    ${this.ins(label.ins)}\n`
                         )
@@ -80,11 +82,13 @@ export class ProgramStringifyer {
                 return `pop %${ins.reg}`;
             case "load":
                 return `load %${ins.reg}, ${ins.offset}`;
-            case "store":
-                return `store ${ins.offset}, %${ins.reg}`;
+            case "store_reg":
+                return `store_reg ${ins.offset}, %${ins.reg}`;
+            case "store_imm":
+                return `store_val ${ins.offset}, ${ins.val}`;
             case "call_reg":
                 return `call_reg %${ins.reg}, ${ins.args}`;
-            case "call_fn":
+            case "call_imm":
                 return `call_fn ${ins.fn.label}, ${ins.args}`;
             case "jmp":
                 return `jmp .b${ins.target}`;

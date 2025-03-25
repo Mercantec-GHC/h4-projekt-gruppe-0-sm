@@ -51,11 +51,12 @@ export class FnMirGen {
 
         const entry = this.block();
         const exit = this.block();
+        this.returnBlock = exit;
 
         this.currentBlock = entry;
         this.lowerBlock(this.stmtKind.body);
 
-        entry.ter = Ter({ tag: "goto", target: exit });
+        this.currentBlock.ter = Ter({ tag: "goto", target: exit });
         exit.ter = Ter({ tag: "return" });
         return {
             stmt: this.stmt,
@@ -251,6 +252,8 @@ export class FnMirGen {
                 return;
             }
             case "binary": {
+                this.lowerExpr(k.left);
+                this.lowerExpr(k.right);
                 switch (k.op) {
                     case "<":
                         this.pushStmt({ tag: "lt" });
@@ -290,4 +293,3 @@ export class FnMirGen {
         this.currentBlock.stmts.push(Stmt(kind));
     }
 }
-

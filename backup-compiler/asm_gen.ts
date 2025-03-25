@@ -25,17 +25,28 @@ export class AsmGen {
         }
         this.writeln(`section .text`);
         for (const fn of this.lir.fns) {
-            this.writeln(`align 8`);
-            this.writeln(`global ${fn.label}:`);
-            this.writeln(`${fn.label}:`);
-
-            this.generateFnBody(fn);
+            this.generateFn(fn);
         }
 
+        this.writeln(`; vim: syntax=nasm commentstring=;\\ %s`);
+        this.writeln("");
         return this.writer.finalize();
     }
 
-    private generateFnBody(fn: lir.Fn) {
+    private generateFn(fn: lir.Fn) {
+        const query = this.queryCFunction(fn);
+        if (query.found) {
+            const { label, args } = query;
+            this.generateCFunctionBody(fn, label, args);
+            return;
+        }
+
+        this.generateFnBody(fn);
+    }
+
+    private queryCFunction(
+        fn: lir.Fn,
+    ): { found: false } | { found: true; label: string; args: number } {
         const stmtKind = fn.mir.stmt.kind;
         if (stmtKind.tag !== "fn") {
             throw new Error();
@@ -45,12 +56,41 @@ export class AsmGen {
             if (!arg || arg.kind.tag !== "string") {
                 throw new Error("incorrect args for attribute");
             }
-            const label = arg.kind.val;
-            this.generateCFunctionBody(label, fn.mir.paramLocals.size);
-            return;
+            return {
+                found: true,
+                label: arg.kind.val,
+                args: fn.mir.paramLocals.size,
+            };
+        }
+        return { found: false };
+    }
+
+    private generateCFunctionBody(fn: lir.Fn, label: string, args: number) {
+        this.writeln(`extern ${label}`);
+        this.writeln(`global ${fn.label}`);
+        this.writeln(`${fn.label}:`);
+
+        this.writeIns(`push rbp`);
+        this.writeIns(`mov rbp, rsp`);
+        for (let i = 0; i < args; ++i) {
+            this.writeIns(`mov rax, ${this.relative((i + 2) * 8)}`);
+            this.writeIns(`push rax`);
         }
 
-        this.writeIns(`push r12`);
+        const argRegs = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"];
+        for (const reg of argRegs.slice(0, args + 1)) {
+            this.writeIns(`pop ${reg}`);
+        }
+
+        this.writeIns(`call ${label}`);
+        this.writeIns(`mov rsp, rbp`);
+        this.writeIns(`pop rbp`);
+        this.writeIns(`ret`);
+    }
+
+    private generateFnBody(fn: lir.Fn) {
+        this.writeln(`global ${fn.label}:`);
+        this.writeln(`${fn.label}:`);
         this.writeIns(`push rbp`);
         this.writeIns(`mov rbp, rsp`);
         this.writeIns(`sub rsp, ${fn.frameSize}`);
@@ -64,30 +104,11 @@ export class AsmGen {
         }
 
         this.writeln(`.exit:`);
+        const returnLocalOffset = fn.localOffsets.get(fn.mir.returnLocal.id)!;
+        this.writeIns(`mov rax, QWORD ${this.relative(returnLocalOffset)}`);
         this.writeIns(`mov rsp, rbp`);
         this.writeIns(`pop rbp`);
-        this.writeIns(`pop r12`);
-    }
-
-    private generateCFunctionBody(label: string, args: number) {
-        const argRegs = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"];
-        const returnReg = "rax";
-        if (args > argRegs.length) {
-            throw new Error(
-                `arg count (${args}) > ${argRegs.length} not supported`,
-            );
-        }
-        this.writeIns(`push ${returnReg}`);
-        for (const reg of argRegs.slice(0, args + 1)) {
-            this.writeIns(`push ${reg}`);
-        }
-        this.writeIns(`call ${label}`);
-        this.writeIns(`mov r12, rax`);
-        for (const reg of argRegs.slice(0, args + 1).toReversed()) {
-            this.writeIns(`push ${reg}`);
-        }
-        this.writeIns(`pop ${returnReg}`);
-        this.writeIns(`push r12`);
+        this.writeIns(`ret`);
     }
 
     private generateIns(ins: lir.Ins) {
@@ -115,16 +136,27 @@ export class AsmGen {
                 this.writeIns(`pop ${r(ins.reg)}`);
                 return;
             case "load":
-                this.writeIns(`mov QWORD [rbp${ins.offset}], ${r(ins.reg)}`);
+                this.writeIns(
+                    `mov ${r(ins.reg)}, QWORD ${this.relative(ins.offset)}`,
+                );
                 return;
-            case "store":
-                this.writeIns(`mov ${r(ins.reg)}, QWORD [rbp${ins.offset}]`);
+            case "store_reg":
+                this.writeIns(
+                    `mov QWORD ${this.relative(ins.offset)}, ${r(ins.reg)}`,
+                );
+                return;
+            case "store_imm":
+                this.writeIns(
+                    `mov QWORD ${this.relative(ins.offset)}, ${ins.val}`,
+                );
                 return;
             case "call_reg":
-                this.generateCall(r(ins.reg), ins.args);
+                this.writeIns(`call ${r(ins.reg)}`);
+                this.writeIns(`push rax`);
                 return;
-            case "call_fn":
-                this.generateCall(ins.fn.label, ins.args);
+            case "call_imm":
+                this.writeIns(`call ${ins.fn.label}`);
+                this.writeIns(`push rax`);
                 return;
             case "jmp":
                 this.writeIns(`jmp .L${ins.target}`);
@@ -153,27 +185,7 @@ export class AsmGen {
                 this.kill(ins.reg);
                 return;
         }
-    }
-
-    private generateCall(value: string, args: number) {
-        const argRegs = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"];
-        const returnReg = "rax";
-        if (args > argRegs.length) {
-            throw new Error(
-                `arg count (${args}) > ${argRegs.length} not supported`,
-            );
-        }
-        this.writeIns(`push ${returnReg}`);
-        for (const reg of argRegs.slice(0, args + 1)) {
-            this.writeIns(`push ${reg}`);
-        }
-        this.writeIns(`call ${value}`);
-        this.writeIns(`mov r12, rax`);
-        for (const reg of argRegs.slice(0, args + 1).toReversed()) {
-            this.writeIns(`push ${reg}`);
-        }
-        this.writeIns(`pop ${returnReg}`);
-        this.writeIns(`push r12`);
+        const _: never = ins;
     }
 
     private reg(reg: lir.Reg): string {
@@ -198,7 +210,6 @@ export class AsmGen {
 
     private allocReg(reg: lir.Reg) {
         if (!this.liveRegs.has(reg)) {
-            this.liveRegs.add(reg);
             const regSel = [
                 "rax",
                 "rdi",
@@ -213,8 +224,13 @@ export class AsmGen {
             if (!regSel) {
                 throw new Error("ran out of registers");
             }
+            this.liveRegs.add(reg);
             this.regSelect.set(reg, regSel);
         }
+    }
+
+    private relative(offset: number): string {
+        return `[rbp${offset >= 0 ? `+${offset}` : `${offset}`}]`;
     }
 
     private kill(reg: lir.Reg) {

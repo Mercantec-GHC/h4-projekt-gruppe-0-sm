@@ -31,7 +31,14 @@ export class LirGen {
             const mir = this.mirGen.fnMir(stmt, stmt.kind);
             const id = this.fnIds++;
             const label = `sbc__${stmt.kind.ident}`;
-            const fn: Fn = { id, label, mir, lines: [], frameSize: 0 };
+            const fn: Fn = {
+                id,
+                label,
+                mir,
+                lines: [],
+                frameSize: 0,
+                localOffsets: new Map(),
+            };
             this.fns.set(id, fn);
             this.stmtFns.set(stmt.id, fn);
         }
@@ -69,8 +76,6 @@ class FnGen {
 
     private currentLabels: Label[] = [];
 
-    private nextOffset = -8;
-    private frameSize = 0;
     private localOffsets = new Map<number, number>();
 
     public constructor(
@@ -84,12 +89,33 @@ class FnGen {
             const label = this.labelIds++;
             this.blockLabels.set(block.id, label);
         }
-        for (const local of this.fn.mir.locals) {
-            this.localOffsets.set(local.id, this.nextOffset);
-            this.nextOffset -= 8;
-            this.frameSize += 8;
+
+        let currentOffset = 8 + this.fn.mir.paramLocals.size * 8;
+        let frameSize = 0;
+
+        for (const local of this.fn.mir.paramLocals.values()) {
+            this.localOffsets.set(local.id, currentOffset);
+            currentOffset -= 8;
         }
-        this.fn.frameSize = this.frameSize;
+        // return address
+        currentOffset -= 8;
+        // old rbp
+        currentOffset -= 8;
+        // return value
+        this.localOffsets.set(this.fn.mir.returnLocal.id, currentOffset);
+        currentOffset -= 8;
+        frameSize += 8;
+        for (const local of this.fn.mir.locals) {
+            if (this.localOffsets.has(local.id)) {
+                continue;
+            }
+            this.localOffsets.set(local.id, currentOffset);
+            currentOffset -= 8;
+            frameSize += 8;
+        }
+        this.fn.frameSize = frameSize;
+        this.fn.localOffsets = this.localOffsets;
+
         for (const block of this.fn.mir.blocks) {
             this.currentLabels.push(this.blockLabels.get(block.id)!);
             for (const stmt of block.stmts) {
@@ -158,7 +184,7 @@ class FnGen {
                 const reg = this.reg();
                 const offset = this.localOffsets.get(k.local.id)!;
                 this.pushIns({ tag: "pop", reg });
-                this.pushIns({ tag: "store", offset, reg });
+                this.pushIns({ tag: "store_reg", offset, reg });
                 this.pushIns({ tag: "kill", reg });
                 return;
             }
@@ -175,8 +201,8 @@ class FnGen {
             case "mul": {
                 const dst = this.reg();
                 const src = this.reg();
-                this.pushIns({ tag: "pop", reg: src });
                 this.pushIns({ tag: "pop", reg: dst });
+                this.pushIns({ tag: "pop", reg: src });
                 this.pushIns({ tag: k.tag, dst, src });
                 this.pushIns({ tag: "push", reg: dst });
                 this.pushIns({ tag: "kill", reg: src });
