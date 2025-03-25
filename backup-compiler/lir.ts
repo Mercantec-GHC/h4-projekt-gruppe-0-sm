@@ -10,6 +10,7 @@ export type Fn = {
     label: string;
     mir: mir.Fn;
     lines: Line[];
+    frameSize: number;
 };
 
 export type Line = {
@@ -27,12 +28,13 @@ export type Ins =
     | { tag: "pop"; reg: Reg }
     | { tag: "load"; reg: Reg; offset: number }
     | { tag: "store"; offset: number; reg: Reg }
-    | { tag: "call_reg"; reg: Reg }
-    | { tag: "call_fn"; fn: Fn }
+    | { tag: "call_reg"; reg: Reg; args: number }
+    | { tag: "call_fn"; fn: Fn; args: number }
     | { tag: "jmp"; target: Label }
     | { tag: "jnz_reg"; reg: Reg; target: Label }
     | { tag: "ret" }
-    | { tag: "lt" | "eq" | "add" | "mul"; dst: Reg; src: Reg };
+    | { tag: "lt" | "eq" | "add" | "mul"; dst: Reg; src: Reg }
+    | { tag: "kill"; reg: Reg };
 
 export type Reg = number;
 export type Label = number;
@@ -81,9 +83,9 @@ export class ProgramStringifyer {
             case "store":
                 return `store ${ins.offset}, %${ins.reg}`;
             case "call_reg":
-                return `call_reg %${ins.reg}`;
+                return `call_reg %${ins.reg}, ${ins.args}`;
             case "call_fn":
-                return `call_fn ${ins.fn.label}`;
+                return `call_fn ${ins.fn.label}, ${ins.args}`;
             case "jmp":
                 return `jmp .b${ins.target}`;
             case "jnz_reg":
@@ -95,6 +97,8 @@ export class ProgramStringifyer {
             case "add":
             case "mul":
                 return `${ins.tag} %${ins.dst}, %${ins.src}`;
+            case "kill":
+                return `kill %${ins.reg}`;
         }
         const _: never = ins;
     }

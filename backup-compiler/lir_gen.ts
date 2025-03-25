@@ -31,7 +31,7 @@ export class LirGen {
             const mir = this.mirGen.fnMir(stmt, stmt.kind);
             const id = this.fnIds++;
             const label = `sbc__${stmt.kind.ident}`;
-            const fn: Fn = { id, label, mir, lines: [] };
+            const fn: Fn = { id, label, mir, lines: [], frameSize: 0 };
             this.fns.set(id, fn);
             this.stmtFns.set(stmt.id, fn);
         }
@@ -43,15 +43,10 @@ export class LirGen {
                 throw new Error();
             }
 
-            // if (stmtKind.attrs.at(0)?.ident === "c_function") {
-            //     const arg = stmtKind.attrs.at(0)!.args.at(0);
-            //     if (!arg || arg.kind.tag !== "string") {
-            //         throw new Error("incorrect args for attribute");
-            //     }
-            //     const label = arg.kind.val;
-            //     new CFunctionGen(fn, label).generate();
-            //     continue;
-            // }
+            if (stmtKind.attrs.at(0)?.ident === "c_function") {
+                // No need to generate lir.
+                continue;
+            }
 
             new FnGen(
                 fn,
@@ -75,6 +70,7 @@ class FnGen {
     private currentLabels: Label[] = [];
 
     private nextOffset = -8;
+    private frameSize = 0;
     private localOffsets = new Map<number, number>();
 
     public constructor(
@@ -91,7 +87,9 @@ class FnGen {
         for (const local of this.fn.mir.locals) {
             this.localOffsets.set(local.id, this.nextOffset);
             this.nextOffset -= 8;
+            this.frameSize += 8;
         }
+        this.fn.frameSize = this.frameSize;
         for (const block of this.fn.mir.blocks) {
             this.currentLabels.push(this.blockLabels.get(block.id)!);
             for (const stmt of block.stmts) {
@@ -117,12 +115,14 @@ class FnGen {
                         const stringId = this.strings.intern(k.val.val);
                         this.pushIns({ tag: "mov_string", reg, stringId });
                         this.pushIns({ tag: "push", reg });
+                        this.pushIns({ tag: "kill", reg });
                         return;
                     }
                     case "int": {
                         const reg = this.reg();
                         this.pushIns({ tag: "mov_int", reg, val: k.val.val });
                         this.pushIns({ tag: "push", reg });
+                        this.pushIns({ tag: "kill", reg });
                         return;
                     }
                     case "fn": {
@@ -133,6 +133,7 @@ class FnGen {
                             fn: this.stmtFns.get(k.val.stmt.id)!,
                         });
                         this.pushIns({ tag: "push", reg });
+                        this.pushIns({ tag: "kill", reg });
                         return;
                     }
                 }
@@ -142,6 +143,7 @@ class FnGen {
             case "pop": {
                 const reg = this.reg();
                 this.pushIns({ tag: "pop", reg });
+                this.pushIns({ tag: "kill", reg });
                 return;
             }
             case "load": {
@@ -149,6 +151,7 @@ class FnGen {
                 const offset = this.localOffsets.get(k.local.id)!;
                 this.pushIns({ tag: "load", reg, offset });
                 this.pushIns({ tag: "push", reg });
+                this.pushIns({ tag: "kill", reg });
                 return;
             }
             case "store": {
@@ -156,12 +159,14 @@ class FnGen {
                 const offset = this.localOffsets.get(k.local.id)!;
                 this.pushIns({ tag: "pop", reg });
                 this.pushIns({ tag: "store", offset, reg });
+                this.pushIns({ tag: "kill", reg });
                 return;
             }
             case "call": {
                 const reg = this.reg();
                 this.pushIns({ tag: "pop", reg });
-                this.pushIns({ tag: "call_reg", reg });
+                this.pushIns({ tag: "call_reg", reg, args: k.args });
+                this.pushIns({ tag: "kill", reg });
                 return;
             }
             case "lt":
@@ -174,6 +179,8 @@ class FnGen {
                 this.pushIns({ tag: "pop", reg: dst });
                 this.pushIns({ tag: k.tag, dst, src });
                 this.pushIns({ tag: "push", reg: dst });
+                this.pushIns({ tag: "kill", reg: src });
+                this.pushIns({ tag: "kill", reg: dst });
                 return;
             }
         }
@@ -206,6 +213,7 @@ class FnGen {
                     reg,
                     target: this.blockLabels.get(k.falsy.id)!,
                 });
+                this.pushIns({ tag: "kill", reg });
                 this.pushIns({
                     tag: "jmp",
                     target: this.blockLabels.get(k.falsy.id)!,
@@ -224,16 +232,6 @@ class FnGen {
     private reg(): Reg {
         const reg = this.regIds++;
         return reg;
-    }
-}
-
-class CFunctionGen {
-    public constructor(
-        private fn: Fn,
-        private label: string,
-    ) {}
-
-    public generate() {
     }
 }
 
