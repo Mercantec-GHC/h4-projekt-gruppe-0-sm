@@ -160,6 +160,12 @@ export class AsmGen {
             case "nop":
                 this.writeIns(`nop`);
                 return;
+            case "alloc_param":
+                // should already be handled
+                return;
+            case "alloc_local":
+                // should already be handled
+                return;
             case "mov_int":
                 this.writeIns(`mov ${r(ins.reg)}, ${ins.val}`);
                 return;

@@ -12,6 +12,8 @@ export type Fn = {
     lines: Line[];
     frameSize: number;
     localOffsets: Map<number, number>;
+
+    localRegs: Map<number, Reg>;
 };
 
 export type Line = {
@@ -22,6 +24,8 @@ export type Line = {
 export type Ins =
     | { tag: "error" }
     | { tag: "nop" }
+    | { tag: "alloc_param"; reg: Reg; size: number }
+    | { tag: "alloc_local"; reg: Reg; size: number }
     | { tag: "mov_int"; reg: Reg; val: number }
     | { tag: "mov_string"; reg: Reg; stringId: number }
     | { tag: "mov_fn"; reg: Reg; fn: Fn }
@@ -70,6 +74,10 @@ export class ProgramStringifyer {
                 return "<error>";
             case "nop":
                 return "nop";
+            case "alloc_param":
+                return `alloc_param %${ins.reg}, ${ins.size}`;
+            case "alloc_local":
+                return `alloc_local %${ins.reg}, ${ins.size}`;
             case "mov_int":
                 return `mov_int %${ins.reg}, ${ins.val}`;
             case "mov_string":

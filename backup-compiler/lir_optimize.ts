@@ -207,6 +207,10 @@ function replaceReg(fn: Fn, cand: Reg, replacement: Reg) {
                 break;
             case "nop":
                 break;
+            case "alloc_param":
+            case "alloc_local":
+                ins.reg = r(ins.reg);
+                break;
             case "mov_int":
             case "mov_string":
             case "mov_fn":
@@ -255,6 +259,8 @@ function pollutesStack(ins: Ins): boolean {
     switch (ins.tag) {
         case "error":
         case "nop":
+        case "alloc_param":
+        case "alloc_local":
         case "mov_int":
         case "mov_string":
         case "mov_fn":

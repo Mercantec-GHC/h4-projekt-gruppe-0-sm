@@ -38,6 +38,7 @@ export class LirGen {
                 lines: [],
                 frameSize: 0,
                 localOffsets: new Map(),
+                localRegs: new Map(),
             };
             this.fns.set(id, fn);
             this.stmtFns.set(stmt.id, fn);
@@ -77,6 +78,7 @@ class FnGen {
     private currentLabels: Label[] = [];
 
     private localOffsets = new Map<number, number>();
+    private localRegs = new Map<number, Reg>();
 
     public constructor(
         private fn: Fn,
@@ -96,6 +98,9 @@ class FnGen {
         for (const local of this.fn.mir.paramLocals.values()) {
             this.localOffsets.set(local.id, currentOffset);
             currentOffset -= 8;
+
+            const reg = this.reg();
+            this.pushIns({ tag: "alloc_param", reg, size: 8 });
         }
         // return address
         currentOffset -= 8;
@@ -104,6 +109,13 @@ class FnGen {
         // return value
         this.localOffsets.set(this.fn.mir.returnLocal.id, currentOffset);
         currentOffset -= 8;
+
+        {
+            const reg = this.reg();
+            this.pushIns({ tag: "alloc_local", reg, size: 8 });
+            this.localRegs.set(this.fn.mir.returnLocal.id, reg);
+        }
+
         frameSize += 8;
         for (const local of this.fn.mir.locals) {
             if (this.localOffsets.has(local.id)) {
@@ -112,6 +124,14 @@ class FnGen {
             this.localOffsets.set(local.id, currentOffset);
             currentOffset -= 8;
             frameSize += 8;
+        }
+        for (const local of this.fn.mir.locals) {
+            if (this.localRegs.has(local.id)) {
+                continue;
+            }
+            const reg = this.reg();
+            this.pushIns({ tag: "alloc_local", reg, size: 8 });
+            this.localRegs.set(local.id, reg);
         }
 
         if (frameSize % 16 !== 8) {
