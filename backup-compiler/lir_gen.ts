@@ -113,6 +113,11 @@ class FnGen {
             currentOffset -= 8;
             frameSize += 8;
         }
+
+        if (frameSize % 16 !== 8) {
+            frameSize += 8;
+        }
+
         this.fn.frameSize = frameSize;
         this.fn.localOffsets = this.localOffsets;
 

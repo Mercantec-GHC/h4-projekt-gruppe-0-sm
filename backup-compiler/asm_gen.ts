@@ -72,6 +72,7 @@ export class AsmGen {
 
         this.writeIns(`push rbp`);
         this.writeIns(`mov rbp, rsp`);
+        this.writeIns(`sub rsp, 8`);
         for (let i = 0; i < args; ++i) {
             this.writeIns(`mov rax, ${this.relative((i + 2) * 8)}`);
             this.writeIns(`push rax`);

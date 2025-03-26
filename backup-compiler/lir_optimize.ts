@@ -11,11 +11,33 @@ import {
 export function lirOptimize(program: Program) {
     console.log("=== BEFORE OPTIMIZATION ===");
     console.log(new ProgramStringifyer(program).stringify());
-    for (const fn of program.fns) {
-        eliminatePushPop(fn);
-        eliminateMovFnCall(fn);
-        eliminateMovIntStoreReg(fn);
+
+    let changed = true;
+    let sizeBefore = program.fns
+        .reduce((acc, fn) => acc + fn.lines.length, 0);
+
+    const sizeHistory = new Set([sizeBefore]);
+    let repeats = 0;
+
+    while (changed && repeats < 3) {
+        for (const fn of program.fns) {
+            eliminatePushPop(fn);
+            eliminateMovFnCall(fn);
+            eliminateMovIntStoreReg(fn);
+            eliminatePushPopShadowed(fn);
+        }
+        const sizeAfter = program.fns
+            .reduce((acc, fn) => acc + fn.lines.length, 0);
+        if (sizeAfter !== sizeBefore) {
+            changed = true;
+        }
+        sizeBefore = sizeAfter;
+        if (sizeHistory.has(sizeBefore)) {
+            repeats += 1;
+        }
+        sizeHistory.add(sizeBefore);
     }
+
     console.log("=== AFTER OPTIMIZATION ===");
     console.log(new ProgramStringifyer(program).stringify());
 }
@@ -130,6 +152,45 @@ function eliminateMovIntStoreReg(fn: Fn) {
     }
 }
 
+function eliminatePushPopShadowed(fn: Fn) {
+    type Cand = { push: number; pop: number };
+    const candidates: Cand[] = [];
+
+    outer: for (let i = 0; i < fn.lines.length - 1; ++i) {
+        const push = fn.lines[i];
+        if (push.ins.tag !== "push") {
+            continue;
+        }
+        for (let j = i + 1; j < fn.lines.length; ++j) {
+            const line = fn.lines[j];
+            if (line.labels.length !== 0) {
+                continue outer;
+            }
+            if (line.ins.tag !== "pop" && pollutesStack(line.ins)) {
+                break;
+            }
+            if (line.ins.tag !== "pop") {
+                continue;
+            }
+            candidates.push({ push: i, pop: j });
+            break;
+        }
+    }
+
+    for (const { push: pushIdx, pop: popIdx } of candidates.toReversed()) {
+        const push = fn.lines[pushIdx];
+        const pop = fn.lines[popIdx];
+        if (!(push.ins.tag === "push" && pop.ins.tag === "pop")) {
+            throw new Error();
+        }
+        const toRemove = pop.ins.reg;
+        const replacement = push.ins.reg;
+        fn.lines.splice(popIdx, 1);
+        fn.lines.splice(pushIdx, 1);
+        replaceReg(fn, toRemove, replacement);
+    }
+}
+
 function replaceReg(fn: Fn, cand: Reg, replacement: Reg) {
     const r = (reg: Reg): Reg => reg === cand ? replacement : reg;
 
@@ -183,3 +244,34 @@ function replaceReg(fn: Fn, cand: Reg, replacement: Reg) {
     }
 }
 
+function pollutesStack(ins: Ins): boolean {
+    switch (ins.tag) {
+        case "error":
+        case "nop":
+        case "mov_int":
+        case "mov_string":
+        case "mov_fn":
+            return false;
+        case "push":
+        case "pop":
+            return true;
+        case "load":
+        case "store_reg":
+        case "store_imm":
+            return false;
+        case "call_reg":
+        case "call_imm":
+            return true;
+        case "jmp":
+        case "jnz_reg":
+        case "ret":
+            return false;
+        case "lt":
+        case "eq":
+        case "add":
+        case "mul":
+            return true;
+        case "kill":
+            return false;
+    }
+}
