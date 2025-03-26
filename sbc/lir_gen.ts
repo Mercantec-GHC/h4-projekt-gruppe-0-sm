@@ -109,6 +109,7 @@ class FnGen {
         // return value
         this.localOffsets.set(this.fn.mir.returnLocal.id, currentOffset);
         currentOffset -= 8;
+        frameSize += 8;
 
         {
             const reg = this.reg();
@@ -116,7 +117,6 @@ class FnGen {
             this.localRegs.set(this.fn.mir.returnLocal.id, reg);
         }
 
-        frameSize += 8;
         for (const local of this.fn.mir.locals) {
             if (this.localOffsets.has(local.id)) {
                 continue;
@@ -140,6 +140,7 @@ class FnGen {
 
         this.fn.frameSize = frameSize;
         this.fn.localOffsets = this.localOffsets;
+        this.fn.localRegs = this.localRegs;
 
         for (const block of this.fn.mir.blocks) {
             this.currentLabels.push(this.blockLabels.get(block.id)!);

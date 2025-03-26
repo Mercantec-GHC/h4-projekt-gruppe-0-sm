@@ -130,7 +130,6 @@ export class Checker {
                     const argTys = k.args
                         .map((arg) => this.exprTy(arg));
                     for (const [i, param] of callee.params.entries()) {
-                        console.log({ arg: argTys[i], param });
                         const tyRes = this.resolveTys(argTys[i], param);
                         if (!tyRes.ok) {
                             this.report(

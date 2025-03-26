@@ -7,6 +7,8 @@ export class AsmGen {
     private liveRegs = new Set<lir.Reg>();
     private regSelect = new Map<lir.Reg, string>();
 
+    private layout!: StackLayout;
+
     public constructor(
         private lir: lir.Program,
     ) {}
@@ -107,28 +109,6 @@ export class AsmGen {
         this.writeIns(`ret`);
     }
 
-    private generateFnBody(fn: lir.Fn) {
-        this.writeln(`${fn.label}:`);
-        this.writeIns(`push rbp`);
-        this.writeIns(`mov rbp, rsp`);
-        this.writeIns(`sub rsp, ${fn.frameSize}`);
-        this.writeIns(`jmp .L${fn.mir.entry.id}`);
-
-        for (const line of fn.lines) {
-            for (const label of line.labels) {
-                this.writeln(`.L${label}:`);
-            }
-            this.generateIns(line.ins);
-        }
-
-        this.writeln(`.exit:`);
-        const returnLocalOffset = fn.localOffsets.get(fn.mir.returnLocal.id)!;
-        this.writeIns(`mov rax, QWORD ${this.relative(returnLocalOffset)}`);
-        this.writeIns(`mov rsp, rbp`);
-        this.writeIns(`pop rbp`);
-        this.writeIns(`ret`);
-    }
-
     private generateCExporter(fn: lir.Fn, label: string) {
         this.writeln(`global ${label}`);
         this.writeln(`${label}:`);
@@ -151,6 +131,57 @@ export class AsmGen {
         this.writeIns(`ret`);
     }
 
+    private generateFnBody(fn: lir.Fn) {
+        const allocator = new StackAllocator();
+        for (const { ins } of fn.lines) {
+            if (ins.tag === "alloc_param") {
+                allocator.allocParam(ins.reg, ins.size);
+            } else if (ins.tag === "alloc_local") {
+                allocator.allocLocal(ins.reg, ins.size);
+            } else {
+                break;
+            }
+        }
+        this.layout = allocator.finalize();
+
+        this.writeln(`${fn.label}:`);
+        this.writeIns(`push rbp`);
+        this.writeIns(`mov rbp, rsp`);
+
+        const frameSize = fn.frameSize;
+        const newFrameSize = this.layout.frameSize;
+        console.log({ frameSize, newFrameSize });
+
+        this.writeIns(`sub rsp, ${fn.frameSize}`);
+        this.writeIns(`jmp .L${fn.mir.entry.id}`);
+
+        const isAlloc = (ins: lir.Ins): boolean =>
+            ins.tag === "alloc_param" || ins.tag === "alloc_local";
+
+        for (const line of fn.lines) {
+            if (isAlloc(line.ins)) {
+                continue;
+            }
+            for (const label of line.labels) {
+                this.writeln(`.L${label}:`);
+            }
+            this.generateIns(line.ins);
+        }
+
+        this.writeln(`.exit:`);
+
+        const returnLocalOffset = fn.localOffsets.get(fn.mir.returnLocal.id)!;
+        this.writeIns(`mov rax, QWORD ${this.relative(returnLocalOffset)}`);
+
+        const newReturnLocalOffset = this.layout
+            .offset(fn.localRegs.get(fn.mir.returnLocal.id)!);
+        console.log({ returnLocalOffset, newReturnLocalOffset });
+
+        this.writeIns(`mov rsp, rbp`);
+        this.writeIns(`pop rbp`);
+        this.writeIns(`ret`);
+    }
+
     private generateIns(ins: lir.Ins) {
         const r = (reg: lir.Reg) => this.reg(reg);
 
@@ -161,11 +192,8 @@ export class AsmGen {
                 this.writeIns(`nop`);
                 return;
             case "alloc_param":
-                // should already be handled
-                return;
             case "alloc_local":
-                // should already be handled
-                return;
+                throw new Error("should not be included");
             case "mov_int":
                 this.writeIns(`mov ${r(ins.reg)}, ${ins.val}`);
                 return;
@@ -305,3 +333,67 @@ class AsmWriter {
         return this.result;
     }
 }
+
+class StackLayout {
+    public constructor(
+        public readonly frameSize: number,
+        private regOffsets: Map<lir.Reg, number>,
+    ) {}
+
+    public offset(reg: lir.Reg): number {
+        const offset = this.regOffsets.get(reg);
+        if (!offset) {
+            throw new Error("not found");
+        }
+        return offset;
+    }
+}
+
+class StackAllocator {
+    private paramRegs = new Map<lir.Reg, number>();
+    private localRegs = new Map<lir.Reg, number>();
+
+    public allocParam(reg: lir.Reg, size: number) {
+        this.paramRegs.set(reg, size);
+    }
+    public allocLocal(reg: lir.Reg, size: number) {
+        this.localRegs.set(reg, size);
+    }
+
+    public finalize(): StackLayout {
+        const regOffsets = new Map<lir.Reg, number>();
+
+        let currentOffset = 8;
+
+        for (const [reg, size] of [...this.paramRegs].toReversed()) {
+            // Parameters are by convention 8-byte aligned.
+            currentOffset += align8(size);
+            regOffsets.set(reg, currentOffset);
+        }
+
+        // Start at 8 because rbp is pushed, and
+        // therefore the *first value*, meaning
+        // the return address is at stack[top - 1].
+        currentOffset = 8;
+        let frameSize = 0;
+
+        // return address
+        currentOffset -= 8;
+        // caller rbp
+        currentOffset -= 8;
+
+        for (const [reg, size] of this.localRegs) {
+            regOffsets.set(reg, currentOffset);
+            currentOffset -= align8(size);
+            frameSize += align8(size);
+        }
+
+        frameSize = align(frameSize, 16);
+
+        return new StackLayout(frameSize, regOffsets);
+    }
+}
+
+const align = (value: number, alignment: number): number =>
+    value % alignment === 0 ? value : value + (alignment - value % alignment);
+const align8 = (value: number): number => align(value, 8);
