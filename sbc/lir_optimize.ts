@@ -8,18 +8,17 @@ import {
     Reg,
 } from "./lir.ts";
 
-export function lirOptimize(program: Program) {
-    console.log("=== BEFORE OPTIMIZATION ===");
-    console.log(new ProgramStringifyer(program).stringify());
+export function optimizeLir(program: Program) {
+    //console.log("=== BEFORE OPTIMIZATION ===");
+    //console.log(new ProgramStringifyer(program).stringify());
 
-    let changed = true;
     let sizeBefore = program.fns
         .reduce((acc, fn) => acc + fn.lines.length, 0);
 
     const sizeHistory = new Set([sizeBefore]);
     let repeats = 0;
 
-    while (changed && repeats < 3) {
+    while (repeats < 1) {
         for (const fn of program.fns) {
             eliminatePushPop(fn);
             eliminateMovFnCall(fn);
@@ -28,9 +27,6 @@ export function lirOptimize(program: Program) {
         }
         const sizeAfter = program.fns
             .reduce((acc, fn) => acc + fn.lines.length, 0);
-        if (sizeAfter !== sizeBefore) {
-            changed = true;
-        }
         sizeBefore = sizeAfter;
         if (sizeHistory.has(sizeBefore)) {
             repeats += 1;
@@ -38,8 +34,8 @@ export function lirOptimize(program: Program) {
         sizeHistory.add(sizeBefore);
     }
 
-    console.log("=== AFTER OPTIMIZATION ===");
-    console.log(new ProgramStringifyer(program).stringify());
+    //console.log("=== AFTER OPTIMIZATION ===");
+    //console.log(new ProgramStringifyer(program).stringify());
 }
 
 function eliminatePushPop(fn: Fn) {

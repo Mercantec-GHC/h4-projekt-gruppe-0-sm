@@ -73,7 +73,11 @@ export class FnStringifyer {
         }
         return `${kind.ident}:\n${
             this.fn.locals
-                .map((local) => `    %${local.id}: ${tyToString(local.ty)}\n`)
+                .map((local) =>
+                    `    %${local.id} :: ${tyToString(local.ty)}${
+                        local.ident ? ` '${local.ident}'` : ""
+                    }\n`
+                )
                 .join("")
         }${
             this.fn.blocks

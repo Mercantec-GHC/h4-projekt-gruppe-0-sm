@@ -132,13 +132,15 @@ export class AsmGen {
     }
 
     private generateFnBody(fn: lir.Fn) {
+        let bodyIdx = 0;
         const allocator = new StackAllocator();
-        for (const { ins } of fn.lines) {
+        for (const [i, { ins }] of fn.lines.entries()) {
             if (ins.tag === "alloc_param") {
                 allocator.allocParam(ins.reg, ins.size);
             } else if (ins.tag === "alloc_local") {
                 allocator.allocLocal(ins.reg, ins.size);
             } else {
+                bodyIdx = i;
                 break;
             }
         }
@@ -154,7 +156,7 @@ export class AsmGen {
         this.writeIns(`sub rsp, ${this.layout.frameSize}`);
         this.writeIns(`jmp .L${fn.mir.entry.id}`);
 
-        for (const line of fn.lines) {
+        for (const line of fn.lines.slice(bodyIdx)) {
             for (const label of line.labels) {
                 this.writeln(`.L${label}:`);
             }

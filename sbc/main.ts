@@ -5,7 +5,7 @@ import { FnStringifyer } from "./mir.ts";
 import { LirGen } from "./lir_gen.ts";
 import { ProgramStringifyer } from "./lir.ts";
 import { AsmGen } from "./asm_gen.ts";
-import { lirOptimize } from "./lir_optimize.ts";
+import { optimizeLir } from "./lir_optimize.ts";
 
 async function main() {
     const text = await Deno.readTextFile(Deno.args[0]);
@@ -32,7 +32,7 @@ async function main() {
     // console.log("=== LIR ===");
     // console.log(new ProgramStringifyer(lir).stringify());
 
-    lirOptimize(lir);
+    optimizeLir(lir);
 
     const asm = new AsmGen(lir).generate();
     // console.log("=== ASM ===");

@@ -10,6 +10,7 @@ import {
 import { MirGen } from "./mir_gen.ts";
 import * as ast from "./ast.ts";
 import * as mir from "./mir.ts";
+import { optimizeMirFn } from "./mir_optimize.ts";
 
 export class LirGen {
     private strings = new StringIntern();
@@ -29,6 +30,7 @@ export class LirGen {
                 throw new Error("only functions can compile top level");
             }
             const mir = this.mirGen.fnMir(stmt, stmt.kind);
+            optimizeMirFn(mir);
             const id = this.fnIds++;
             const label = `sbc__${stmt.kind.ident}`;
             const fn: Fn = {

@@ -23,7 +23,7 @@ export function tyToString(ty: Ty): string {
         case "fn": {
             const k = ty.stmt.kind as ast.StmtKind & { tag: "fn" };
             const params = ty.params
-                .map((param, i) => `${k.params[i]}: ${tyToString(param)}`)
+                .map((param, i) => `${k.params[i].ident}: ${tyToString(param)}`)
                 .join(", ");
             const returnTy = tyToString(ty.returnTy);
             return `fn ${k.ident}(${params}) -> ${returnTy}`;
