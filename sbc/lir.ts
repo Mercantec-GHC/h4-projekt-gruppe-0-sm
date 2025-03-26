@@ -10,8 +10,6 @@ export type Fn = {
     label: string;
     mir: mir.Fn;
     lines: Line[];
-    frameSize: number;
-    localOffsets: Map<number, number>;
 
     localRegs: Map<number, Reg>;
 };
@@ -31,9 +29,9 @@ export type Ins =
     | { tag: "mov_fn"; reg: Reg; fn: Fn }
     | { tag: "push"; reg: Reg }
     | { tag: "pop"; reg: Reg }
-    | { tag: "load"; reg: Reg; offset: number }
-    | { tag: "store_reg"; offset: number; reg: Reg }
-    | { tag: "store_imm"; offset: number; val: number }
+    | { tag: "load"; reg: Reg; sReg: Reg }
+    | { tag: "store_reg"; sReg: Reg; reg: Reg }
+    | { tag: "store_imm"; sReg: Reg; val: number }
     | { tag: "call_reg"; reg: Reg; args: number }
     | { tag: "call_imm"; fn: Fn; args: number }
     | { tag: "jmp"; target: Label }
@@ -89,11 +87,11 @@ export class ProgramStringifyer {
             case "pop":
                 return `pop %${ins.reg}`;
             case "load":
-                return `load %${ins.reg}, [${ins.offset}]`;
+                return `load %${ins.reg}, [%${ins.sReg}]`;
             case "store_reg":
-                return `store_reg [${ins.offset}], %${ins.reg}`;
+                return `store_reg [%${ins.sReg}], %${ins.reg}`;
             case "store_imm":
-                return `store_val [${ins.offset}], ${ins.val}`;
+                return `store_val [%${ins.sReg}], ${ins.val}`;
             case "call_reg":
                 return `call_reg %${ins.reg}, ${ins.args}`;
             case "call_imm":

@@ -36,8 +36,6 @@ export class LirGen {
                 label,
                 mir,
                 lines: [],
-                frameSize: 0,
-                localOffsets: new Map(),
                 localRegs: new Map(),
             };
             this.fns.set(id, fn);
@@ -77,7 +75,6 @@ class FnGen {
 
     private currentLabels: Label[] = [];
 
-    private localOffsets = new Map<number, number>();
     private localRegs = new Map<number, Reg>();
 
     public constructor(
@@ -92,38 +89,15 @@ class FnGen {
             this.blockLabels.set(block.id, label);
         }
 
-        let currentOffset = 8 + this.fn.mir.paramLocals.size * 8;
-        let frameSize = 0;
-
         for (const local of this.fn.mir.paramLocals.values()) {
-            this.localOffsets.set(local.id, currentOffset);
-            currentOffset -= 8;
-
             const reg = this.reg();
             this.pushIns({ tag: "alloc_param", reg, size: 8 });
+            this.localRegs.set(local.id, reg);
         }
-        // return address
-        currentOffset -= 8;
-        // old rbp
-        currentOffset -= 8;
-        // return value
-        this.localOffsets.set(this.fn.mir.returnLocal.id, currentOffset);
-        currentOffset -= 8;
-        frameSize += 8;
-
         {
             const reg = this.reg();
             this.pushIns({ tag: "alloc_local", reg, size: 8 });
             this.localRegs.set(this.fn.mir.returnLocal.id, reg);
-        }
-
-        for (const local of this.fn.mir.locals) {
-            if (this.localOffsets.has(local.id)) {
-                continue;
-            }
-            this.localOffsets.set(local.id, currentOffset);
-            currentOffset -= 8;
-            frameSize += 8;
         }
         for (const local of this.fn.mir.locals) {
             if (this.localRegs.has(local.id)) {
@@ -134,12 +108,6 @@ class FnGen {
             this.localRegs.set(local.id, reg);
         }
 
-        if (frameSize % 16 !== 8) {
-            frameSize += 8;
-        }
-
-        this.fn.frameSize = frameSize;
-        this.fn.localOffsets = this.localOffsets;
         this.fn.localRegs = this.localRegs;
 
         for (const block of this.fn.mir.blocks) {
@@ -200,17 +168,17 @@ class FnGen {
             }
             case "load": {
                 const reg = this.reg();
-                const offset = this.localOffsets.get(k.local.id)!;
-                this.pushIns({ tag: "load", reg, offset });
+                const sReg = this.localRegs.get(k.local.id)!;
+                this.pushIns({ tag: "load", reg, sReg });
                 this.pushIns({ tag: "push", reg });
                 this.pushIns({ tag: "kill", reg });
                 return;
             }
             case "store": {
                 const reg = this.reg();
-                const offset = this.localOffsets.get(k.local.id)!;
+                const sReg = this.localRegs.get(k.local.id)!;
                 this.pushIns({ tag: "pop", reg });
-                this.pushIns({ tag: "store_reg", offset, reg });
+                this.pushIns({ tag: "store_reg", sReg, reg });
                 this.pushIns({ tag: "kill", reg });
                 return;
             }

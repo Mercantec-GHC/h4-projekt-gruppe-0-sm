@@ -144,24 +144,17 @@ export class AsmGen {
         }
         this.layout = allocator.finalize();
 
+        const returnLocalOffset = this.layout
+            .offset(fn.localRegs.get(fn.mir.returnLocal.id)!);
+
         this.writeln(`${fn.label}:`);
         this.writeIns(`push rbp`);
         this.writeIns(`mov rbp, rsp`);
 
-        const frameSize = fn.frameSize;
-        const newFrameSize = this.layout.frameSize;
-        console.log({ frameSize, newFrameSize });
-
-        this.writeIns(`sub rsp, ${fn.frameSize}`);
+        this.writeIns(`sub rsp, ${this.layout.frameSize}`);
         this.writeIns(`jmp .L${fn.mir.entry.id}`);
 
-        const isAlloc = (ins: lir.Ins): boolean =>
-            ins.tag === "alloc_param" || ins.tag === "alloc_local";
-
         for (const line of fn.lines) {
-            if (isAlloc(line.ins)) {
-                continue;
-            }
             for (const label of line.labels) {
                 this.writeln(`.L${label}:`);
             }
@@ -169,14 +162,7 @@ export class AsmGen {
         }
 
         this.writeln(`.exit:`);
-
-        const returnLocalOffset = fn.localOffsets.get(fn.mir.returnLocal.id)!;
         this.writeIns(`mov rax, QWORD ${this.relative(returnLocalOffset)}`);
-
-        const newReturnLocalOffset = this.layout
-            .offset(fn.localRegs.get(fn.mir.returnLocal.id)!);
-        console.log({ returnLocalOffset, newReturnLocalOffset });
-
         this.writeIns(`mov rsp, rbp`);
         this.writeIns(`pop rbp`);
         this.writeIns(`ret`);
@@ -193,7 +179,8 @@ export class AsmGen {
                 return;
             case "alloc_param":
             case "alloc_local":
-                throw new Error("should not be included");
+                // Handled elsewhere.
+                return;
             case "mov_int":
                 this.writeIns(`mov ${r(ins.reg)}, ${ins.val}`);
                 return;
@@ -211,17 +198,23 @@ export class AsmGen {
                 return;
             case "load":
                 this.writeIns(
-                    `mov ${r(ins.reg)}, QWORD ${this.relative(ins.offset)}`,
+                    `mov ${r(ins.reg)}, QWORD ${
+                        this.relative(this.layout.offset(ins.sReg))
+                    }`,
                 );
                 return;
             case "store_reg":
                 this.writeIns(
-                    `mov QWORD ${this.relative(ins.offset)}, ${r(ins.reg)}`,
+                    `mov QWORD ${
+                        this.relative(this.layout.offset(ins.sReg))
+                    }, ${r(ins.reg)}`,
                 );
                 return;
             case "store_imm":
                 this.writeIns(
-                    `mov QWORD ${this.relative(ins.offset)}, ${ins.val}`,
+                    `mov QWORD ${
+                        this.relative(this.layout.offset(ins.sReg))
+                    }, ${ins.val}`,
                 );
                 return;
             case "call_reg":
@@ -388,7 +381,8 @@ class StackAllocator {
             frameSize += align8(size);
         }
 
-        frameSize = align(frameSize, 16);
+        // frameSize - 8 is safe because frameSize is always >= 8.
+        frameSize = align(frameSize - 8, 16);
 
         return new StackLayout(frameSize, regOffsets);
     }

@@ -145,10 +145,10 @@ function eliminateMovIntStoreReg(fn: Fn) {
         ) {
             throw new Error();
         }
-        const offset = storeReg.ins.offset;
+        const sReg = storeReg.ins.sReg;
         const val = movInt.ins.val;
         fn.lines.splice(i + 1, 2);
-        fn.lines[i].ins = { tag: "store_imm", offset, val };
+        fn.lines[i].ins = { tag: "store_imm", sReg, val };
     }
 }
 
@@ -223,8 +223,10 @@ function replaceReg(fn: Fn, cand: Reg, replacement: Reg) {
             case "load":
             case "store_reg":
                 ins.reg = r(ins.reg);
+                ins.sReg = r(ins.sReg);
                 break;
             case "store_imm":
+                ins.sReg = r(ins.sReg);
                 break;
             case "call_reg":
                 ins.reg = r(ins.reg);
