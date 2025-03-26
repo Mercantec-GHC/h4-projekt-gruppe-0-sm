@@ -97,13 +97,13 @@ export class FnMirGen {
                 const exit = this.block();
                 const loop = this.block();
 
+                entry.ter = Ter({ tag: "goto", target: loop });
+
                 this.loopExitBlocks.set(stmt.id, exit);
 
                 this.currentBlock = loop;
                 this.lowerBlock(k.body);
-
-                entry.ter = Ter({ tag: "goto", target: loop });
-                loop.ter = Ter({ tag: "goto", target: exit });
+                this.currentBlock.ter = Ter({ tag: "goto", target: loop });
 
                 this.currentBlock = exit;
                 return;
@@ -116,17 +116,18 @@ export class FnMirGen {
 
                 this.currentBlock = truthy;
                 this.lowerBlock(k.truthy);
-                truthy.ter = Ter({ tag: "goto", target: exit });
+                this.currentBlock.ter = Ter({ tag: "goto", target: exit });
 
                 let falsy = exit;
                 if (k.falsy) {
                     falsy = this.block();
                     this.currentBlock = falsy;
                     this.lowerBlock(k.falsy);
-                    falsy.ter = Ter({ tag: "goto", target: exit });
+                    this.currentBlock.ter = Ter({ tag: "goto", target: exit });
                 }
 
                 entry.ter = Ter({ tag: "if", truthy, falsy });
+                this.currentBlock = exit;
                 return;
             }
             case "return": {

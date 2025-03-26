@@ -1,4 +1,7 @@
 
+#[c_function("notice")]
+fn notice() {}
+
 #[c_function("print_int")]
 fn print_int(value) {}
 
@@ -8,9 +11,17 @@ fn inner(value) {
 }
 
 fn main() {
-    let a = 4;
-    inner(a + 2);
-    return a;
+    let i = 0;
+    loop {
+        if 10 < i + 1 {
+            break;
+        }
+        let a = 4;
+        inner(a + 2);
+
+        i = i + 1;
+    }
+    return i;
 }
 
 // vim: syntax=rust commentstring=//\ %s

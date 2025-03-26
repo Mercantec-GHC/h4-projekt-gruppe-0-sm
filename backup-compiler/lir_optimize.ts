@@ -186,6 +186,13 @@ function eliminatePushPopShadowed(fn: Fn) {
         const toRemove = pop.ins.reg;
         const replacement = push.ins.reg;
         fn.lines.splice(popIdx, 1);
+        for (let i = pushIdx + 1; i <= popIdx - 1; ++i) {
+            const kill = fn.lines[i].ins;
+            if (kill.tag === "kill" && kill.reg === push.ins.reg) {
+                fn.lines.splice(i, 1);
+                break;
+            }
+        }
         fn.lines.splice(pushIdx, 1);
         replaceReg(fn, toRemove, replacement);
     }

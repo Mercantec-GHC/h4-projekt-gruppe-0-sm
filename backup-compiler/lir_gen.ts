@@ -204,10 +204,10 @@ class FnGen {
             case "eq":
             case "add":
             case "mul": {
-                const dst = this.reg();
                 const src = this.reg();
-                this.pushIns({ tag: "pop", reg: dst });
+                const dst = this.reg();
                 this.pushIns({ tag: "pop", reg: src });
+                this.pushIns({ tag: "pop", reg: dst });
                 this.pushIns({ tag: k.tag, dst, src });
                 this.pushIns({ tag: "push", reg: dst });
                 this.pushIns({ tag: "kill", reg: src });
@@ -242,7 +242,7 @@ class FnGen {
                 this.pushIns({
                     tag: "jnz_reg",
                     reg,
-                    target: this.blockLabels.get(k.falsy.id)!,
+                    target: this.blockLabels.get(k.truthy.id)!,
                 });
                 this.pushIns({ tag: "kill", reg });
                 this.pushIns({

@@ -81,19 +81,19 @@ export class ProgramStringifyer {
             case "pop":
                 return `pop %${ins.reg}`;
             case "load":
-                return `load %${ins.reg}, ${ins.offset}`;
+                return `load %${ins.reg}, [${ins.offset}]`;
             case "store_reg":
-                return `store_reg ${ins.offset}, %${ins.reg}`;
+                return `store_reg [${ins.offset}], %${ins.reg}`;
             case "store_imm":
-                return `store_val ${ins.offset}, ${ins.val}`;
+                return `store_val [${ins.offset}], ${ins.val}`;
             case "call_reg":
                 return `call_reg %${ins.reg}, ${ins.args}`;
             case "call_imm":
                 return `call_fn ${ins.fn.label}, ${ins.args}`;
             case "jmp":
-                return `jmp .b${ins.target}`;
+                return `jmp .L${ins.target}`;
             case "jnz_reg":
-                return `jmp %${ins.reg}, .b${ins.target}`;
+                return `jnz_reg %${ins.reg}, .L${ins.target}`;
             case "ret":
                 return "ret";
             case "lt":

@@ -163,14 +163,15 @@ export class AsmGen {
                 this.writeIns(`jmp .L${ins.target}`);
                 return;
             case "jnz_reg":
-                this.writeIns(`jnz ${r(ins.reg)}, .L${ins.target}`);
+                this.writeIns(`cmp ${r(ins.reg)}, 0`);
+                this.writeIns(`jne .L${ins.target}`);
                 return;
             case "ret":
                 this.writeIns(`jmp .exit`);
                 return;
             case "lt":
                 this.writeIns(`cmp ${r(ins.dst)}, ${r(ins.src)}`);
-                this.writeIns(`setle ${this.reg8(ins.dst)}`);
+                this.writeIns(`setl ${this.reg8(ins.dst)}`);
                 return;
             case "eq":
                 this.writeIns(`cmp ${r(ins.dst)}, ${r(ins.src)}`);
