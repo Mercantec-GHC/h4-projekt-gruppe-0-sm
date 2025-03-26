@@ -299,13 +299,13 @@ export class AsmGen {
         }
     }
 
-    private relative(offset: number): string {
-        return `[rbp${offset >= 0 ? `+${offset}` : `${offset}`}]`;
-    }
-
     private kill(reg: lir.Reg) {
         this.liveRegs.delete(reg);
         this.regSelect.delete(reg);
+    }
+
+    private relative(offset: number): string {
+        return `[rbp${offset >= 0 ? `+${offset}` : `${offset}`}]`;
     }
 
     private writeIns(ins: string) {

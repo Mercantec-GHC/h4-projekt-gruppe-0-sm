@@ -6,15 +6,28 @@ fn notice() -> int {}
 fn print_int(value: int) -> int {}
 
 
-
-
 #[c_function("println")]
 fn println(value: *str) -> int {}
+
+fn add(a: int, b: int) -> int { return a + b; }
+fn compute() -> int { return 0; }
+fn consume(value: int) -> int { return 0; }
 
 
 #[c_export("sbc_main")]
 fn main() -> int {
-    println("hello_world");
+    let i = 0;
+
+    loop {
+        if 10 < i + 1 {
+            break;
+        }
+    
+        println("hello\ world");
+        
+        i = i + 1;
+    }
+
     return 0;
 }
 

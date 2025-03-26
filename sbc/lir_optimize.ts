@@ -9,8 +9,8 @@ import {
 } from "./lir.ts";
 
 export function optimizeLir(program: Program) {
-    //console.log("=== BEFORE OPTIMIZATION ===");
-    //console.log(new ProgramStringifyer(program).stringify());
+    console.log("=== BEFORE OPTIMIZATION ===");
+    console.log(new ProgramStringifyer(program).stringify());
 
     let sizeBefore = program.fns
         .reduce((acc, fn) => acc + fn.lines.length, 0);
@@ -34,8 +34,8 @@ export function optimizeLir(program: Program) {
         sizeHistory.add(sizeBefore);
     }
 
-    //console.log("=== AFTER OPTIMIZATION ===");
-    //console.log(new ProgramStringifyer(program).stringify());
+    console.log("=== AFTER OPTIMIZATION ===");
+    console.log(new ProgramStringifyer(program).stringify());
 }
 
 function eliminatePushPop(fn: Fn) {
