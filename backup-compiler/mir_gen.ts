@@ -45,7 +45,7 @@ export class FnMirGen {
         this.returnLocal = this.local(fnTy.returnTy);
         for (const [i, param] of this.stmtKind.params.entries()) {
             const ty = this.ch.paramTy(this.stmt, i);
-            const local = this.local(ty, param);
+            const local = this.local(ty, param.ident);
             this.paramLocals.set(i, local);
         }
 
@@ -182,6 +182,7 @@ export class FnMirGen {
     }
 
     private lowerExpr(expr: ast.Expr) {
+        const ty = this.ch.exprTy(expr);
         const k = expr.kind;
         switch (k.tag) {
             case "error":
@@ -191,7 +192,6 @@ export class FnMirGen {
                 if (!re) {
                     throw new Error();
                 }
-                const ty = this.ch.exprTy(expr);
                 switch (re.tag) {
                     case "fn": {
                         this.pushStmt({
@@ -224,7 +224,6 @@ export class FnMirGen {
                 return;
             }
             case "int": {
-                const ty = this.ch.exprTy(expr);
                 this.pushStmt({
                     tag: "push",
                     val: { tag: "int", val: k.val },
@@ -232,11 +231,10 @@ export class FnMirGen {
                 });
                 return;
             }
-            case "string": {
-                const ty = this.ch.exprTy(expr);
+            case "str": {
                 this.pushStmt({
                     tag: "push",
-                    val: { tag: "string", val: k.val },
+                    val: { tag: "str", val: k.val },
                     ty,
                 });
                 return;

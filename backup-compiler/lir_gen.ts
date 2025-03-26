@@ -141,7 +141,7 @@ class FnGen {
                 return;
             case "push": {
                 switch (k.val.tag) {
-                    case "string": {
+                    case "str": {
                         const reg = this.reg();
                         const stringId = this.strings.intern(k.val.val);
                         this.pushIns({ tag: "mov_string", reg, stringId });

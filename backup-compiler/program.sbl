@@ -1,28 +1,22 @@
 
 #[c_function("notice")]
-fn notice() {}
+fn notice() -> int {}
 
 #[c_function("print_int")]
-fn print_int(value) {}
+fn print_int(value: int) -> int {}
 
-fn inner(value) {
-    print_int(value);
-    return 0;    
+
+
+
+#[c_function("println")]
+fn println(value: *str) -> int {}
+
+
+#[c_export("sbc_main")]
+fn main() -> int {
+    println("hello_world");
+    return 0;
 }
 
-fn main() {
-    let i = 0;
-    loop {
-        if 10 < i + 1 {
-            break;
-        }
-        let a = 4;
-        inner(a + 2);
-
-        i = i + 1;
-    }
-    return i;
-}
-
-// vim: syntax=rust commentstring=//\ %s
+// vim: syntax=slige commentstring=//\ %s
 

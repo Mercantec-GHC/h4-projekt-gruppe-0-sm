@@ -2,18 +2,24 @@ import * as ast from "./ast.ts";
 
 export type Ty =
     | { tag: "error" }
+    | { tag: "unknown" }
     | { tag: "int" }
-    | { tag: "string" }
+    | { tag: "str" }
+    | { tag: "ptr"; ty: Ty }
     | { tag: "fn"; stmt: ast.Stmt; params: Ty[]; returnTy: Ty };
 
 export function tyToString(ty: Ty): string {
     switch (ty.tag) {
         case "error":
             return `<error>`;
+        case "unknown":
+            return `<unknown>`;
         case "int":
             return `int`;
-        case "string":
-            return `string`;
+        case "str":
+            return `str`;
+        case "ptr":
+            return `*${tyToString(ty.ty)}`;
         case "fn": {
             const k = ty.stmt.kind as ast.StmtKind & { tag: "fn" };
             const params = ty.params

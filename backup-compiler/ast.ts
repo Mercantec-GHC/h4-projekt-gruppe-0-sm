@@ -14,7 +14,7 @@ export type Stmt = {
 export type StmtKind =
     | { tag: "error" }
     | { tag: "fn" } & FnStmt
-    | { tag: "let"; ident: string; expr?: Expr }
+    | { tag: "let" } & LetStmt
     | { tag: "loop"; body: Block }
     | { tag: "if"; expr: Expr; truthy: Block; falsy?: Block }
     | { tag: "return"; expr?: Expr }
@@ -25,8 +25,21 @@ export type StmtKind =
 export type FnStmt = {
     ident: string;
     attrs: Attr[];
-    params: string[];
+    params: Param[];
+    returnTy: Ty;
     body: Block;
+};
+
+export type LetStmt = {
+    ident: string;
+    ty?: Ty;
+    expr?: Expr;
+};
+
+export type Param = {
+    ident: string;
+    line: number;
+    ty: Ty;
 };
 
 export type Expr = {
@@ -39,11 +52,22 @@ export type ExprKind =
     | { tag: "error" }
     | { tag: "ident"; ident: string }
     | { tag: "int"; val: number }
-    | { tag: "string"; val: string }
+    | { tag: "str"; val: string }
     | { tag: "call"; expr: Expr; args: Expr[] }
     | { tag: "binary"; op: BinaryOp; left: Expr; right: Expr };
 
 export type BinaryOp = "<" | "==" | "+" | "*";
+
+export type Ty = {
+    id: number;
+    line: number;
+    kind: TyKind;
+};
+
+export type TyKind =
+    | { tag: "error" }
+    | { tag: "ident"; ident: string }
+    | { tag: "ptr"; ty: Ty };
 
 export type Attr = {
     ident: string;

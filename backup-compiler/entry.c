@@ -1,8 +1,8 @@
 #include <stdint.h>
 
-extern int32_t sbc__main(void);
+extern int32_t sbc_main(void);
 
 int main(void)
 {
-    sbc__main();
+    sbc_main();
 }

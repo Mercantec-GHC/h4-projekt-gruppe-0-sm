@@ -1,3 +1,4 @@
+import { AttrView } from "./attr.ts";
 import * as lir from "./lir.ts";
 
 export class AsmGen {
@@ -34,40 +35,57 @@ export class AsmGen {
     }
 
     private generateFn(fn: lir.Fn) {
-        const query = this.queryCFunction(fn);
-        if (query.found) {
-            const { label, args } = query;
+        const cFunctionQuery = this.queryCFunction(fn);
+        if (cFunctionQuery.found) {
+            const { label, args } = cFunctionQuery;
             this.generateCFunctionBody(fn, label, args);
             return;
         }
 
         this.generateFnBody(fn);
+
+        const cExportQuery = this.queryCExport(fn);
+        if (cExportQuery.found) {
+            const { label } = cExportQuery;
+            this.generateCExporter(fn, label);
+        }
     }
 
     private queryCFunction(
         fn: lir.Fn,
     ): { found: false } | { found: true; label: string; args: number } {
-        const stmtKind = fn.mir.stmt.kind;
-        if (stmtKind.tag !== "fn") {
-            throw new Error();
-        }
-        if (stmtKind.attrs.at(0)?.ident === "c_function") {
-            const arg = stmtKind.attrs.at(0)!.args.at(0);
-            if (!arg || arg.kind.tag !== "string") {
+        const attrs = AttrView.fromStmt(fn.mir.stmt);
+        if (attrs.has("c_function")) {
+            const attr = attrs.get("c_function");
+            if (attr.args !== 1 || !attr.isStr(0)) {
                 throw new Error("incorrect args for attribute");
             }
             return {
                 found: true,
-                label: arg.kind.val,
+                label: attr.strVal(0),
                 args: fn.mir.paramLocals.size,
             };
         }
         return { found: false };
     }
 
+    private queryCExport(
+        fn: lir.Fn,
+    ): { found: false } | { found: true; label: string } {
+        const attrs = AttrView.fromStmt(fn.mir.stmt);
+        if (attrs.has("c_export")) {
+            const attr = attrs.get("c_export");
+            if (attr.args !== 1 || !attr.isStr(0)) {
+                throw new Error("incorrect args for attribute");
+            }
+            const label = attr.strVal(0);
+            return { found: true, label };
+        }
+        return { found: false };
+    }
+
     private generateCFunctionBody(fn: lir.Fn, label: string, args: number) {
         this.writeln(`extern ${label}`);
-        this.writeln(`global ${fn.label}`);
         this.writeln(`${fn.label}:`);
 
         this.writeIns(`push rbp`);
@@ -90,7 +108,6 @@ export class AsmGen {
     }
 
     private generateFnBody(fn: lir.Fn) {
-        this.writeln(`global ${fn.label}:`);
         this.writeln(`${fn.label}:`);
         this.writeIns(`push rbp`);
         this.writeIns(`mov rbp, rsp`);
@@ -107,6 +124,28 @@ export class AsmGen {
         this.writeln(`.exit:`);
         const returnLocalOffset = fn.localOffsets.get(fn.mir.returnLocal.id)!;
         this.writeIns(`mov rax, QWORD ${this.relative(returnLocalOffset)}`);
+        this.writeIns(`mov rsp, rbp`);
+        this.writeIns(`pop rbp`);
+        this.writeIns(`ret`);
+    }
+
+    private generateCExporter(fn: lir.Fn, label: string) {
+        this.writeln(`global ${label}`);
+        this.writeln(`${label}:`);
+
+        this.writeIns(`push rbp`);
+        this.writeIns(`mov rbp, rsp`);
+        this.writeIns(`sub rsp, 8`);
+
+        const args = fn.mir.paramLocals.size;
+
+        const argRegs = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"];
+        for (const reg of argRegs.slice(0, args)) {
+            this.writeIns(`push ${reg}`);
+        }
+
+        this.writeIns(`call ${fn.label}`);
+
         this.writeIns(`mov rsp, rbp`);
         this.writeIns(`pop rbp`);
         this.writeIns(`ret`);

@@ -58,7 +58,7 @@ export type TerKind =
 
 export type Val =
     | { tag: "int"; val: number }
-    | { tag: "string"; val: string }
+    | { tag: "str"; val: string }
     | { tag: "fn"; stmt: ast.Stmt };
 
 export class FnStringifyer {
@@ -129,7 +129,7 @@ export class FnStringifyer {
 
     private val(val: Val): string {
         switch (val.tag) {
-            case "string":
+            case "str":
                 return JSON.stringify(val.val);
             case "int":
                 return `${val.val}`;

@@ -4,14 +4,18 @@ import {
     Block,
     Expr,
     ExprKind,
+    Param,
     Stmt,
     StmtKind,
+    Ty as AstTy,
+    TyKind,
 } from "./ast.ts";
 import { Ty, tyToString } from "./ty.ts";
 
 export class Checker {
     private stmtTys = new Map<number, Ty>();
     private exprTys = new Map<number, Ty>();
+    private tyTys = new Map<number, Ty>();
 
     public errorOccured = false;
 
@@ -27,8 +31,9 @@ export class Checker {
         if (this.stmtTys.has(stmt.id)) {
             return this.stmtTys.get(stmt.id)!;
         }
-        const params = k.params.map((_): Ty => ({ tag: "int" }));
-        const returnTy: Ty = { tag: "int" };
+        const params = k.params
+            .map((param): Ty => this.tyTy(param.ty));
+        const returnTy: Ty = this.tyTy(k.returnTy);
         const ty: Ty = { tag: "fn", stmt, params, returnTy };
         this.stmtTys.set(stmt.id, ty);
         return ty;
@@ -50,7 +55,30 @@ export class Checker {
         if (this.stmtTys.has(stmt.id)) {
             return this.stmtTys.get(stmt.id)!;
         }
-        const ty: Ty = k.expr ? this.exprTy(k.expr) : { tag: "int" };
+        const declTy = k.ty && this.tyTy(k.ty);
+        const exprTy = k.expr && this.exprTy(k.expr);
+        const tyRes = declTy && exprTy
+            ? this.resolveTys(declTy, exprTy)
+            : declTy
+            ? { ok: true, ty: declTy } as const
+            : exprTy
+            ? { ok: true, ty: exprTy } as const
+            : { ok: true, ty: { tag: "unknown" } as Ty } as const;
+
+        if (!tyRes.ok) {
+            this.report(tyRes.msg, stmt.line);
+            const ty: Ty = { tag: "error" };
+            this.stmtTys.set(stmt.id, ty);
+            return ty;
+        }
+        const ty = tyRes.ty;
+        if (ty.tag === "unknown") {
+            this.report("could not infer type", stmt.line);
+            const ty: Ty = { tag: "error" };
+            this.stmtTys.set(stmt.id, ty);
+            return ty;
+        }
+
         this.stmtTys.set(stmt.id, ty);
         return ty;
     }
@@ -83,8 +111,8 @@ export class Checker {
                 }
                 case "int":
                     return { tag: "int" };
-                case "string":
-                    return { tag: "string" };
+                case "str":
+                    return { tag: "ptr", ty: { tag: "str" } };
                 case "call": {
                     const callee = this.exprTy(k.expr);
                     if (callee.tag !== "fn") {
@@ -98,13 +126,15 @@ export class Checker {
                         );
                         return { tag: "error" };
                     }
-                    const args = k.args.map((arg) => this.exprTy(arg));
+
+                    const argTys = k.args
+                        .map((arg) => this.exprTy(arg));
                     for (const [i, param] of callee.params.entries()) {
-                        if (!this.assignable(args[i], param)) {
+                        console.log({ arg: argTys[i], param });
+                        const tyRes = this.resolveTys(argTys[i], param);
+                        if (!tyRes.ok) {
                             this.report(
-                                `argument mismatch, type '${
-                                    tyToString(args[i])
-                                }' not assignable to '${tyToString(param)}'`,
+                                `argument mismatch, ${tyRes.msg}`,
                                 expr.line,
                             );
                         }
@@ -147,6 +177,40 @@ export class Checker {
         return ty;
     }
 
+    public tyTy(astTy: AstTy): Ty {
+        if (this.tyTys.has(astTy.id)) {
+            return this.tyTys.get(astTy.id)!;
+        }
+        const ty = ((): Ty => {
+            const k = astTy.kind;
+            switch (k.tag) {
+                case "error":
+                    return { tag: "error" };
+                case "ident": {
+                    switch (k.ident) {
+                        case "int":
+                            return { tag: "int" };
+                        case "str":
+                            return { tag: "str" };
+                        default:
+                            this.report(
+                                `unknown type '${k.ident}'`,
+                                astTy.line,
+                            );
+                            return { tag: "error" };
+                    }
+                }
+                case "ptr": {
+                    const ty = this.tyTy(k.ty);
+                    return { tag: "ptr", ty };
+                }
+            }
+            const _: never = k;
+        })();
+        this.tyTys.set(astTy.id, ty);
+        return ty;
+    }
+
     private assignable(a: Ty, b: Ty): boolean {
         if (a.tag !== b.tag) {
             return false;
@@ -157,16 +221,52 @@ export class Checker {
         return true;
     }
 
+    private resolveTys(a: Ty, b: Ty):
+        | { ok: true; ty: Ty }
+        | { ok: false; msg: string } {
+        const ok = (ty: Ty) => ({ ok: true, ty } as const);
+        const both = (tag: Ty["tag"]): boolean =>
+            a.tag === tag && b.tag === tag;
+
+        if (a.tag === "error" || b.tag === "error") {
+            return ok(a);
+        } else if (both("int")) {
+            return ok(a);
+        } else if (both("str")) {
+            return ok(a);
+        } else if (
+            a.tag === "ptr" && b.tag === "ptr"
+        ) {
+            const tyRes = this.resolveTys(a.ty, b.ty);
+            if (!tyRes.ok) {
+                return tyRes;
+            }
+            return ok(a);
+        } else if (
+            a.tag === "fn" && b.tag === "fn" &&
+            a.stmt.id !== b.stmt.id
+        ) {
+            return ok(a);
+        } else {
+            return {
+                ok: false,
+                msg: `type '${tyToString(a)}' is not assignable to '${
+                    tyToString(b)
+                }'`,
+            };
+        }
+    }
+
     private report(msg: string, line: number) {
         this.errorOccured = true;
-        //console.error(`parser: ${msg} on line ${line}`);
-        throw new Error(`parser: ${msg} on line ${line}`);
+        //console.error(`Checker: ${msg} on line ${line}`);
+        throw new Error(`Checker: ${msg} on line ${line}`);
     }
 }
 
 export type Resolve =
     | { tag: "fn"; stmt: Stmt }
-    | { tag: "param"; stmt: Stmt; i: number }
+    | { tag: "param"; stmt: Stmt; param: Param; i: number }
     | { tag: "let"; stmt: Stmt }
     | { tag: "loop"; stmt: Stmt };
 
@@ -298,7 +398,12 @@ export class Resolver {
                 throw new Error();
             }
             for (const [i, param] of k.params.entries()) {
-                this.syms.defineVal(param, { tag: "param", stmt: fn, i });
+                this.syms.defineVal(param.ident, {
+                    tag: "param",
+                    stmt: fn,
+                    param,
+                    i,
+                });
             }
             this.resolveBlock(k.body);
 
@@ -375,7 +480,7 @@ export class Resolver {
             }
             case "int":
                 return;
-            case "string":
+            case "str":
                 return;
             case "call":
                 this.resolveExpr(k.expr);
@@ -393,8 +498,8 @@ export class Resolver {
 
     private report(msg: string, line: number) {
         this.errorOccured = true;
-        //console.error(`parser: ${msg} on line ${line}`);
-        throw new Error(`parser: ${msg} on line ${line}`);
+        //console.error(`Resolver: ${msg} on line ${line}`);
+        throw new Error(`Resolver: ${msg} on line ${line}`);
     }
 }
 
@@ -405,6 +510,7 @@ export class Parser {
     private blockIds = 0;
     private stmtIds = 0;
     private exprIds = 0;
+    private tyIds = 0;
 
     private last: Tok;
     private eaten?: Tok;
@@ -534,13 +640,13 @@ export class Parser {
             this.report("expected '('");
             return this.stmt({ tag: "error" }, line);
         }
-        const params: string[] = [];
+        const params: Param[] = [];
         if (!this.done() && !this.test(")")) {
-            if (!this.eat("ident")) {
-                this.report("expected 'ident'");
+            const paramRes = this.parseParam();
+            if (!paramRes.ok) {
                 return this.stmt({ tag: "error" }, line);
             }
-            params.push(this.eaten!.identVal!);
+            params.push(paramRes.param);
             while (!this.done() && !this.test(")")) {
                 if (!this.eat(",")) {
                     this.report("expected ','");
@@ -549,23 +655,48 @@ export class Parser {
                 if (this.test(")")) {
                     break;
                 }
-                if (!this.eat("ident")) {
-                    this.report("expected 'ident'");
+                const paramRes = this.parseParam();
+                if (!paramRes.ok) {
                     return this.stmt({ tag: "error" }, line);
                 }
-                params.push(this.eaten!.identVal!);
+                params.push(paramRes.param);
             }
         }
         if (!this.eat(")")) {
             this.report("expected ')'");
             return this.stmt({ tag: "error" }, line);
         }
+        if (!this.eat("->")) {
+            this.report("expected '->'");
+            return this.stmt({ tag: "error" }, line);
+        }
+        const returnTy = this.parseTy();
         if (!this.test("{")) {
             this.report("expected block");
             return this.stmt({ tag: "error" }, line);
         }
         const body = this.parseBlock();
-        return this.stmt({ tag: "fn", ident, attrs, params, body }, line);
+        return this.stmt(
+            { tag: "fn", ident, attrs, params, returnTy, body },
+            line,
+        );
+    }
+
+    private parseParam():
+        | { ok: true; param: Param }
+        | { ok: false } {
+        const line = this.curr().line;
+        if (!this.eat("ident")) {
+            this.report("expected 'ident'");
+            return { ok: false };
+        }
+        const ident = this.eaten!.identVal!;
+        if (!this.eat(":")) {
+            this.report("expected ':'");
+            return { ok: false };
+        }
+        const ty = this.parseTy();
+        return { ok: true, param: { ident, line, ty } };
     }
 
     private parseLetStmt(): Stmt {
@@ -722,14 +853,29 @@ export class Parser {
                 { tag: "int", val: this.eaten!.intVal! },
                 this.eaten!.line,
             );
-        } else if (this.eat("string")) {
+        } else if (this.eat("str")) {
             return this.expr(
-                { tag: "string", val: this.eaten?.stringVal! },
+                { tag: "str", val: this.eaten?.stringVal! },
                 this.eaten!.line,
             );
         } else {
-            this.report("expected expr");
+            this.report("expected expression");
             return this.expr({ tag: "error" }, this.last!.line);
+        }
+    }
+
+    private parseTy(): AstTy {
+        if (this.eat("ident")) {
+            return this.ty(
+                { tag: "ident", ident: this.eaten!.identVal! },
+                this.eaten!.line,
+            );
+        } else if (this.eat("*")) {
+            const ty = this.parseTy();
+            return this.ty({ tag: "ptr", ty }, this.eaten!.line);
+        } else {
+            this.report("expected type");
+            return this.ty({ tag: "error" }, this.last!.line);
         }
     }
 
@@ -740,6 +886,11 @@ export class Parser {
 
     private expr(kind: ExprKind, line: number): Expr {
         const id = this.exprIds++;
+        return { id, line, kind };
+    }
+
+    private ty(kind: TyKind, line: number): AstTy {
+        const id = this.tyIds++;
         return { id, line, kind };
     }
 
@@ -769,8 +920,8 @@ export class Parser {
 
     private report(msg: string, line = this.last.line) {
         this.errorOccured = true;
-        //console.error(`parser: ${msg} on line ${line}`);
-        throw new Error(`parser: ${msg} on line ${line}`);
+        //console.error(`Parser: ${msg} on line ${line}`);
+        throw new Error(`Parser: ${msg} on line ${line}`);
     }
 }
 
@@ -783,7 +934,7 @@ export type Tok = {
 };
 
 export function lex(text: string): Tok[] {
-    const ops = "(){}[]<>+*=,;#\n";
+    const ops = "(){}[]<>+-*=:,;#\n";
     const kws = ["let", "fn", "return", "if", "else", "loop", "break"];
 
     return ops
@@ -792,6 +943,7 @@ export function lex(text: string): Tok[] {
             text
                 .replaceAll(/\/\/.*?$/mg, "")
                 .replaceAll(op, ` ${op} `)
+                .replaceAll(" -  > ", " -> ")
                 .replaceAll(" =  = ", " == ")
                 .replaceAll(/\\ /g, "\\SPACE"), text)
         .split(/[ \t\r]/)
@@ -814,7 +966,7 @@ export function lex(text: string): Tok[] {
                     : { type: "ident", line, identVal: val };
             } else if (/^".*?"$/.test(val)) {
                 return {
-                    type: "string",
+                    type: "str",
                     line,
                     stringVal: val
                         .slice(1, val.length - 1)
