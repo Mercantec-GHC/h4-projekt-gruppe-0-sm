@@ -108,6 +108,10 @@ export class AsmGen {
         this.writeIns(`push rbp`);
         this.writeIns(`mov rbp, rsp`);
         this.writeIns(`sub rsp, 8`);
+
+        // By doing this, we avoid having to maintain 16-byte stack alignment.
+        this.writeIns(`and rsp, 0xFFFFFFFFFFFFFFF0`);
+
         for (let i = 0; i < args; ++i) {
             this.writeIns(`mov rax, ${this.relative((i + 2) * 8)}`);
             this.writeIns(`push rax`);
@@ -130,7 +134,6 @@ export class AsmGen {
 
         this.writeIns(`push rbp`);
         this.writeIns(`mov rbp, rsp`);
-        this.writeIns(`sub rsp, 8`);
 
         const args = fn.mir.paramLocals.size;
 
@@ -168,7 +171,7 @@ export class AsmGen {
         this.writeIns(`push rbp`);
         this.writeIns(`mov rbp, rsp`);
 
-        this.writeIns(`sub rsp, ${this.layout.frameSize - 8}`);
+        this.writeIns(`sub rsp, ${this.layout.frameSize}`);
         this.writeIns(`jmp .L${fn.mir.entry.id}`);
 
         for (const line of fn.lines.slice(bodyIdx)) {
@@ -404,6 +407,8 @@ class StackAllocator {
     public finalize(): StackLayout {
         const regOffsets = new Map<lir.Reg, number>();
 
+        // Last param is at [rbp+8]
+        // See: https://eli.thegreenplace.net/2011/09/06/stack-frame-layout-on-x86-64
         let currentOffset = 8;
 
         for (const [reg, size] of [...this.paramRegs].toReversed()) {
@@ -412,26 +417,16 @@ class StackAllocator {
             regOffsets.set(reg, currentOffset);
         }
 
-        // Start at 8 because rbp is pushed, and
-        // therefore the *first value*, meaning
-        // the return address is at stack[top - 1].
-        currentOffset = 8;
+        // First local is at [rbp-8]
+        // See above.
+        currentOffset = -8;
         let frameSize = 0;
-
-        // return address
-        currentOffset -= 8;
-        // caller rbp
-        currentOffset -= 8;
-        frameSize += 8;
 
         for (const [reg, size] of this.localRegs) {
             regOffsets.set(reg, currentOffset);
             currentOffset -= align8(size);
             frameSize += align8(size);
         }
-
-        // frameSize - 8 is safe because frameSize is always >= 8.
-        frameSize = align(frameSize - 8, 16);
 
         return new StackLayout(frameSize, regOffsets);
     }
