@@ -1,0 +1,24 @@
+
+#[c_export("sbc_calculate_total_price")]
+fn calculate_total_price(item_amount: int, items: *(), prices: *()) -> int {
+    let total_dkk_cent = 0;
+    
+    let i = 0;
+    while i < item_amount {
+        let price = prices_get_price(prices, i);
+        let amount = items_get_amount(items, i);
+
+        total_dkk_cent = total_dkk_cent + price * amount;
+
+        i = i + 1;
+    }
+
+    return total_dkk_cent;
+}
+
+#[c_function("sbcs_prices_get_price")]
+fn prices_get_price(items: *(), i: int) -> int {}
+#[c_function("sbcs_items_get_amount")]
+fn items_get_amount(items: *(), i: int) -> int {}
+
+// vim: syntax=slige 

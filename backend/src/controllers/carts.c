@@ -3,6 +3,10 @@
 #include "controllers.h"
 #include <stdio.h>
 
+extern int64_t sbc_calculate_total_price(int64_t item_amount,
+    const CartsItemVec* items,
+    const ProductPriceVec* prices);
+
 void route_post_carts_purchase(HttpCtx* ctx)
 {
     Cx* cx = http_ctx_user_ctx(ctx);
@@ -27,9 +31,7 @@ void route_post_carts_purchase(HttpCtx* ctx)
 
     size_t item_amount = req.items.size;
 
-    // accumulate product_prices and total
-
-    int64_t total_dkk_cent = 0;
+    // accumulate product_prices
 
     ProductPriceVec prices;
     product_price_vec_construct(&prices);
@@ -42,9 +44,11 @@ void route_post_carts_purchase(HttpCtx* ctx)
             RESPOND_SERVER_ERROR(ctx);
             goto l0_return;
         }
-        total_dkk_cent += price.price_dkk_cent * req.items.data[i].amount;
         product_price_vec_push(&prices, price);
     }
+
+    int64_t total_dkk_cent
+        = sbc_calculate_total_price((int64_t)item_amount, &req.items, &prices);
 
     // check and update user balance
 
@@ -104,4 +108,13 @@ l0_return:
     product_price_vec_destroy(&prices);
     user_destroy(&user);
     carts_purchase_req_destroy(&req);
+}
+
+int64_t sbcs_prices_get_price(const ProductPriceVec* prices, int64_t i)
+{
+    return prices->data[i].price_dkk_cent;
+}
+int64_t sbcs_items_get_amount(const CartsItemVec* items, int64_t i)
+{
+    return items->data[i].amount;
 }

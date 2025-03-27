@@ -50,6 +50,8 @@ HEADERS = $(shell find src/ -name *.h)
 C_FILES = $(shell find src/ -name *.c)
 O_FILES = $(patsubst src/%.c,build/%.o,$(C_FILES))
 
+O_FILES += build/controllers/carts.sbl.o
+
 CC = gcc
 
 TARGET=server
@@ -62,6 +64,13 @@ build/$(TARGET): $(O_FILES)
 build/%.o: src/%.c $(HEADERS)
 	@mkdir -p $(dir $@)
 	$(CC) $< -c -o $@ $(C_FLAGS) $(OPTIMIZATION) $(F_FLAGS)
+
+build/%.sbl.o: build/%.sbl.nasm
+	nasm -f elf64 $< -o $@
+
+build/%.sbl.nasm: src/%.sbl
+	@mkdir -p $(dir $@)
+	deno run --allow-read --allow-write ../sbc/main.ts $< $@
 
 clean:
 	rm -rf build/
