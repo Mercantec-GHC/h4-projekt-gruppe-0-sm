@@ -152,4 +152,9 @@ class MockServer implements Server {
   Image productImage(int productId) {
     return Image.asset("assets/placeholder.png");
   }
+
+  @override
+  Future<Result<Coordinate, String>> productCoords(int id) async {
+    return Ok(Coordinate(x: 200, y: 100));
+  }
 }

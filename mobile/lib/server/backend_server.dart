@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:mobile/models/cart_item.dart';
+import 'package:mobile/models/coordinate.dart';
 import 'package:mobile/models/product.dart';
 import 'package:mobile/models/receipt.dart';
 import 'package:mobile/models/user.dart';
@@ -231,5 +232,27 @@ class BackendServer implements Server {
   @override
   Image productImage(int productId) {
     return Image.network("$_apiUrl/products/image.png?product_id=$productId");
+  }
+
+  @override
+  Future<Result<Coordinate, String>> productCoords(int id) async {
+    final res = await _getJson(
+      path: "/products/coords?product_id=$id",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+    );
+    return res.flatMap((body) {
+      if (body["ok"]) {
+        if (body["found"]) {
+          return Ok(
+              (Coordinate.fromJson(body["coords"] as Map<String, dynamic>)));
+        }
+        return const Err("Product has no coordinate");
+      } else {
+        return Err(body["msg"]);
+      }
+    });
   }
 }
