@@ -17,6 +17,8 @@ async function main() {
     const re = new Resolver(ast).resolve();
     const ch = new Checker(re);
 
+    const optimize = true;
+
     const mirGen = new MirGen(re, ch);
 
     // console.log("=== MIR ===");
@@ -28,11 +30,15 @@ async function main() {
     //     console.log(new FnStringifyer(fnMir).stringify());
     // }
 
-    const lir = new LirGen(ast, mirGen).generate();
+    const lir = new LirGen(ast, mirGen, {
+        optimize,
+    }).generate();
     // console.log("=== LIR ===");
     // console.log(new ProgramStringifyer(lir).stringify());
 
-    optimizeLir(lir);
+    if (optimize) {
+        optimizeLir(lir);
+    }
 
     const asm = new AsmGen(lir).generate();
     // console.log("=== ASM ===");

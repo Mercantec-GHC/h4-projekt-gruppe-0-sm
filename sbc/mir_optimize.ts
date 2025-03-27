@@ -2,9 +2,9 @@ import * as ast from "./ast.ts";
 import { Block, Fn, FnStringifyer } from "./mir.ts";
 
 export function optimizeMirFn(fn: Fn) {
-    console.log(`=== OPTIMIZING ${(fn.stmt.kind as ast.FnStmt).ident} ===`);
-    console.log("=== BEFORE OPTIMIZATION ===");
-    console.log(new FnStringifyer(fn).stringify());
+    // console.log(`=== OPTIMIZING ${(fn.stmt.kind as ast.FnStmt).ident} ===`);
+    // console.log("=== BEFORE OPTIMIZATION ===");
+    // console.log(new FnStringifyer(fn).stringify());
 
     const blockSize = fn.blocks
         .map((block) => block.stmts.length)
@@ -27,8 +27,8 @@ export function optimizeMirFn(fn: Fn) {
         sizeHistory.add(sizeBefore);
     }
 
-    console.log("=== AFTER OPTIMIZATION ===");
-    console.log(new FnStringifyer(fn).stringify());
+    // console.log("=== AFTER OPTIMIZATION ===");
+    // console.log(new FnStringifyer(fn).stringify());
 }
 
 function fnSize(fn: Fn, blockSize: number): number {

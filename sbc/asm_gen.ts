@@ -168,7 +168,7 @@ export class AsmGen {
         this.writeIns(`push rbp`);
         this.writeIns(`mov rbp, rsp`);
 
-        this.writeIns(`sub rsp, ${this.layout.frameSize}`);
+        this.writeIns(`sub rsp, ${this.layout.frameSize - 8}`);
         this.writeIns(`jmp .L${fn.mir.entry.id}`);
 
         for (const line of fn.lines.slice(bodyIdx)) {
@@ -422,6 +422,7 @@ class StackAllocator {
         currentOffset -= 8;
         // caller rbp
         currentOffset -= 8;
+        frameSize += 8;
 
         for (const [reg, size] of this.localRegs) {
             regOffsets.set(reg, currentOffset);

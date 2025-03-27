@@ -12,6 +12,10 @@ import * as ast from "./ast.ts";
 import * as mir from "./mir.ts";
 import { optimizeMirFn } from "./mir_optimize.ts";
 
+export type LirGenOpts = {
+    optimize?: boolean;
+};
+
 export class LirGen {
     private strings = new StringIntern();
 
@@ -22,6 +26,7 @@ export class LirGen {
     public constructor(
         private ast: ast.Stmt[],
         private mirGen: MirGen,
+        private opts: LirGenOpts = {},
     ) {}
 
     public generate(): Program {
@@ -30,7 +35,9 @@ export class LirGen {
                 throw new Error("only functions can compile top level");
             }
             const mir = this.mirGen.fnMir(stmt, stmt.kind);
-            optimizeMirFn(mir);
+            if (this.opts.optimize !== false) {
+                optimizeMirFn(mir);
+            }
             const id = this.fnIds++;
             const label = `sbc__${stmt.kind.ident}`;
             const fn: Fn = {
@@ -189,6 +196,16 @@ class FnGen {
                 this.pushIns({ tag: "pop", reg });
                 this.pushIns({ tag: "call_reg", reg, args: k.args });
                 this.pushIns({ tag: "kill", reg });
+
+                const rval = this.reg();
+                this.pushIns({ tag: "pop", reg: rval });
+                for (let i = 0; i < k.args; ++i) {
+                    const reg = this.reg();
+                    this.pushIns({ tag: "pop", reg });
+                    this.pushIns({ tag: "kill", reg });
+                }
+                this.pushIns({ tag: "push", reg: rval });
+                this.pushIns({ tag: "kill", reg: rval });
                 return;
             }
             case "lt":

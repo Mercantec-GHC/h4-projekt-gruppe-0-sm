@@ -110,15 +110,18 @@ export class FnMirGen {
             }
             case "while": {
                 const entry = this.currentBlock;
+
                 const cond = this.block();
-                const loop = this.block();
-                const exit = this.block();
+                this.currentBlock = cond;
+                this.lowerExpr(k.expr);
+                const condExit = this.currentBlock;
 
                 entry.ter = Ter({ tag: "goto", target: cond });
 
-                this.currentBlock = cond;
-                this.lowerExpr(k.expr);
-                this.currentBlock.ter = Ter({
+                const loop = this.block();
+                const exit = this.block();
+
+                condExit.ter = Ter({
                     tag: "if",
                     truthy: loop,
                     falsy: exit,
@@ -128,7 +131,8 @@ export class FnMirGen {
 
                 this.currentBlock = loop;
                 this.lowerBlock(k.body);
-                this.currentBlock.ter = Ter({ tag: "goto", target: cond });
+                const loopExit = this.currentBlock;
+                loopExit.ter = Ter({ tag: "goto", target: cond });
 
                 this.currentBlock = exit;
                 return;
@@ -136,23 +140,31 @@ export class FnMirGen {
             case "if": {
                 this.lowerExpr(k.expr);
                 const entry = this.currentBlock;
-                const exit = this.block();
-                const truthy = this.block();
 
+                const truthy = this.block();
                 this.currentBlock = truthy;
                 this.lowerBlock(k.truthy);
-                this.currentBlock.ter = Ter({ tag: "goto", target: exit });
+                const truthyExit = this.currentBlock;
 
-                let falsy = exit;
                 if (k.falsy) {
-                    falsy = this.block();
+                    const falsy = this.block();
                     this.currentBlock = falsy;
                     this.lowerBlock(k.falsy);
-                    this.currentBlock.ter = Ter({ tag: "goto", target: exit });
-                }
+                    const falsyExit = this.currentBlock;
 
-                entry.ter = Ter({ tag: "if", truthy, falsy });
-                this.currentBlock = exit;
+                    const exit = this.block();
+                    truthyExit.ter = Ter({ tag: "goto", target: exit });
+                    falsyExit.ter = Ter({ tag: "goto", target: exit });
+
+                    entry.ter = Ter({ tag: "if", truthy, falsy });
+                    this.currentBlock = exit;
+                } else {
+                    const exit = this.block();
+                    truthyExit.ter = Ter({ tag: "goto", target: exit });
+
+                    entry.ter = Ter({ tag: "if", truthy, falsy: exit });
+                    this.currentBlock = exit;
+                }
                 return;
             }
             case "return": {
