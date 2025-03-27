@@ -94,8 +94,8 @@ export class FnMirGen {
             }
             case "loop": {
                 const entry = this.currentBlock;
-                const exit = this.block();
                 const loop = this.block();
+                const exit = this.block();
 
                 entry.ter = Ter({ tag: "goto", target: loop });
 
@@ -104,6 +104,31 @@ export class FnMirGen {
                 this.currentBlock = loop;
                 this.lowerBlock(k.body);
                 this.currentBlock.ter = Ter({ tag: "goto", target: loop });
+
+                this.currentBlock = exit;
+                return;
+            }
+            case "while": {
+                const entry = this.currentBlock;
+                const cond = this.block();
+                const loop = this.block();
+                const exit = this.block();
+
+                entry.ter = Ter({ tag: "goto", target: cond });
+
+                this.currentBlock = cond;
+                this.lowerExpr(k.expr);
+                this.currentBlock.ter = Ter({
+                    tag: "if",
+                    truthy: loop,
+                    falsy: exit,
+                });
+
+                this.loopExitBlocks.set(stmt.id, exit);
+
+                this.currentBlock = loop;
+                this.lowerBlock(k.body);
+                this.currentBlock.ter = Ter({ tag: "goto", target: cond });
 
                 this.currentBlock = exit;
                 return;
@@ -250,21 +275,49 @@ export class FnMirGen {
                 });
                 return;
             }
+            case "not":
+            case "negate":
+                throw new Error("todo");
             case "binary": {
                 this.lowerExpr(k.left);
                 this.lowerExpr(k.right);
                 switch (k.op) {
+                    case "or":
+                    case "xor":
+                    case "and":
+                        throw new Error("todo");
                     case "<":
                         this.pushStmt({ tag: "lt" });
+                        return;
+                    case ">":
+                        this.pushStmt({ tag: "gt" });
+                        return;
+                    case "<=":
+                        this.pushStmt({ tag: "le" });
+                        return;
+                    case ">=":
+                        this.pushStmt({ tag: "ge" });
                         return;
                     case "==":
                         this.pushStmt({ tag: "eq" });
                         return;
+                    case "!=":
+                        this.pushStmt({ tag: "ne" });
+                        return;
                     case "+":
                         this.pushStmt({ tag: "add" });
                         return;
+                    case "-":
+                        this.pushStmt({ tag: "sub" });
+                        return;
                     case "*":
                         this.pushStmt({ tag: "mul" });
+                        return;
+                    case "/":
+                        this.pushStmt({ tag: "div" });
+                        return;
+                    case "%":
+                        this.pushStmt({ tag: "mod" });
                         return;
                 }
                 const __: never = k.op;

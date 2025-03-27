@@ -37,8 +37,21 @@ export type Ins =
     | { tag: "jmp"; target: Label }
     | { tag: "jnz_reg"; reg: Reg; target: Label }
     | { tag: "ret" }
-    | { tag: "lt" | "eq" | "add" | "mul"; dst: Reg; src: Reg }
+    | { tag: BinaryOp; dst: Reg; src: Reg }
     | { tag: "kill"; reg: Reg };
+
+export type BinaryOp =
+    | "lt"
+    | "gt"
+    | "le"
+    | "ge"
+    | "eq"
+    | "ne"
+    | "add"
+    | "sub"
+    | "mul"
+    | "div"
+    | "mod";
 
 export type Reg = number;
 export type Label = number;
@@ -103,9 +116,16 @@ export class ProgramStringifyer {
             case "ret":
                 return "ret";
             case "lt":
+            case "gt":
+            case "le":
+            case "ge":
             case "eq":
+            case "ne":
             case "add":
+            case "sub":
+            case "div":
             case "mul":
+            case "mod":
                 return `${ins.tag} %${ins.dst}, %${ins.src}`;
             case "kill":
                 return `kill %${ins.reg}`;

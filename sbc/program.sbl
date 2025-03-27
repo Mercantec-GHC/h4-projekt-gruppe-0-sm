@@ -1,29 +1,16 @@
 
-#[c_function("notice")]
-fn notice() -> int {}
-
-#[c_function("print_int")]
-fn print_int(value: int) -> int {}
-
-
 #[c_function("println")]
 fn println(value: *str) -> int {}
-
-fn add(a: int, b: int) -> int { return a + b; }
-fn compute() -> int { return 0; }
-fn consume(value: int) -> int { return 0; }
-
+#[c_function("print_int")]
+fn print_int(value: int) -> int {}
 
 #[c_export("sbc_main")]
 fn main() -> int {
     let i = 0;
 
-    loop {
-        if 10 < i + 1 {
-            break;
-        }
+    while i < 10 {
     
-        println("hello\ world");
+        println("Hello\ world");
         
         i = i + 1;
     }

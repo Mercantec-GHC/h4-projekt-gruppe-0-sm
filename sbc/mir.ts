@@ -38,7 +38,20 @@ export type StmtKind =
     | { tag: "load"; local: Local }
     | { tag: "store"; local: Local }
     | { tag: "call"; args: number }
-    | { tag: "lt" | "eq" | "add" | "mul" };
+    | { tag: BinaryOp };
+
+export type BinaryOp =
+    | "lt"
+    | "gt"
+    | "le"
+    | "ge"
+    | "eq"
+    | "ne"
+    | "add"
+    | "sub"
+    | "mul"
+    | "div"
+    | "mod";
 
 export type Ter = {
     kind: TerKind;
@@ -108,9 +121,16 @@ export class FnStringifyer {
             case "call":
                 return `call ${k.args}`;
             case "lt":
+            case "gt":
+            case "le":
+            case "ge":
             case "eq":
+            case "ne":
             case "add":
+            case "sub":
             case "mul":
+            case "div":
+            case "mod":
                 return k.tag;
         }
     }

@@ -9,8 +9,8 @@ import {
 } from "./lir.ts";
 
 export function optimizeLir(program: Program) {
-    console.log("=== BEFORE OPTIMIZATION ===");
-    console.log(new ProgramStringifyer(program).stringify());
+    // console.log("=== BEFORE OPTIMIZATION ===");
+    // console.log(new ProgramStringifyer(program).stringify());
 
     let sizeBefore = program.fns
         .reduce((acc, fn) => acc + fn.lines.length, 0);
@@ -34,8 +34,8 @@ export function optimizeLir(program: Program) {
         sizeHistory.add(sizeBefore);
     }
 
-    console.log("=== AFTER OPTIMIZATION ===");
-    console.log(new ProgramStringifyer(program).stringify());
+    // console.log("=== AFTER OPTIMIZATION ===");
+    // console.log(new ProgramStringifyer(program).stringify());
 }
 
 function eliminatePushPop(fn: Fn) {
@@ -237,9 +237,16 @@ function replaceReg(fn: Fn, cand: Reg, replacement: Reg) {
             case "ret":
                 break;
             case "lt":
+            case "gt":
+            case "le":
+            case "ge":
             case "eq":
+            case "ne":
             case "add":
+            case "sub":
             case "mul":
+            case "div":
+            case "mod":
                 ins.dst = r(ins.dst);
                 ins.src = r(ins.src);
                 break;
@@ -278,9 +285,16 @@ function pollutesStack(ins: Ins): boolean {
         case "ret":
             return false;
         case "lt":
+        case "gt":
+        case "le":
+        case "ge":
         case "eq":
+        case "ne":
         case "add":
+        case "sub":
         case "mul":
+        case "div":
+        case "mod":
             return true;
         case "kill":
             return false;

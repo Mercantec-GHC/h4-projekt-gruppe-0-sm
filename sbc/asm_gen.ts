@@ -27,9 +27,24 @@ export class AsmGen {
             this.writeIns(`db "${escaped}"`);
         }
         this.writeln(`section .text`);
+
         for (const fn of this.lir.fns) {
             this.generateFn(fn);
         }
+
+        this.writeln(`sbc__div:`);
+        this.writeIns(`mov rdx, 0`);
+        this.writeIns(`mov rax, [rsp+16]`);
+        this.writeIns(`mov rdi, [rsp+8]`);
+        this.writeIns(`div rdi`);
+        this.writeIns(`ret`);
+        this.writeln(`sbc__mod:`);
+        this.writeIns(`mov rdx, 0`);
+        this.writeIns(`mov rax, [rsp+16]`);
+        this.writeIns(`mov rdi, [rsp+8]`);
+        this.writeIns(`div rdi`);
+        this.writeIns(`mov rax, rdx`);
+        this.writeIns(`ret`);
 
         this.writeln(`; vim: syntax=nasm commentstring=;\\ %s`);
         this.writeln("");
@@ -241,15 +256,46 @@ export class AsmGen {
                 this.writeIns(`cmp ${r(ins.dst)}, ${r(ins.src)}`);
                 this.writeIns(`setl ${this.reg8(ins.dst)}`);
                 return;
+            case "gt":
+                this.writeIns(`cmp ${r(ins.dst)}, ${r(ins.src)}`);
+                this.writeIns(`setg ${this.reg8(ins.dst)}`);
+                return;
+            case "le":
+                this.writeIns(`cmp ${r(ins.dst)}, ${r(ins.src)}`);
+                this.writeIns(`setle ${this.reg8(ins.dst)}`);
+                return;
+            case "ge":
+                this.writeIns(`cmp ${r(ins.dst)}, ${r(ins.src)}`);
+                this.writeIns(`setge ${this.reg8(ins.dst)}`);
+                return;
             case "eq":
                 this.writeIns(`cmp ${r(ins.dst)}, ${r(ins.src)}`);
                 this.writeIns(`sete ${this.reg8(ins.dst)}`);
                 return;
+            case "ne":
+                this.writeIns(`cmp ${r(ins.dst)}, ${r(ins.src)}`);
+                this.writeIns(`setne ${this.reg8(ins.dst)}`);
+                return;
             case "add":
                 this.writeIns(`add ${r(ins.dst)}, ${r(ins.src)}`);
                 return;
+            case "sub":
+                this.writeIns(`sub ${r(ins.dst)}, ${r(ins.src)}`);
+                return;
             case "mul":
                 this.writeIns(`imul ${r(ins.dst)}, ${r(ins.src)}`);
+                return;
+            case "div":
+                this.writeIns(`push ${r(ins.dst)}`);
+                this.writeIns(`push ${r(ins.src)}`);
+                this.writeIns(`call sbc__div`);
+                this.writeIns(`mov ${r(ins.dst)}, rax`);
+                return;
+            case "mod":
+                this.writeIns(`push ${r(ins.dst)}`);
+                this.writeIns(`push ${r(ins.src)}`);
+                this.writeIns(`call sbc__mod`);
+                this.writeIns(`mov ${r(ins.dst)}, rax`);
                 return;
             case "kill":
                 this.kill(ins.reg);

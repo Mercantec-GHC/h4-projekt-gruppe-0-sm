@@ -140,24 +140,27 @@ export class Checker {
                     }
                     return callee.returnTy;
                 }
+                case "not":
+                case "negate":
+                    throw new Error("todo");
                 case "binary": {
                     const left = this.exprTy(k.left);
                     const right = this.exprTy(k.right);
 
-                    const cfg = (op: BinaryOp, l: Ty, r: Ty = l) =>
-                        k.op === op && this.assignable(left, l) &&
+                    const cfg = (ops: BinaryOp[], l: Ty, r: Ty = l) =>
+                        ops.includes(k.op) && this.assignable(left, l) &&
                         this.assignable(right, r);
 
-                    if (cfg("<", { tag: "int" })) {
+                    if (cfg(["<", ">", "<=", ">="], { tag: "int" })) {
                         return { tag: "int" };
                     }
-                    if (cfg("==", { tag: "int" })) {
+                    if (cfg(["==", "!="], { tag: "int" })) {
                         return { tag: "int" };
                     }
-                    if (cfg("+", { tag: "int" })) {
+                    if (cfg(["+", "-"], { tag: "int" })) {
                         return { tag: "int" };
                     }
-                    if (cfg("*", { tag: "int" })) {
+                    if (cfg(["*", "/", "%"], { tag: "int" })) {
                         return { tag: "int" };
                     }
 
@@ -436,6 +439,12 @@ export class Resolver {
                 this.resolveBlock(k.body);
                 this.loopStack.pop();
                 return;
+            case "while":
+                this.resolveExpr(k.expr);
+                this.loopStack.push(stmt);
+                this.resolveBlock(k.body);
+                this.loopStack.pop();
+                return;
             case "if":
                 this.resolveExpr(k.expr);
                 this.resolveBlock(k.truthy);
@@ -487,6 +496,9 @@ export class Resolver {
                     this.resolveExpr(arg);
                 }
                 return;
+            case "not":
+            case "negate":
+                throw new Error("todo");
             case "binary":
                 this.resolveExpr(k.left);
                 this.resolveExpr(k.right);
@@ -560,6 +572,8 @@ export class Parser {
             return this.parseLetStmt();
         } else if (this.test("loop")) {
             return this.parseLoopStmt();
+        } else if (this.test("while")) {
+            return this.parseWhileStmt();
         } else if (this.test("if")) {
             return this.parseIfStmt();
         } else if (this.test("return")) {
@@ -732,6 +746,18 @@ export class Parser {
         return this.stmt({ tag: "loop", body }, line);
     }
 
+    private parseWhileStmt(): Stmt {
+        const line = this.curr().line;
+        this.step();
+        const expr = this.parseExpr();
+        if (!this.test("{")) {
+            this.report("expected block");
+            return this.stmt({ tag: "error" }, line);
+        }
+        const body = this.parseBlock();
+        return this.stmt({ tag: "while", expr, body }, line);
+    }
+
     private parseIfStmt(): Stmt {
         const line = this.curr().line;
         this.step();
@@ -780,15 +806,25 @@ export class Parser {
         return this.parseBinaryExpr();
     }
 
-    private parseBinaryExpr(prec = 4): Expr {
+    private parseBinaryExpr(prec = 7): Expr {
         if (prec == 0) {
-            return this.parsePostfixExpr();
+            return this.parsePrefixExpr();
         }
         const ops: [BinaryOp, number][] = [
+            ["or", 7],
+            ["xor", 6],
+            ["and", 5],
             ["<", 4],
+            [">", 4],
+            ["<=", 4],
+            [">=", 4],
             ["==", 3],
+            ["!=", 3],
             ["+", 2],
+            ["-", 2],
             ["*", 1],
+            ["/", 1],
+            ["%", 1],
         ];
 
         let left = this.parseBinaryExpr(prec - 1);
@@ -809,6 +845,18 @@ export class Parser {
             }
         }
         return left;
+    }
+
+    private parsePrefixExpr(): Expr {
+        if (this.eat("not")) {
+            const expr = this.parsePrefixExpr();
+            return this.expr({ tag: "not", expr }, this.eaten!.line);
+        } else if (this.eat("-")) {
+            const expr = this.parsePrefixExpr();
+            return this.expr({ tag: "negate", expr }, this.eaten!.line);
+        } else {
+            return this.parsePostfixExpr();
+        }
     }
 
     private parsePostfixExpr(): Expr {
@@ -933,8 +981,21 @@ export type Tok = {
 };
 
 export function lex(text: string): Tok[] {
-    const ops = "(){}[]<>+-*=:,;#\n";
-    const kws = ["let", "fn", "return", "if", "else", "loop", "break"];
+    const ops = "(){}[]<>+-*/%=!:,;#\n";
+    const kws = [
+        "let",
+        "fn",
+        "return",
+        "if",
+        "else",
+        "loop",
+        "while",
+        "break",
+        "not",
+        "or",
+        "xor",
+        "and",
+    ];
 
     return ops
         .split("")
@@ -943,6 +1004,8 @@ export function lex(text: string): Tok[] {
                 .replaceAll(/\/\/.*?$/mg, "")
                 .replaceAll(op, ` ${op} `)
                 .replaceAll(" -  > ", " -> ")
+                .replaceAll(" <  = ", " <= ")
+                .replaceAll(" >  = ", " >= ")
                 .replaceAll(" =  = ", " == ")
                 .replaceAll(/\\ /g, "\\SPACE"), text)
         .split(/[ \t\r]/)

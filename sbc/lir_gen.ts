@@ -192,9 +192,16 @@ class FnGen {
                 return;
             }
             case "lt":
+            case "gt":
+            case "le":
+            case "ge":
+            case "ne":
             case "eq":
             case "add":
-            case "mul": {
+            case "sub":
+            case "mul":
+            case "div":
+            case "mod": {
                 const src = this.reg();
                 const dst = this.reg();
                 this.pushIns({ tag: "pop", reg: src });

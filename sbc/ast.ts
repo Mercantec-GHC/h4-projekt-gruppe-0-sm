@@ -16,6 +16,7 @@ export type StmtKind =
     | { tag: "fn" } & FnStmt
     | { tag: "let" } & LetStmt
     | { tag: "loop"; body: Block }
+    | { tag: "while"; expr: Expr; body: Block }
     | { tag: "if"; expr: Expr; truthy: Block; falsy?: Block }
     | { tag: "return"; expr?: Expr }
     | { tag: "break" }
@@ -54,9 +55,25 @@ export type ExprKind =
     | { tag: "int"; val: number }
     | { tag: "str"; val: string }
     | { tag: "call"; expr: Expr; args: Expr[] }
+    | { tag: "not"; expr: Expr }
+    | { tag: "negate"; expr: Expr }
     | { tag: "binary"; op: BinaryOp; left: Expr; right: Expr };
 
-export type BinaryOp = "<" | "==" | "+" | "*";
+export type BinaryOp =
+    | "or"
+    | "xor"
+    | "and"
+    | "<"
+    | ">"
+    | "<="
+    | ">="
+    | "=="
+    | "!="
+    | "+"
+    | "-"
+    | "*"
+    | "/"
+    | "%";
 
 export type Ty = {
     id: number;
