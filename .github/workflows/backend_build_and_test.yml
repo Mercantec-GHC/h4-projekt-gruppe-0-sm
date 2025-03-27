@@ -23,6 +23,11 @@ jobs:
         working-directory: ./backend
     steps:
     - uses: actions/checkout@v4
+    - uses: denoland/setup-deno@v2
+      with:
+        deno-version: v2.x
+    - name: Install nasm
+      run: sudo apt-get install nasm
     - name: Build debug with tests
       run: make -B INCLUDE_TESTS=1
     - name: Run tests
@@ -35,6 +40,11 @@ jobs:
         working-directory: ./backend
     steps:
     - uses: actions/checkout@v4
+    - uses: denoland/setup-deno@v2
+      with:
+        deno-version: v2.x
+    - name: Install nasm
+      run: sudo apt-get install nasm
     - name: Build release with tests
       run: make -B RELEASE=1 INCLUDE_TESTS=1
     - name: Run tests
@@ -50,6 +60,8 @@ jobs:
     - uses: denoland/setup-deno@v2
       with:
         deno-version: v2.x
+    - name: Install nasm
+      run: sudo apt-get install nasm
     - name: Cache dependencies
       run: deno cache --check test/test.ts
     - name: Build with tests
@@ -73,6 +85,8 @@ jobs:
     - uses: denoland/setup-deno@v2
       with:
         deno-version: v2.x
+    - name: Install nasm
+      run: sudo apt-get install nasm
     - name: Cache dependencies
       run: deno cache --check test/test.ts
     - name: Build release with tests
