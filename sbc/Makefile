@@ -11,7 +11,7 @@ out: entry.o out.o lib.o
 	nasm -f elf64 $< -o $@
 
 out.nasm: program.sbl
-	deno run --allow-read --allow-write --check main.ts $<
+	deno run --allow-read --allow-write --check main.ts $< $@
 
 clean:
 	rm -rf out.asm out.o lib.o entry.o out

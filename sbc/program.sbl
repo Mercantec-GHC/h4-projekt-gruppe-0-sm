@@ -11,6 +11,10 @@ fn factorial(v: int) -> int {
     return v * factorial(v - 1);
 }
 
+fn return_void_ptr(ptr: *()) -> *() {
+    return ptr;
+}
+
 #[c_export("sbc_main")]
 fn main() -> int {
     let i = 0;

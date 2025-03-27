@@ -188,6 +188,8 @@ export class Checker {
             switch (k.tag) {
                 case "error":
                     return { tag: "error" };
+                case "void":
+                    return { tag: "void" };
                 case "ident": {
                     switch (k.ident) {
                         case "int":
@@ -231,6 +233,8 @@ export class Checker {
             a.tag === tag && b.tag === tag;
 
         if (a.tag === "error" || b.tag === "error") {
+            return ok(a);
+        } else if (both("void")) {
             return ok(a);
         } else if (both("int")) {
             return ok(a);
@@ -912,7 +916,14 @@ export class Parser {
     }
 
     private parseTy(): AstTy {
-        if (this.eat("ident")) {
+        if (this.eat("(")) {
+            if (this.eat(")")) {
+                return this.ty({ tag: "void" }, this.eaten!.line);
+            } else {
+                this.report("expected ')'");
+                return this.ty({ tag: "error" }, this.last!.line);
+            }
+        } else if (this.eat("ident")) {
             return this.ty(
                 { tag: "ident", ident: this.eaten!.identVal! },
                 this.eaten!.line,

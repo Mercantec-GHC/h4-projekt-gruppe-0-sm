@@ -8,7 +8,13 @@ import { AsmGen } from "./asm_gen.ts";
 import { optimizeLir } from "./lir_optimize.ts";
 
 async function main() {
-    const text = await Deno.readTextFile(Deno.args[0]);
+    const inputFile = Deno.args[0];
+    const outputFile = Deno.args[1];
+    if (!inputFile || !outputFile) {
+        throw new Error("incorrect arguments");
+    }
+
+    const text = await Deno.readTextFile(inputFile);
 
     const ast = new Parser(text).parse();
     // console.log("=== AST ===");
@@ -44,7 +50,7 @@ async function main() {
     // console.log("=== ASM ===");
     // console.log(asm);
 
-    await Deno.writeTextFile("out.nasm", asm);
+    await Deno.writeTextFile(outputFile, asm);
 }
 
 main();

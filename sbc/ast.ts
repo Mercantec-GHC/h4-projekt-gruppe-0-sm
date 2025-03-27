@@ -83,6 +83,7 @@ export type Ty = {
 
 export type TyKind =
     | { tag: "error" }
+    | { tag: "void" }
     | { tag: "ident"; ident: string }
     | { tag: "ptr"; ty: Ty };
 

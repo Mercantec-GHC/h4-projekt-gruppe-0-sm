@@ -3,6 +3,7 @@ import * as ast from "./ast.ts";
 export type Ty =
     | { tag: "error" }
     | { tag: "unknown" }
+    | { tag: "void" }
     | { tag: "int" }
     | { tag: "str" }
     | { tag: "ptr"; ty: Ty }
@@ -14,6 +15,8 @@ export function tyToString(ty: Ty): string {
             return `<error>`;
         case "unknown":
             return `<unknown>`;
+        case "void":
+            return `()`;
         case "int":
             return `int`;
         case "str":
