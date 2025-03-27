@@ -114,7 +114,7 @@ export class AsmGen {
         }
 
         const argRegs = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"];
-        for (const reg of argRegs.slice(0, args + 1)) {
+        for (const reg of argRegs.slice(0, args)) {
             this.writeIns(`pop ${reg}`);
         }
 
