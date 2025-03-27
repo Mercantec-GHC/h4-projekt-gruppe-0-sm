@@ -33,16 +33,16 @@ export class AsmGen {
         }
 
         this.writeln(`sbc__div:`);
-        this.writeIns(`mov rdx, 0`);
         this.writeIns(`mov rax, [rsp+16]`);
         this.writeIns(`mov rdi, [rsp+8]`);
-        this.writeIns(`div rdi`);
+        this.writeIns(`cqo`);
+        this.writeIns(`idiv rdi`);
         this.writeIns(`ret`);
         this.writeln(`sbc__mod:`);
-        this.writeIns(`mov rdx, 0`);
         this.writeIns(`mov rax, [rsp+16]`);
         this.writeIns(`mov rdi, [rsp+8]`);
-        this.writeIns(`div rdi`);
+        this.writeIns(`cqo`);
+        this.writeIns(`idiv rdi`);
         this.writeIns(`mov rax, rdx`);
         this.writeIns(`ret`);
 

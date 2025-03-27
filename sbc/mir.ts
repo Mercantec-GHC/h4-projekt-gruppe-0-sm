@@ -111,7 +111,9 @@ export class FnStringifyer {
             case "error":
                 return "<error>";
             case "push":
-                return `push (${tyToString(k.ty)}) ${this.val(k.val)}`;
+                return `push (${tyToString(k.ty, { short: true })}) ${
+                    this.val(k.val)
+                }`;
             case "pop":
                 return "pop";
             case "load":
