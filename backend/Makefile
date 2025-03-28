@@ -59,7 +59,7 @@ TARGET=server
 all: build/$(TARGET)
 
 build/$(TARGET): $(O_FILES)
-	$(CC) -o $@ $^ $(F_FLAGS) $(OPTIMIZATION) $(L_FLAGS)
+	$(CC) -o $@ $^ $(F_FLAGS) $(OPTIMIZATION) -z noexecstack $(L_FLAGS)
 
 build/%.o: src/%.c $(HEADERS)
 	@mkdir -p $(dir $@)
